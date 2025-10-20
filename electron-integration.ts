@@ -2,6 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import * as path from 'path'
 import * as fs from 'fs/promises'
+import { exec } from 'child_process'
+import { fileURLToPath } from 'url'
+import { app } from 'electron'
 // Removed imports from backend files to avoid compilation issues
 import { BrowserWindow } from 'electron'
 import {
@@ -228,13 +231,46 @@ class ElectronPersistenceManager {
 		await this.saveItems(game.items)
 		await this.savePortals(game.portals)
 		await this.saveDialogues(game.dialogues)
+
+		// Compile data after all saves are complete
+		await this.compileDataToTypescript()
 	}
 
 	async compileDataToTypescript(): Promise<void> {
-		// Stub implementation - could generate TypeScript types from JSON data
-		console.log(
-			'Data compilation not implemented in ElectronPersistenceManager'
-		)
+		return new Promise((resolve, reject) => {
+			try {
+				console.log('🔄 Starting data compilation for project...')
+				// Get the application directory (works for both dev and packaged apps)
+				const appPath = app.getAppPath()
+				const scriptPath = path.resolve(
+					appPath,
+					'src/questEditor/backend/generate-data.js'
+				)
+				const workingDir = path.dirname(this.dataDir) // src/questEngine/
+				const command = `cd "${workingDir}" && node "${scriptPath}"`
+
+				console.log('App path:', appPath)
+				console.log('Script path:', scriptPath)
+				console.log('Working directory:', workingDir)
+				console.log('Command:', command)
+
+				exec(command, (error, stdout, stderr) => {
+					if (stdout) console.log('Data compilation output:', stdout)
+					if (stderr) console.log('Data compilation stderr:', stderr)
+
+					if (error) {
+						console.error('❌ Data compilation failed:', error)
+						reject(error)
+					} else {
+						console.log('✅ Data compilation completed successfully')
+						resolve()
+					}
+				})
+			} catch (error) {
+				console.error('❌ Error compiling data to TypeScript:', error)
+				reject(error)
+			}
+		})
 	}
 }
 
@@ -1000,6 +1036,9 @@ export class QuestEditorIntegration {
 		// Write back to file
 		await fs.writeFile(linksPath, JSON.stringify(updatedLinks, null, 2))
 		console.log('entityLinks.json updated.')
+
+		// Compile data after entity links update
+		await this.persistence.compileDataToTypescript()
 	}
 
 	/**
