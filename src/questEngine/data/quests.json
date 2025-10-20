@@ -1,0 +1,39 @@
+[
+  {
+    "id": "d1qj6u1ep",
+    "chapter": "Chapter 1",
+    "title": "New Quest",
+    "description": "Quest description",
+    "order": 0,
+    "steps": [
+      {
+        "id": "step_1760988320290",
+        "name": "New Step",
+        "objectiveType": "collectByName",
+        "objectiveParams": {
+          "itemName": "Diamond"
+        },
+        "onStart": [],
+        "onComplete": []
+      },
+      {
+        "id": "step_1760988345212",
+        "name": "New Step",
+        "objectiveType": "collectByName",
+        "objectiveParams": {
+          "itemName": "Red Box"
+        },
+        "onStart": [],
+        "onComplete": [
+          {
+            "type": "spawnEntity",
+            "params": {
+              "entityId": "c3zyfbyc7"
+            }
+          }
+        ]
+      }
+    ],
+    "completed": false
+  }
+]

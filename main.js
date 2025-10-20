@@ -175,35 +175,66 @@ electron_1.ipcMain.handle('create-project', async (_event, { name, path: project
     };
     projects.push(newProject);
     await saveProjects(projects);
-    // Create questEngine folder and data files in the project's src directory
+    // Create questEngine folder and copy game engine files to the project's src directory
     try {
         const questEnginePath = path.join(projectPath, 'src', 'questEngine');
-        const dataPath = path.join(questEnginePath, 'data');
-        await fs.mkdir(dataPath, { recursive: true });
-        console.log(`Created questEngine folder: ${questEnginePath}`);
-        // Create empty JSON files
-        const jsonFiles = [
-            'quests.json',
-            'locations.json',
-            'npcs.json',
-            'portals.json',
-            'dialogues.json',
-            'entityLinks.json',
-            'items.json',
-        ];
-        for (const file of jsonFiles) {
-            const filePath = path.join(dataPath, file);
-            let emptyData = '[]'; // Default empty array for most files
-            if (file === 'entityLinks.json') {
-                emptyData = '{}'; // Object for entity links
-            }
-            await fs.writeFile(filePath, emptyData, 'utf8');
-            console.log(`Created ${file} in ${dataPath}`);
+        // Use __dirname (compiled main.js location) to find questEngine folder in src/
+        const sourceQuestEnginePath = path.join(__dirname, 'src', 'questEngine');
+        console.log('=== PROJECT CREATION DEBUG ===');
+        console.log('Project path:', projectPath);
+        console.log('Source questEngine path:', sourceQuestEnginePath);
+        console.log('Target questEngine path:', questEnginePath);
+        console.log('__dirname:', __dirname);
+        console.log('App path:', electron_1.app.getAppPath());
+        // Check if questEngine folder exists in the app root
+        try {
+            await fs.access(sourceQuestEnginePath);
+            console.log('✓ Source questEngine folder exists at:', sourceQuestEnginePath);
+            // Create target directory first
+            await fs.mkdir(questEnginePath, { recursive: true });
+            console.log('✓ Created target directory');
+            // Copy the entire questEngine folder to the project's src directory
+            await fs.cp(sourceQuestEnginePath, questEnginePath, {
+                recursive: true,
+                force: true,
+            });
+            console.log(`✓ Successfully copied questEngine folder to: ${questEnginePath}`);
+            // Verify copy by checking if a key file exists
+            const testFile = path.join(questEnginePath, 'index.ts');
+            await fs.access(testFile);
+            console.log('✓ Verified copy - index.ts exists in target');
         }
-        console.log('All data files created successfully');
+        catch (copyError) {
+            console.error('✗ Failed to copy questEngine folder:', copyError);
+            console.error('Error details:', copyError.message);
+            // Fallback: Create empty data files if questEngine folder doesn't exist
+            const dataPath = path.join(questEnginePath, 'data');
+            await fs.mkdir(dataPath, { recursive: true });
+            console.log(`✓ Created questEngine folder: ${questEnginePath}`);
+            // Create empty JSON files
+            const jsonFiles = [
+                'quests.json',
+                'locations.json',
+                'npcs.json',
+                'portals.json',
+                'dialogues.json',
+                'entityLinks.json',
+                'items.json',
+            ];
+            for (const file of jsonFiles) {
+                const filePath = path.join(dataPath, file);
+                let emptyData = '[]'; // Default empty array for most files
+                if (file === 'entityLinks.json') {
+                    emptyData = '{}'; // Object for entity links
+                }
+                await fs.writeFile(filePath, emptyData, 'utf8');
+                console.log(`✓ Created ${file} in ${dataPath}`);
+            }
+            console.log('✓ All data files created successfully');
+        }
     }
     catch (error) {
-        console.error('Failed to create questEngine folder and files:', error);
+        console.error('✗ Failed to create questEngine folder and files:', error);
     }
     return newProject;
 });
