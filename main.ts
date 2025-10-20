@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import * as path from 'path'
 import { autoUpdater } from 'electron-updater'
 import * as fs from 'fs/promises' // For file I/O
-import { QuestEditorIntegration } from './electron/electron-integration'
+import { QuestEditorIntegration } from './electron-integration'
 
 let mainWindow: BrowserWindow | null = null
 let questEditor: QuestEditorIntegration | null = null
@@ -64,15 +64,19 @@ function createWindow(): void {
 	})
 
 	const isDev = process.env.NODE_ENV === 'development'
-	mainWindow.loadURL(
-		isDev
-			? 'http://localhost:3000'
-			: `file://${path.join(__dirname, 'build/index.html')}`
-	)
+	const htmlPath = isDev
+		? 'http://localhost:3000'
+		: `file://${path.join(__dirname, '../app.asar.unpacked/build/index.html')}`
 
-	if (isDev) {
-		mainWindow.webContents.openDevTools({ mode: 'detach' })
-	}
+	console.log('Loading URL:', htmlPath)
+	console.log('__dirname:', __dirname)
+
+	mainWindow.loadURL(htmlPath).catch((err) => {
+		console.error('Failed to load URL:', htmlPath, err)
+	})
+
+	// Always open dev tools for debugging
+	mainWindow.webContents.openDevTools({ mode: 'detach' })
 
 	mainWindow.on('closed', () => {
 		mainWindow = null

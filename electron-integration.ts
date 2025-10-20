@@ -13,7 +13,7 @@ import {
 	Item,
 	Portal,
 	DialogueSequence,
-} from '../src/questEditor/models'
+} from './src/questEditor/models'
 
 class ElectronPersistenceManager {
 	private dataDir: string

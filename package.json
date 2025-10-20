@@ -5,8 +5,9 @@
 	"scripts": {
 		"start": "cross-env NODE_ENV=development concurrently \"npm run start:react\" \"wait-on http://localhost:3000 && electron .\"",
 		"start:react": "cross-env BROWSER=none react-scripts start",
-		"build": "react-scripts build && npm run build:electron",
-		"build:electron": "tsc main.ts preload.ts electron/electron-integration.ts --outDir . --target es2020 --module commonjs --esModuleInterop",
+		"build": "react-scripts build && npm run fix-html-paths && npm run build:electron",
+		"build:electron": "tsc main.ts preload.ts electron-integration.ts --outDir . --target es2020 --module commonjs --esModuleInterop",
+		"fix-html-paths": "node -e \"const fs=require('fs'); const html=fs.readFileSync('build/index.html','utf8').replace(/\\/static\\//g,'./static/'); fs.writeFileSync('build/index.html',html); console.log('Fixed HTML paths for Electron');\"",
 		"package": "npm run build && electron-builder",
 		"publish": "npm run build && electron-builder --publish always",
 		"test": "echo \"Error: no test specified\" && exit 1"
@@ -14,10 +15,20 @@
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
-	"description": "",
+	"description": "Quest Engine - A visual quest builder and game engine",
 	"build": {
-		"appId": "com.yourapp.questengine",
+		"appId": "com.cansyland.questengine",
 		"productName": "QuestEngine",
+		"files": [
+			"build/**/*",
+			"main.js",
+			"preload.js",
+			"electron-integration.js",
+			"node_modules/**/*"
+		],
+		"asarUnpack": [
+			"build/**/*"
+		],
 		"mac": {
 			"target": "dmg"
 		},
@@ -32,7 +43,6 @@
 	},
 	"dependencies": {
 		"cors": "^2.8.5",
-		"electron": "^38.3.0",
 		"electron-store": "^11.0.2",
 		"electron-updater": "^6.6.2",
 		"express": "^5.1.0",
@@ -47,6 +57,7 @@
 		"@types/react-dom": "^19.2.2",
 		"concurrently": "^9.2.1",
 		"cross-env": "^10.1.0",
+		"electron": "^38.3.0",
 		"electron-builder": "^26.0.12",
 		"react-scripts": "^5.0.0",
 		"typescript": "^5.9.3",

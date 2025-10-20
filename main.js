@@ -37,7 +37,7 @@ const electron_1 = require("electron");
 const path = __importStar(require("path"));
 const electron_updater_1 = require("electron-updater");
 const fs = __importStar(require("fs/promises")); // For file I/O
-const electron_integration_1 = require("./electron/electron-integration");
+const electron_integration_1 = require("./electron-integration");
 let mainWindow = null;
 let questEditor = null;
 // Simple file-based storage for projects
@@ -84,12 +84,16 @@ function createWindow() {
 		`);
     });
     const isDev = process.env.NODE_ENV === 'development';
-    mainWindow.loadURL(isDev
+    const htmlPath = isDev
         ? 'http://localhost:3000'
-        : `file://${path.join(__dirname, 'build/index.html')}`);
-    if (isDev) {
-        mainWindow.webContents.openDevTools({ mode: 'detach' });
-    }
+        : `file://${path.join(__dirname, '../app.asar.unpacked/build/index.html')}`;
+    console.log('Loading URL:', htmlPath);
+    console.log('__dirname:', __dirname);
+    mainWindow.loadURL(htmlPath).catch((err) => {
+        console.error('Failed to load URL:', htmlPath, err);
+    });
+    // Always open dev tools for debugging
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
     mainWindow.on('closed', () => {
         mainWindow = null;
     });
