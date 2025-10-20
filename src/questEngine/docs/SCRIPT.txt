@@ -1,0 +1,370 @@
+═══════════════════════════════════════════════════════════════════════════════
+                            THE MYTHICAL TRIP
+                          A Journey Beyond Reality
+═══════════════════════════════════════════════════════════════════════════════
+
+NOTE: Keep dialogues short and entertaining! No long boring conversations!
+
+═══════════════════════════════════════════════════════════════════════════════
+# SCENE 1 – THE ORDINARY WORLD
+═══════════════════════════════════════════════════════════════════════════════
+
+Location: Main Stage
+Description: Player enters the scene and is greeted by a mysterious white bunny who 
+            beckons them toward a glowing portal/cave. The player can either enter 
+            the cave or proceed up to the stage with the video screen.
+
+[CUTSCENE]
+    Bunny waves ands jumps out of sight
+Trigger: Player enters cave → Transition to Scene 2
+
+═══════════════════════════════════════════════════════════════════════════════
+# SCENE 2 – JOURNEY INTO THE UNKNOWN
+═══════════════════════════════════════════════════════════════════════════════
+
+Location: Mycelium Caves
+
+────────────────────────────────────────────────────────────────────────────────
+QUEST: DEEP TUNES
+────────────────────────────────────────────────────────────────────────────────
+
+[CUTSCENE] 
+  Bunny hops into cave, bonks his head on the ceiling. A massive stone falls,
+  blocking the path deeper into the cave.
+
+┌─ Talk to Bassimus (the groovy mushroom) ──────────────────────────────────┐
+│                                                                            │
+│  Bassimus: "Hey dude, what's up?"                                         │
+│                                                                            │
+│  Player Options:                                                          │
+│    → Nothing                        [Closes dialogue]                     │
+│    → There was this white bunny...                                        │
+│                                                                            │
+│  Bassimus: "Whoa yeah, that hopper's been bouncing all over the place.    │
+│             I'm curious what he's up to. If you find out, come tell me!"  │
+│                                                                            │
+│  Player Options:                                                          │
+│    → I can't! The passage is blocked by a giant boulder!                  │
+│                                                                            │
+│  Bassimus: "Oh, I see. That's nothing some deep riffs can't handle."      │
+│                                                                            │
+│  Player:                                                                  │
+│    → Some riffs?                                                          │
+│                                                                            │
+│  Bassimus: "Yeah! But my bass needs a new string first. Last gig was      │
+│             too groovy and the old one snapped. Think you can find one?"  │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+OBJECTIVE: Find Bass String
+
+  → If player talks to Bassimus while searching:
+    Bassimus: "You're gonna love the sound of my beauty, but I need 
+               that new string first!"
+
+OBJECTIVE: Return with Bass String
+
+  → Player brings string to Bassimus
+    Bassimus: "Whooaaa! Thanks, dude! Now let's see what this baby can do..."
+
+[CUTSCENE]
+  Bassimus plays a thunderous riff. Camera pans to the boulder as it vibrates
+  violently, then tumbles away, clearing the path.
+
+  → If player talks to Bassimus after:
+    Bassimus: "YEAH! See? Nothing beats a deep groove!"
+
+────────────────────────────────────────────────────────────────────────────────
+QUEST: CRYSTALS & CONSEQUENCES (Optional Mischief)
+────────────────────────────────────────────────────────────────────────────────
+
+You enter a chamber filled with glowing crystals.
+
+┌─ Meet Crystallia (the crystal keeper) ────────────────────────────────────┐
+│                                                                            │
+│  Crystallia is meticulously polishing crystals.                           │
+│                                                                            │
+│  Crystallia: "Don't touch ANYTHING! Just move along!"                     │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+OPTIONAL CHAOS:
+
+  → Player touches 3 different crystals:
+    Crystallia: "HEY! Didn't I tell you NOT to touch anything? 
+                 Just keep moving!"
+
+  → Player touches 2 different crystals:
+    Crystallia: "This is a delicate structure! Just follow the bunny!"
+
+  → Player touches 1 crystal:
+    Crystallia: "Enough is ENOUGH! Out! Go HERE!" 
+                [Plays animation pointing toward exit]
+
+────────────────────────────────────────────────────────────────────────────────
+QUEST: THE MIRROR SELF
+────────────────────────────────────────────────────────────────────────────────
+
+┌─ Talk to Echo (your doppelganger) ────────────────────────────────────────┐
+│                                                                            │
+│  Echo: "Whoa! Who are YOU?"                                               │
+│                                                                            │
+│  Player:                                                                  │
+│    → Who are YOU?                                                         │
+│                                                                            │
+│  Echo: "I am you, but the real question is... who are YOU?"               │
+│                                                                            │
+│  Player Options:                                                          │
+│    → Obviously not you                                                    │
+│    → I don't know                                                         │
+│    → You, of course                                                       │
+│    → I am who I am                                                        │
+│                                                                            │
+│  Echo: "Well, if I am you and you are me, then I'm sure we share         │
+│         the same desire..."                                               │
+│                                                                            │
+│  Player Options: (all lead to same outcome)                               │
+│    → Crystals!                                                            │
+│    → Crystals?                                                            │
+│    → ...Crystals                                                          │
+│    → CRYSTALS!                                                            │
+│                                                                            │
+│  Echo: "YES! Let's get some crystals. Please grab a few from that         │
+│         grumpy keeper up there."                                          │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+OBJECTIVE: Steal 6 Crystals
+
+  → Player grabs 3 crystals:
+    Crystallia: "HEY! Didn't I tell you not to touch those? 
+                 Just move on already!"
+
+  → Player grabs 2 crystal:
+    Crystallia: "This is a DELICATE structure! Follow the bunny!"
+
+  → Player grabs 1 crystal:
+
+[CUTSCENE]
+  The ground shakes violently! Dirt, pebbles, and crystals rain from above.
+  (Alternative for quiekcer development. dust appears and after it dissapears 
+  scenen is full of stuff on the floor)
+
+┌─ Confrontation with Crystallia ───────────────────────────────────────────┐
+│                                                                            │
+│  Crystallia: "SEE?! DIDN'T I TELL YOU THIS WAS DELICATE?                  │
+│               Now look what you've done!"                                 │
+│                                                                            │
+│  Player:                                                                  │
+│    → But I was just...                                                    │
+│                                                                            │
+│  Crystallia: "I don't care! Just move on and let me clean this mess!"    │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ Return to Echo ──────────────────────────────────────────────────────────┐
+│                                                                            │
+│  Echo: "Oh... welp. That wasn't supposed to happen."                      │
+│                                                                            │
+│  Player:                                                                  │
+│    → ...                                                                  │
+│                                                                            │
+│  Echo: "The problem is... the earthquake blocked the passage."            │
+│                                                                            │
+│  Player:                                                                  │
+│    → What now?                                                            │
+│                                                                            │
+│  Echo: "I need some special mushrooms to clear this mess.                 │
+│         Can you bring some from the world above?"                         │
+│                                                                            │
+│  Player:                                                                  │
+│    → Sure!                                                                │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+OBJECTIVE: The Mushroom Run
+  1. Return to Scene 1 (Main Stage)
+  2. Collect 10 Mushrooms
+  3. Return to Echo
+
+┌─ Deliver Mushrooms ───────────────────────────────────────────────────────┐
+│                                                                            │
+│  Echo: "Perfect! Let me place these just right..."                        │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+[CUTSCENE]
+  The mushrooms pulse with energy, breaking down the debris and clearing 
+  the path forward.
+
+────────────────────────────────────────────────────────────────────────────────
+QUEST: HELP PERSEPHONE
+────────────────────────────────────────────────────────────────────────────────
+
+Setting: The banks of the River Styx. Persephone sits crouched, weeping.
+
+┌─ Talk to Persephone ──────────────────────────────────────────────────────┐
+│                                                                            │
+│  Persephone: "Why... why am I here?"                                      │
+│                                                                            │
+│  Player Options:                                                          │
+│    → Are you okay?                                                        │
+│    → Have you seen the white bunny?                                       │
+│                                                                            │
+│  Persephone: "I'm... stuck. Trapped here forever."                        │
+│                                                                            │
+│  Player:                                                                  │
+│    → What happened?                                                       │
+│                                                                            │
+│  Persephone: "I ate from the pomegranate... now I can never leave         │
+│               this place. It's the curse of the underworld."              │
+│                                                                            │
+│  Player:                                                                  │
+│    → There must be a way out.                                             │
+│                                                                            │
+│  Persephone: "For you, maybe... but not for me. The path ahead is         │
+│               yours to take. I belong here now."                          │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+OBJECTIVE: Activate the Portal
+  → Collect 5 pomegranate seeds
+  → Place them around the ancient door
+
+┌─ Convince Persephone (Order Doesn't Matter) ──────────────────────────────┐
+│                                                                            │
+│  NOTE: Persephone has 3 fixed responses. It doesn't matter which option   │
+│        the player chooses - she goes through denial, doubt, then finally  │
+│        acceptance. Player must click through all 3 options.               │
+│                                                                            │
+│  ──────────────────────────────────────────────────────────────────────   │
+│                                                                            │
+│  [FIRST ATTEMPT - All 3 options available]                                │
+│                                                                            │
+│  Player: "The portal is open."                                            │
+│                                                                            │
+│  Player Options:                                                          │
+│    → Just follow me, it'll be fine!                                       │
+│    → You don't have to stay here forever.                                 │
+│    → I'm not leaving without you.                                         │
+│                                                                            │
+│  Player clicks ANY option above                                           │
+│                                                                            │
+│  Persephone: "You don't understand... it's not that simple."              │
+│              [Chosen option disappears]                                   │
+│                                                                            │
+│  ──────────────────────────────────────────────────────────────────────   │
+│                                                                            │
+│  [SECOND ATTEMPT - 2 options remain]                                      │
+│                                                                            │
+│  Player Options: (2 remaining, any combination)                           │
+│    → [One of the two options that wasn't clicked]                         │
+│    → [The other option that wasn't clicked]                               │
+│                                                                            │
+│  Player clicks ANY of the 2 remaining options                             │
+│                                                                            │
+│  Persephone: "But the pomegranate... the curse binds me here.             │
+│               I've accepted my fate."                                     │
+│              [Chosen option disappears]                                   │
+│                                                                            │
+│  ──────────────────────────────────────────────────────────────────────   │
+│                                                                            │
+│  [THIRD ATTEMPT - 1 option remains]                                       │
+│                                                                            │
+│  Player Options: (only 1 left)                                            │
+│    → [The last remaining option]                                          │
+│                                                                            │
+│  Player clicks the final remaining option                                 │
+│                                                                            │
+│  Persephone: "You... you'd really help me?"                           │
+│              "Maybe... maybe I don't have to be defined by one mistake.   │
+│              Okay. I'll come with you."                                   │
+│              [Quest complete!]                                            │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Trigger: Pass through the door → Transition to Scene 3
+
+═══════════════════════════════════════════════════════════════════════════════
+# SCENE 3 – THE ABYSS
+═══════════════════════════════════════════════════════════════════════════════
+
+Location: The Eternal Toroid
+
+Description: A donut-shaped dimension that loops endlessly. Guide Persephone 
+            through this liminal space, collecting light while avoiding darkness.
+
+────────────────────────────────────────────────────────────────────────────────
+QUEST: PERSEPHONE'S LIGHT
+────────────────────────────────────────────────────────────────────────────────
+
+Mechanics:
+  → Collect orbs of light
+  → Avoid dark shadows
+  → Avoid pomegranate-like temptations
+
+UI: Balance Bar
+  - Starts centered
+  - Darkness collected: bar moves left, turns dark purple
+  - Light collected: bar moves right, turns pastel glow
+  
+Outcomes:
+  - Too much darkness → Return to Scene 2, restart quest (click old portal)
+  - Enough light → Progress to Scene 4
+
+┌─ Persephone's Voice (Light Collected) ────────────────────────────────────┐
+│                                                                            │
+│  [Hopeful]     "I can finally see the light..."                           │
+│  [Joyful]      "I'm starting to remember how things used to be."          │
+│  [Peaceful]    "This feels... right."                                     │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ Persephone's Voice (Darkness Collected) ─────────────────────────────────┐
+│                                                                            │
+│  [Desperate]   "It will never work out..."                                │
+│  [Angry]       "This is impossible!"                                      │
+│  [Defeated]    "Just... leave me alone."                                  │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+# SCENE 4 – THE BLISS
+═══════════════════════════════════════════════════════════════════════════════
+
+Location: Celestial Stage
+
+Description: The final ascent. A geometric paradise of floating platforms, 
+            bathed in glowing pastel light. The ultimate release.
+
+┌─ Persephone's Gratitude ──────────────────────────────────────────────────┐
+│                                                                            │
+│  Persephone: "Thank you... for helping me find my light again."           │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────
+QUEST: REACH THE SUMMIT
+────────────────────────────────────────────────────────────────────────────────
+
+Objectives:
+  → Follow the bunny as it leaps from platform to platform
+  → Collect as much light as possible (particles)
+  → Reach the highest point
+
+[CUTSCENE: THE REVELATION]
+  The white bunny begins to glow brilliantly. It transforms, expanding into
+  an all-seeing eye—a biblically accurate angel wihtn wheels and eyes.
+
+┌─ The Almighty Eye ────────────────────────────────────────────────────────┐
+│                                                                            │
+│  "You have journeyed through shadow and emerged in light.                 │
+│   Remember this feeling as you return to the world you know—               │
+│   everything is heightened now, every moment a gift,                      │
+│   every breath a celebration of being."                                   │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+                              END OF SCRIPT
+═══════════════════════════════════════════════════════════════════════════════

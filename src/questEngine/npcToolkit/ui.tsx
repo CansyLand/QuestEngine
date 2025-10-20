@@ -1,0 +1,700 @@
+import { Color4 } from '@dcl/sdk/math'
+import ReactEcs, { Button, Label, ReactEcsRenderer, UiEntity } from '@dcl/sdk/react-ecs'
+import { engine, Entity, UiCanvasInformation } from '@dcl/sdk/ecs'
+import {
+  buttonClick,
+  confirmText,
+  displayButton,
+  displayDialog,
+  displayFirstButtonContainer,
+  displayImage,
+  displayPortrait,
+  displaySecondButtonContainer,
+  displaySkipable,
+  getButtonText,
+  getbuttonSize,
+  getFontSize,
+  getButtonFontSize,
+  getImage,
+  getImageAtlasMapping,
+  getLeftClickTheme,
+  getPortrait,
+  getSkipableTheme,
+  getText,
+  getTextColor,
+  getTextPosition,
+  getTheme,
+  handleDialogClick,
+  imageHeight,
+  imageWidth,
+  portraitHeight,
+  portraitWidth,
+  positionImageX,
+  positionImageY,
+  positionPortaitX,
+  positionPortaitY,
+  positionTextX,
+  positionTextY,
+  realHeight,
+  realWidth,
+  skipDialogs,
+  getWindowHeight
+} from './dialog'
+import { sourcesComponentsCoordinates } from './uiResources'
+import { activeNPC } from './npc'
+
+/// 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
+// export let lightTheme = 'https://decentraland.org/images/ui/light-atlas-v3.png'
+export let lightTheme = 'assets/images/light-atlas-v3-halloween.png'
+
+export let darkTheme = 'https://decentraland.org/images/ui/dark-atlas-v3.png'
+
+export let bubblesTexture = 'https://decentraland.org/images/ui/dialog-bubbles.png'
+
+export let section = {
+  ...sourcesComponentsCoordinates.backgrounds.NPCDialog,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+export let skipButtonSection = {
+  ...sourcesComponentsCoordinates.buttons.F,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+export let skipButtonSectionBlack = {
+  ...sourcesComponentsCoordinates.buttons.FBlack,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+export let leftClickSection = {
+  ...sourcesComponentsCoordinates.icons.ClickWhite,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+export let leftClickSectionbBlack = {
+  ...sourcesComponentsCoordinates.icons.ClickDark,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+export let primaryButtonSection = {
+  ...sourcesComponentsCoordinates.buttons.E,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+export let secondaryButtonSection = {
+  ...sourcesComponentsCoordinates.buttons.F,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+export let darkButtonSection = {
+  ...sourcesComponentsCoordinates.buttons.buttonF,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+export let darkButtonCorner = {
+  ...sourcesComponentsCoordinates.buttons.buttonFCorner,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+export let darkButtonEdge = {
+  ...sourcesComponentsCoordinates.buttons.buttonFEdge,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+export let redButtonSection = {
+  ...sourcesComponentsCoordinates.buttons.buttonE,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+export let redButtonCorner = {
+  ...sourcesComponentsCoordinates.buttons.buttonECorner,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+export let redButtonEdge = {
+  ...sourcesComponentsCoordinates.buttons.buttonEEdge,
+  atlasHeight: sourcesComponentsCoordinates.atlasHeight,
+  atlasWidth: sourcesComponentsCoordinates.atlasWidth
+}
+
+let modalScale = 1
+let modelFontSizeScale = 1
+let modalTextWrapScale = 1
+
+// export function setupNPCUiScaling(inModalScale: number, inFontSize: number, inModalTextWrapScale: number) {
+//   modalScale = inModalScale
+//   modelFontSizeScale = inFontSize
+//   modalTextWrapScale = inModalTextWrapScale
+//   console.log(
+//     'NPC-TOOLKIT',
+//     'Scale UI:',
+//     modalScale,
+//     'TextFontSize:',
+//     modelFontSizeScale,
+//     'TextWrapScaling:',
+//     modalTextWrapScale
+//   )
+// }
+
+let timer = 0
+let canvasInfoTimer = 0.5
+let scaleSystemAlreadyAdded = false
+
+export function UIScaleUpdate() {
+  if (scaleSystemAlreadyAdded) return
+  scaleSystemAlreadyAdded = true
+
+  engine.addSystem((dt) => {
+    timer += dt
+
+    if (timer <= canvasInfoTimer) return
+    timer = 0
+
+    const uiCanvasInfo = UiCanvasInformation.getOrNull(engine.RootEntity)
+
+    if (!uiCanvasInfo) return
+
+    const newScaleFactor = Math.min(uiCanvasInfo.width / 1920, uiCanvasInfo.height / 1080)
+
+    if (newScaleFactor !== modalScale) {
+      modalScale = newScaleFactor
+      modelFontSizeScale = newScaleFactor
+      modalTextWrapScale = newScaleFactor
+    }
+  })
+}
+
+function getScaledSize(size: number): number {
+  return size * modalScale
+}
+function getScaledFontSize(size: number): number {
+  return size * modelFontSizeScale
+}
+function getScaledTextWrap(size: number): number {
+  return size * modalTextWrapScale
+}
+function getScaledButtonWidth(button: number) {
+  return typeof getbuttonSize(button) === 'number' ? getScaledSize(getbuttonSize(button) as number) : 'auto'
+}
+
+export const NpcUtilsUi = () => {
+  UIScaleUpdate()
+
+  const width = getScaledSize(realWidth(700))
+  const height = getScaledSize(realHeight(284))
+
+  return (
+    <UiEntity
+      uiTransform={{
+        display: displayDialog() ? 'flex' : 'none',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        positionType: 'absolute',
+        position: { bottom: '10%', left: '50%' },
+        margin: { top: -height / 2, left: -width / 2 },
+        padding: { top: getScaledSize(40), bottom: getScaledSize(40) },
+        width,
+        height: typeof getWindowHeight() === 'number' ? (getWindowHeight() as number) : 'auto',
+        minHeight: getScaledSize(25)
+      }}
+    >
+      <UiEntity
+        uiTransform={{
+          positionType: 'absolute',
+          position: { top: 0, left: 0 },
+          width: '100%',
+          height: '100%'
+        }}
+        uiBackground={{
+          textureMode: 'stretch',
+          texture: {
+            src: getTheme()
+          },
+          uvs: getImageAtlasMapping(section)
+        }}
+        onMouseDown={() => {
+          handleDialogClick()
+        }}
+      />
+
+      <UiEntity
+        uiTransform={{
+          display: displayPortrait() ? 'flex' : 'none',
+          width: getScaledSize(portraitWidth()),
+          height: getScaledSize(portraitHeight()),
+          positionType: 'absolute',
+          position: {
+            bottom: getScaledSize(positionPortaitY()),
+            left: getScaledSize(positionPortaitX())
+          }
+        }}
+        uiBackground={{
+          textureMode: 'stretch',
+          texture: {
+            src: getPortrait()
+          }
+          // uvs: getImageAtlasMapping(skipButtonSection),
+        }}
+      />
+
+      <UiEntity
+        uiTransform={{
+          display: displayImage() ? 'flex' : 'none',
+          width: getScaledSize(imageWidth()),
+          height: getScaledSize(imageHeight()),
+          positionType: 'absolute',
+          position: { bottom: positionImageY(), right: positionImageX() }
+        }}
+        uiBackground={{
+          textureMode: 'stretch',
+          texture: {
+            src: getImage() // ? getImage() : ''
+          }
+          // uvs: getImageAtlasMapping(skipButtonSection),
+        }}
+      />
+
+      <UiEntity
+        uiTransform={{
+          display: displaySkipable() ? 'flex' : 'none',
+          width: getScaledSize(15),
+          height: getScaledSize(15),
+          positionType: 'absolute',
+          position: { bottom: '7%', left: '25%' }
+        }}
+        uiBackground={{
+          textureMode: 'stretch',
+          texture: {
+            src: getTheme()
+          },
+          uvs: getImageAtlasMapping(getSkipableTheme())
+        }}
+        onMouseDown={() => {
+          skipDialogs(activeNPC)
+        }}
+      >
+        <UiEntity
+          uiTransform={{
+            display: 'flex',
+            positionType: 'absolute',
+            alignSelf: 'center',
+            position: { left: '110%' }
+          }}
+          uiText={{
+            value: 'Skip',
+            color: getTextColor(),
+            fontSize: getScaledFontSize(12)
+          }}
+        />
+      </UiEntity>
+
+      <UiEntity
+        uiTransform={{
+          display: 'flex',
+          width: getScaledSize(24),
+          height: getScaledSize(36),
+          positionType: 'absolute',
+          position: { bottom: '5%', right: '2%' }
+        }}
+        uiBackground={{
+          textureMode: 'stretch',
+          texture: {
+            src: getTheme()
+          },
+          uvs: getImageAtlasMapping(getLeftClickTheme())
+        }}
+      />
+
+      <UiEntity
+        uiTransform={{
+          height: 'auto',
+          width: 'auto',
+          alignSelf: 'flex-start',
+          alignItems: 'flex-start',
+          justifyContent: 'flex-start',
+          flexDirection: 'row',
+          position: getTextPosition(),
+          display: 'flex',
+          flexGrow: 1,
+          minHeight: 100
+        }}
+        uiText={{
+          value: getText(),
+          color: getTextColor(),
+          fontSize: getScaledFontSize(getFontSize()),
+          textAlign: 'middle-left'
+        }}
+      />
+
+      <UiEntity
+        uiTransform={{
+          width: getScaledSize(300),
+          height: getScaledSize(50),
+          alignItems: 'center',
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          display: displayFirstButtonContainer() ? 'flex' : 'none'
+        }}
+      >
+        {/* Button1 (Top-Left) */}
+        <UiEntity
+          onMouseDown={() => {
+            buttonClick(0)
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              height: 'auto',
+              width: getScaledSize(12)
+            }}
+            uiBackground={{
+              textureMode: 'stretch',
+              texture: {
+                src: getTheme()
+              },
+              uvs: getImageAtlasMapping(darkButtonCorner)
+            }}
+          />
+          <UiEntity
+            uiTransform={{
+              width: getScaledButtonWidth(0),
+              height: 'auto',
+              minHeight: getScaledSize(45),
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              alignContent: 'flex-start',
+              display: displayButton(1) ? 'flex' : 'none'
+            }}
+            uiBackground={{
+              textureMode: 'stretch',
+              texture: {
+                src: getTheme()
+              },
+              uvs: getImageAtlasMapping(darkButtonSection)
+            }}
+          >
+            <UiEntity
+              uiTransform={{
+                width: getScaledSize(25),
+                height: getScaledSize(25),
+                margin: { right: getScaledSize(5) },
+                positionType: 'absolute'
+              }}
+              uiBackground={{
+                textureMode: 'stretch',
+                texture: {
+                  src: getTheme()
+                },
+                uvs: getImageAtlasMapping(primaryButtonSection)
+              }}
+            />
+            <UiEntity
+              uiTransform={(() => {
+                const baseTransform = {
+                  width: 'auto' as const,
+                  overflow: 'hidden' as const,
+                  padding: { right: getScaledSize(5) },
+                  margin: { left: getScaledSize(30) }
+                }
+                const buttonWidth = getScaledButtonWidth(0)
+                if (buttonWidth === 'auto') {
+                  return { ...baseTransform, maxWidth: getScaledSize(217) }
+                } else {
+                  return { ...baseTransform, maxWidth: buttonWidth }
+                }
+              })()}
+              uiText={{
+                value: getButtonText(0),
+                fontSize: getScaledFontSize(getButtonFontSize(0)),
+                textAlign: 'middle-left',
+                textWrap: 'wrap'
+              }}
+            />
+          </UiEntity>
+          <UiEntity
+            uiTransform={{
+              height: 'auto',
+              width: getScaledSize(12),
+              margin: { right: '5%' }
+            }}
+            uiBackground={{
+              textureMode: 'stretch',
+              texture: {
+                src: getTheme()
+              },
+              uvs: getImageAtlasMapping(darkButtonEdge)
+            }}
+          />
+        </UiEntity>
+
+        {/* Button2 (Top-Right) */}
+        <UiEntity
+          onMouseDown={() => {
+            buttonClick(1)
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              height: 'auto',
+              width: getScaledSize(12)
+            }}
+            uiBackground={{
+              textureMode: 'stretch',
+              texture: {
+                src: getTheme()
+              },
+              uvs: getImageAtlasMapping(redButtonCorner)
+            }}
+          />
+          <UiEntity
+            uiTransform={{
+              width: getScaledButtonWidth(1),
+              height: 'auto',
+              minHeight: getScaledSize(45),
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              alignContent: 'flex-start',
+              display: displayButton(2) ? 'flex' : 'none'
+            }}
+            uiBackground={{
+              textureMode: 'stretch',
+              texture: {
+                src: getTheme()
+              },
+              uvs: getImageAtlasMapping(redButtonSection)
+            }}
+          >
+            {/* <UiEntity
+              uiTransform={{
+                width: getScaledSize(25),
+                height: getScaledSize(25),
+                margin: { right: getScaledSize(5) },
+                positionType: 'absolute'
+              }}
+              uiBackground={{
+                textureMode: 'stretch',
+                texture: {
+                  src: getTheme()
+                },
+                uvs: getImageAtlasMapping(secondaryButtonSection)
+              }}
+            /> */}
+            <UiEntity
+              uiTransform={(() => {
+                const baseTransform = {
+                  width: 'auto' as const,
+                  overflow: 'hidden' as const,
+                  padding: { right: getScaledSize(5) },
+                  margin: { left: getScaledSize(0) }
+                }
+
+                const buttonWidth = getScaledButtonWidth(1)
+                if (buttonWidth === 'auto') {
+                  return { ...baseTransform, maxWidth: getScaledSize(217) }
+                } else {
+                  return { ...baseTransform, maxWidth: buttonWidth }
+                }
+              })()}
+              uiText={{
+                value: getButtonText(1),
+                fontSize: getScaledFontSize(getButtonFontSize(1)),
+                textAlign: 'middle-left',
+                textWrap: 'wrap'
+              }}
+            />
+          </UiEntity>
+          <UiEntity
+            uiTransform={{
+              height: 'auto',
+              width: getScaledSize(12)
+            }}
+            uiBackground={{
+              textureMode: 'stretch',
+              texture: {
+                src: getTheme()
+              },
+              uvs: getImageAtlasMapping(redButtonEdge)
+            }}
+          />
+        </UiEntity>
+      </UiEntity>
+
+      {/* Second row of buttons */}
+      <UiEntity
+        uiTransform={{
+          width: getScaledSize(300),
+          height: getScaledSize(50),
+          alignItems: 'center',
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          margin: { top: getScaledSize(20) },
+          display: displaySecondButtonContainer() ? 'flex' : 'none'
+        }}
+      >
+        {/* Button3 */}
+        <UiEntity
+          onMouseDown={() => {
+            buttonClick(3)
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              height: 'auto',
+              width: getScaledSize(12)
+            }}
+            uiBackground={{
+              textureMode: 'stretch',
+              texture: {
+                src: getTheme()
+              },
+              uvs: getImageAtlasMapping(darkButtonCorner)
+            }}
+          />
+          <UiEntity
+            uiTransform={{
+              width: getScaledButtonWidth(2),
+              overflow: 'hidden',
+              height: 'auto',
+              minHeight: getScaledSize(45),
+              alignItems: 'center',
+              justifyContent: 'center',
+              alignContent: 'flex-start',
+              display: displayButton(3) ? 'flex' : 'none'
+            }}
+            uiBackground={{
+              textureMode: 'stretch',
+              texture: {
+                src: getTheme()
+              },
+              uvs: getImageAtlasMapping(darkButtonSection)
+            }}
+          >
+            <UiEntity
+              uiTransform={(() => {
+                const baseTransform = {
+                  width: 'auto' as const,
+                  overflow: 'hidden' as const
+                }
+                const buttonWidth = getScaledButtonWidth(2)
+                if (buttonWidth === 'auto') {
+                  return { ...baseTransform, maxWidth: getScaledSize(252) }
+                } else {
+                  return { ...baseTransform, maxWidth: buttonWidth }
+                }
+              })()}
+              uiText={{
+                value: getButtonText(2),
+                fontSize: getScaledFontSize(getButtonFontSize(2)),
+                textAlign: 'middle-left',
+                textWrap: 'wrap'
+              }}
+            />
+          </UiEntity>
+          <UiEntity
+            uiTransform={{
+              height: 'auto',
+              width: getScaledSize(12),
+              margin: { right: '5%' }
+            }}
+            uiBackground={{
+              textureMode: 'stretch',
+              texture: {
+                src: getTheme()
+              },
+              uvs: getImageAtlasMapping(darkButtonEdge)
+            }}
+          />
+        </UiEntity>
+
+        {/* Button4 */}
+        <UiEntity
+          onMouseDown={() => {
+            buttonClick(4)
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              height: 'auto',
+              width: getScaledSize(12)
+            }}
+            uiBackground={{
+              textureMode: 'stretch',
+              texture: {
+                src: getTheme()
+              },
+              uvs: getImageAtlasMapping(darkButtonCorner)
+            }}
+          />
+          <UiEntity
+            uiTransform={{
+              width: getScaledButtonWidth(3),
+              overflow: 'hidden',
+              height: 'auto',
+              minHeight: getScaledSize(45),
+              alignItems: 'center',
+              justifyContent: 'center',
+              alignContent: 'flex-start',
+              display: displayButton(4) ? 'flex' : 'none'
+            }}
+            uiBackground={{
+              textureMode: 'stretch',
+              texture: {
+                src: getTheme()
+              },
+              uvs: getImageAtlasMapping(darkButtonSection)
+            }}
+          >
+            <UiEntity
+              uiTransform={(() => {
+                const baseTransform = {
+                  width: 'auto' as const,
+                  overflow: 'hidden' as const
+                }
+                const buttonWidth = getScaledButtonWidth(3)
+                if (buttonWidth === 'auto') {
+                  return { ...baseTransform, maxWidth: getScaledSize(252) }
+                } else {
+                  return { ...baseTransform, maxWidth: buttonWidth }
+                }
+              })()}
+              uiText={{
+                value: getButtonText(3),
+                fontSize: getScaledFontSize(getButtonFontSize(3)),
+                textAlign: 'middle-left',
+                textWrap: 'wrap'
+              }}
+            />
+          </UiEntity>
+          <UiEntity
+            uiTransform={{
+              height: 'auto',
+              width: getScaledSize(12)
+            }}
+            uiBackground={{
+              textureMode: 'stretch',
+              texture: {
+                src: getTheme()
+              },
+              uvs: getImageAtlasMapping(darkButtonEdge)
+            }}
+          />
+        </UiEntity>
+      </UiEntity>
+    </UiEntity>
+  )
+}
