@@ -18,6 +18,7 @@ import { NotificationContainer } from './Notification'
 import { EditModal } from './EditModal'
 import { QuestStepSelector } from './components/modals/QuestStepSelector'
 import { BuilderTabs } from './components/main/BuilderTabs'
+import { BuilderHeader } from './components/main/BuilderHeader'
 import { LinksPanel } from './components/entities/LinksPanel'
 import { DialoguePanel } from './components/entities/DialoguePanel'
 
@@ -31,9 +32,11 @@ import './styles/forms.css'
 import './styles/cards.css'
 import './styles/utilities.css'
 
-interface BuilderProps {}
+interface BuilderProps {
+	onBack?: () => void
+}
 
-export const Builder: React.FC<BuilderProps> = () => {
+export const Builder: React.FC<BuilderProps> = ({ onBack }) => {
 	const [gameData, setGameData] = useState<Game>({
 		locations: [],
 		quests: [],
@@ -738,21 +741,7 @@ export const Builder: React.FC<BuilderProps> = () => {
 
 	return (
 		<div className='builder'>
-			<header className='builder-header'>
-				<h1>Game Builder</h1>
-				<div className='builder-actions'>
-					<button onClick={loadData} disabled={loading}>
-						Reload
-					</button>
-					<button
-						onClick={() =>
-							window.open('http://localhost:5173/player/', '_blank')
-						}
-					>
-						Play Game
-					</button>
-				</div>
-			</header>
+			<BuilderHeader loading={loading} onReload={loadData} onBack={onBack} />
 
 			<BuilderTabs
 				activeTab={activeTab}

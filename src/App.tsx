@@ -125,7 +125,7 @@ function App() {
 	if (showQuestEditor && currentProject) {
 		return (
 			<div style={{ height: '100vh', width: '100vw' }}>
-				<Builder />
+				<Builder onBack={handleBackToProjects} />
 			</div>
 		)
 	}

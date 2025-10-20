@@ -13,5 +13,4 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     setQuestEditorProject: (projectPath) => electron_1.ipcRenderer.invoke('set-quest-editor-project', projectPath),
     getQuestData: (dataType) => electron_1.ipcRenderer.invoke('get-quest-data', dataType),
     saveQuestData: (dataType, data) => electron_1.ipcRenderer.invoke('save-quest-data', dataType, data),
-    getBackendPort: () => electron_1.ipcRenderer.invoke('get-backend-port'),
 });

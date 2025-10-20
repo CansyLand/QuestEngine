@@ -68,6 +68,21 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.js'), // Compiled from preload.ts
         },
     });
+    // Disable HMR for Electron renderer to prevent hot-update.js requests
+    mainWindow.webContents.on('did-finish-load', () => {
+        mainWindow?.webContents.executeJavaScript(`
+			if (typeof window !== 'undefined' && window.__webpack_require__) {
+				// Disable webpack HMR
+				if (window.__webpack_require__.hot) {
+					window.__webpack_require__.hot.decline();
+				}
+			}
+			// Disable any other HMR mechanisms
+			if (typeof window !== 'undefined' && window.hot) {
+				window.hot.decline();
+			}
+		`);
+    });
     const isDev = process.env.NODE_ENV === 'development';
     mainWindow.loadURL(isDev
         ? 'http://localhost:3000'

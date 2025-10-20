@@ -262,10 +262,19 @@ export class QuestEditorIntegration {
 	 * Set the active project path and update data directory
 	 */
 	async setProjectPath(projectPath: string): Promise<void> {
+		console.log('QuestEditorIntegration: Setting project path to:', projectPath)
 		this.projectPath = projectPath
 		await this.updateDataDirectory(projectPath)
 		await this.initializeEngine()
 		this.setupSceneMonitoring(projectPath)
+		console.log('QuestEditorIntegration: Project path set successfully')
+	}
+
+	/**
+	 * Get the current project path
+	 */
+	getProjectPath(): string | null {
+		return this.projectPath
 	}
 
 	/**
@@ -289,6 +298,7 @@ export class QuestEditorIntegration {
 	 */
 	private setupApiRoutes(): void {
 		const router = express.Router()
+		const self = this // Capture 'this' context
 
 		// Game data endpoint (legacy)
 		router.get('/game', async (req, res) => {
@@ -446,7 +456,236 @@ export class QuestEditorIntegration {
 			}
 		})
 
+		// Get thumbnail images from the current DCL project
+		router.get('/thumbnails', async (req, res) => {
+			try {
+				console.log('API: /thumbnails endpoint called')
+				console.log('API: Getting thumbnails, projectPath:', self.projectPath)
+				console.log('API: Project path type:', typeof self.projectPath)
+				console.log('API: Project path truthy:', !!self.projectPath)
+				const images: Array<{ name: string; url: string; project: string }> = []
+
+				if (!self.projectPath) {
+					console.log('API: No project path set - returning empty array')
+					return res.json({
+						success: true,
+						data: images,
+						message: 'No project loaded. Please select a project first.',
+					})
+				}
+
+				console.log('API: Project path is set, proceeding with image scan')
+
+				// Capture projectPath in a local variable to avoid 'this' binding issues
+				const currentProjectPath = self.projectPath
+				console.log('API: Captured project path:', currentProjectPath)
+
+				// Helper function to recursively get all image files from a directory
+				const getAllImageFiles = async (
+					dirPath: string,
+					baseUrl: string,
+					projectName: string
+				): Promise<Array<{ name: string; url: string; project: string }>> => {
+					const result: Array<{ name: string; url: string; project: string }> =
+						[]
+
+					try {
+						console.log(`API: Attempting to read directory: ${dirPath}`)
+						const items = await fs.readdir(dirPath)
+						console.log(
+							`API: Successfully read directory, found ${items.length} items:`,
+							items
+						)
+
+						for (const item of items) {
+							console.log(`API: Processing item: ${item}`)
+							const fullPath = path.join(dirPath, item)
+							const stat = await fs.stat(fullPath)
+
+							if (stat.isDirectory()) {
+								console.log(`API: ${item} is a directory, recursing...`)
+								// Recursively scan subdirectories
+								const subImages = await getAllImageFiles(
+									fullPath,
+									baseUrl,
+									projectName
+								)
+								result.push(...subImages)
+							} else if (stat.isFile()) {
+								console.log(`API: ${item} is a file`)
+								// Check if it's an image file
+								const ext = path.extname(item).toLowerCase()
+								console.log(`API: Extension: ${ext}`)
+								if (['.png', '.jpg', '.jpeg', '.gif', '.webp'].includes(ext)) {
+									const relativePath = path.relative(dirPath, fullPath)
+									const url = `${baseUrl}/${relativePath.replace(/\\/g, '/')}`
+									console.log(`API: Found image: ${relativePath} -> ${url}`)
+									result.push({
+										name: relativePath,
+										url: url,
+										project: projectName,
+									})
+								} else {
+									console.log(`API: Skipping non-image file: ${item}`)
+								}
+							}
+						}
+					} catch (error) {
+						// Gracefully ignore if directory doesn't exist or can't be read
+						console.log(
+							`API: Could not read directory ${dirPath}:`,
+							error instanceof Error ? error.message : String(error)
+						)
+						console.log('API: Full error object:', error)
+					}
+
+					return result
+				}
+
+				// Look for images in multiple locations
+				console.log('API: Checking for images in multiple locations...')
+
+				// 1. Check thumbnails folder (existing logic)
+				const thumbnailsPath = path.join(currentProjectPath, 'thumbnails')
+				try {
+					console.log('API: Checking thumbnails folder:', thumbnailsPath)
+					const thumbnailImages = await getAllImageFiles(
+						thumbnailsPath,
+						`http://localhost:31234/api/thumbnails/${path.basename(
+							currentProjectPath
+						)}`,
+						path.basename(currentProjectPath)
+					)
+					console.log(
+						`API: Found ${thumbnailImages.length} images in thumbnails`
+					)
+					images.push(...thumbnailImages)
+				} catch (error) {
+					console.log('API: No thumbnails folder accessible')
+				}
+
+				// 2. Check assets/images folder (new requirement) - temporarily disabled due to route issues
+				// const assetsImagesPath = path.join(this.projectPath, 'assets', 'images')
+				// try {
+				// 	console.log('API: Checking assets/images folder:', assetsImagesPath)
+				// 	const assetsImages = await getAllImageFiles(
+				// 		assetsImagesPath,
+				// 		`http://localhost:31234/api/assets-images/${path.basename(
+				// 			this.projectPath
+				// 		)}`
+				// 	)
+				// 	console.log(
+				// 		`API: Found ${assetsImages.length} images in assets/images`
+				// 	)
+				// 	images.push(...assetsImages)
+				// } catch (error) {
+				// 	console.log('API: No assets/images folder accessible')
+				// }
+
+				console.log(`API: Total images found: ${images.length}`)
+
+				const response = {
+					success: true,
+					data: images,
+				}
+				res.json(response)
+			} catch (error) {
+				console.error('Error getting thumbnails:', error)
+				const response = {
+					success: false,
+					error: error instanceof Error ? error.message : 'Unknown error',
+				}
+				res.status(500).json(response)
+			}
+		})
+
 		this.app.use('/api', router)
+
+		// Serve thumbnail images from the current DCL project
+		this.app.get('/api/thumbnails/:project/:filename', async (req, res) => {
+			try {
+				const { project, filename } = req.params
+
+				if (!this.projectPath) {
+					return res.status(404).json({ error: 'No project loaded' })
+				}
+
+				// Verify the project matches the current project
+				if (project !== path.basename(this.projectPath)) {
+					return res.status(403).json({ error: 'Access denied' })
+				}
+
+				// Try both locations: root thumbnails folder and scene/thumbnails folder
+				let filePath = path.join(this.projectPath, 'thumbnails', filename)
+				let foundFilePath = null
+
+				// First check root thumbnails folder
+				try {
+					await fs.access(filePath)
+					foundFilePath = filePath
+				} catch {
+					// If not found at root, check scene/thumbnails
+					filePath = path.join(
+						this.projectPath,
+						'scene',
+						'thumbnails',
+						filename
+					)
+					try {
+						await fs.access(filePath)
+						foundFilePath = filePath
+					} catch {
+						// File not found in either location
+					}
+				}
+
+				if (!foundFilePath) {
+					return res.status(404).json({ error: 'File not found' })
+				}
+
+				filePath = foundFilePath
+
+				// Security check: ensure the file is within a thumbnails directory
+				const rootThumbnailsDir = path.join(this.projectPath, 'thumbnails')
+				const sceneThumbnailsDir = path.join(
+					this.projectPath,
+					'scene',
+					'thumbnails'
+				)
+				if (
+					!filePath.startsWith(rootThumbnailsDir) &&
+					!filePath.startsWith(sceneThumbnailsDir)
+				) {
+					return res.status(403).json({ error: 'Access denied' })
+				}
+
+				// File exists (already verified above)
+
+				// Set appropriate content type based on file extension
+				const ext = path.extname(filename).toLowerCase()
+				const contentTypes: { [key: string]: string } = {
+					'.png': 'image/png',
+					'.jpg': 'image/jpeg',
+					'.jpeg': 'image/jpeg',
+					'.gif': 'image/gif',
+					'.webp': 'image/webp',
+				}
+
+				const contentType = contentTypes[ext] || 'application/octet-stream'
+				res.setHeader('Content-Type', contentType)
+				res.setHeader('Access-Control-Allow-Origin', '*')
+				res.setHeader('Access-Control-Allow-Methods', 'GET')
+				res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+				res.setHeader('Cache-Control', 'no-cache')
+
+				// Stream the file
+				const fileStream = require('fs').createReadStream(filePath)
+				fileStream.pipe(res)
+			} catch (error) {
+				console.error('Error serving thumbnail:', error)
+				res.status(500).json({ error: 'Internal server error' })
+			}
+		})
 	}
 
 	/**

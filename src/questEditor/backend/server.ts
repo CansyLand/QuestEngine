@@ -25,19 +25,22 @@ const engine = new GameEngine(persistence)
 app.use(express.static(path.join(__dirname, '../../public')))
 
 // Serve node_modules for ES module resolution (development only)
-app.use('/node_modules', express.static(path.join(__dirname, '../../../node_modules')))
+app.use(
+	'/node_modules',
+	express.static(path.join(__dirname, '../../../node_modules'))
+)
 
 // API routes
 app.use('/api', createApiRouter(engine, persistence))
 
 // Serve builder at /builder
 app.get('/builder', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../dist/frontend/index.html'))
+	res.sendFile(path.join(__dirname, '../../dist/frontend/index.html'))
 })
 
 // Serve player at /player
 app.get('/player', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../dist/frontend/index.html'))
+	res.sendFile(path.join(__dirname, '../../dist/frontend/index.html'))
 })
 
 // Serve static files from built frontend directories (after specific routes)
@@ -47,18 +50,21 @@ app.use('/shared', express.static(path.join(__dirname, '../../dist/frontend')))
 
 // Default route redirects to builder
 app.get('/', (req, res) => {
-  res.redirect('/builder')
+	res.redirect('/builder')
 })
 
 app.listen(PORT, () => {
-  console.log(`Game Editor server running at http://localhost:${PORT}`)
-  console.log(`Builder: http://localhost:${PORT}/builder`)
-  console.log(`Player: http://localhost:${PORT}/player`)
+	console.log(`Game Editor server running at http://localhost:${PORT}`)
+	console.log(`Builder: http://localhost:${PORT}/builder`)
+	console.log(`Player: http://localhost:${PORT}/player`)
 })
 
 // DCL Entity Monitoring Setup
 // Paths (relative to questEditor/backend/)
-const compositePath = path.join(__dirname, '../../../assets/scene/main.composite')
+const compositePath = path.join(
+	__dirname,
+	'../../../assets/scene/main.composite'
+)
 const linksPath = path.join(__dirname, '../../data/entityLinks.json')
 
 // In-memory cache for change detection (simple hash based on entity count)
@@ -66,116 +72,129 @@ let lastHash: string | null = null
 
 // Function to compute a basic hash of main.composite (for change detection)
 function computeHash(data: any): string {
-  // More comprehensive hash that includes entity data changes
-  const transformData = data.components?.find((c: any) => c.name === 'core::Transform')?.data || {}
-  const nameData = data.components?.find((c: any) => c.name === 'core-schema::Name')?.data || {}
+	// More comprehensive hash that includes entity data changes
+	const transformData =
+		data.components?.find((c: any) => c.name === 'core::Transform')?.data || {}
+	const nameData =
+		data.components?.find((c: any) => c.name === 'core-schema::Name')?.data ||
+		{}
 
-  // Include entity count and all entity names/positions for comprehensive change detection
-  const entities = Object.keys(transformData)
-  let hashData = entities.length.toString()
+	// Include entity count and all entity names/positions for comprehensive change detection
+	const entities = Object.keys(transformData)
+	let hashData = entities.length.toString()
 
-  // Sort entities to ensure consistent hashing
-  const sortedEntities = entities.sort()
+	// Sort entities to ensure consistent hashing
+	const sortedEntities = entities.sort()
 
-  sortedEntities.forEach((entityId) => {
-    const transform = transformData[entityId]?.json
-    const name = nameData[entityId]?.json?.value
+	sortedEntities.forEach((entityId) => {
+		const transform = transformData[entityId]?.json
+		const name = nameData[entityId]?.json?.value
 
-    if (transform) {
-      hashData += `${entityId}:${transform.position?.x || 0},${transform.position?.y || 0},${transform.position?.z || 0}`
-    }
-    if (name) {
-      hashData += `:${name}`
-    }
-  })
+		if (transform) {
+			hashData += `${entityId}:${transform.position?.x || 0},${
+				transform.position?.y || 0
+			},${transform.position?.z || 0}`
+		}
+		if (name) {
+			hashData += `:${name}`
+		}
+	})
 
-  return hashData
+	return hashData
 }
 
 // Function to extract relevant entity data from main.composite
 function extractEntityData(compositeData: any) {
-  const links: Record<string, any> = {}
-  const transformData = compositeData.components?.find((c: any) => c.name === 'core::Transform')?.data || {}
-  const nameData = compositeData.components?.find((c: any) => c.name === 'core-schema::Name')?.data || {}
+	const links: Record<string, any> = {}
+	const transformData =
+		compositeData.components?.find((c: any) => c.name === 'core::Transform')
+			?.data || {}
+	const nameData =
+		compositeData.components?.find((c: any) => c.name === 'core-schema::Name')
+			?.data || {}
 
-  // Iterate through transform entities (assuming they align with name entities)
-  for (const entityId of Object.keys(transformData)) {
-    if (nameData[entityId]) {
-      // Only process if both components exist
-      const transform = transformData[entityId].json
-      const name = nameData[entityId].json.value
-      links[entityId] = {
-        position: transform.position || { x: 0, y: 0, z: 0 }, // Fallback if missing
-        parent: transform.parent || 0,
-        name: name || 'Unknown',
-        questEntityId: null // Placeholder for manual linking (e.g., to "bass_string" or "crystallia")
-      }
-    }
-  }
-  return links
+	// Iterate through transform entities (assuming they align with name entities)
+	for (const entityId of Object.keys(transformData)) {
+		if (nameData[entityId]) {
+			// Only process if both components exist
+			const transform = transformData[entityId].json
+			const name = nameData[entityId].json.value
+			links[entityId] = {
+				position: transform.position || { x: 0, y: 0, z: 0 }, // Fallback if missing
+				parent: transform.parent || 0,
+				name: name || 'Unknown',
+				questEntityId: null, // Placeholder for manual linking (e.g., to "bass_string" or "crystallia")
+			}
+		}
+	}
+	return links
 }
 
 // Function to update entityLinks.json
 function updateLinks(newLinks: Record<string, any>) {
-  // Load existing links
-  let existingLinks: Record<string, any> = {}
-  if (fs.existsSync(linksPath)) {
-    existingLinks = JSON.parse(fs.readFileSync(linksPath, 'utf8'))
-  }
+	// Load existing links
+	let existingLinks: Record<string, any> = {}
+	if (fs.existsSync(linksPath)) {
+		existingLinks = JSON.parse(fs.readFileSync(linksPath, 'utf8'))
+	}
 
-  // Create updated links
-  const updatedLinks: Record<string, any> = {}
+	// Create updated links
+	const updatedLinks: Record<string, any> = {}
 
-  // Process existing entities
-  for (const entityId in existingLinks) {
-    const existingEntity = existingLinks[entityId]
+	// Process existing entities
+	for (const entityId in existingLinks) {
+		const existingEntity = existingLinks[entityId]
 
-    if (newLinks[entityId]) {
-      // Entity still exists, update with new data (including name changes)
-      updatedLinks[entityId] = {
-        ...newLinks[entityId],
-        questEntityId: existingEntity.questEntityId // Preserve existing quest entity links
-      }
-    } else {
-      // Entity was removed from main.composite - delete it entirely
-      // (we don't need to keep removed entities in entityLinks.json)
-      console.log(`Removing entity ${entityId} (${existingEntity.name}) from entityLinks.json`)
-    }
-  }
+		if (newLinks[entityId]) {
+			// Entity still exists, update with new data (including name changes)
+			updatedLinks[entityId] = {
+				...newLinks[entityId],
+				questEntityId: existingEntity.questEntityId, // Preserve existing quest entity links
+			}
+		} else {
+			// Entity was removed from main.composite - delete it entirely
+			// (we don't need to keep removed entities in entityLinks.json)
+			console.log(
+				`Removing entity ${entityId} (${existingEntity.name}) from entityLinks.json`
+			)
+		}
+	}
 
-  // Add any new entities from main.composite
-  for (const entityId in newLinks) {
-    if (!existingLinks[entityId]) {
-      updatedLinks[entityId] = newLinks[entityId]
-      console.log(`Adding new entity ${entityId} (${newLinks[entityId].name}) to entityLinks.json`)
-    }
-  }
+	// Add any new entities from main.composite
+	for (const entityId in newLinks) {
+		if (!existingLinks[entityId]) {
+			updatedLinks[entityId] = newLinks[entityId]
+			console.log(
+				`Adding new entity ${entityId} (${newLinks[entityId].name}) to entityLinks.json`
+			)
+		}
+	}
 
-  // Write back to file
-  fs.writeFileSync(linksPath, JSON.stringify(updatedLinks, null, 2))
-  console.log('entityLinks.json updated.')
+	// Write back to file
+	fs.writeFileSync(linksPath, JSON.stringify(updatedLinks, null, 2))
+	console.log('entityLinks.json updated.')
 }
 
 // Main monitoring function
 function monitorChanges() {
-  if (!fs.existsSync(compositePath)) {
-    console.error(`File not found: ${compositePath}`)
-    return
-  }
+	if (!fs.existsSync(compositePath)) {
+		console.error(`File not found: ${compositePath}`)
+		return
+	}
 
-  try {
-    const compositeData = JSON.parse(fs.readFileSync(compositePath, 'utf8'))
-    const currentHash = computeHash(compositeData)
+	try {
+		const compositeData = JSON.parse(fs.readFileSync(compositePath, 'utf8'))
+		const currentHash = computeHash(compositeData)
 
-    if (currentHash !== lastHash) {
-      lastHash = currentHash // Update cache
-      const newLinks = extractEntityData(compositeData)
-      updateLinks(newLinks)
-    }
-    // No else: File unchanged, do nothing
-  } catch (error) {
-    console.error('Error monitoring main.composite:', error)
-  }
+		if (currentHash !== lastHash) {
+			lastHash = currentHash // Update cache
+			const newLinks = extractEntityData(compositeData)
+			updateLinks(newLinks)
+		}
+		// No else: File unchanged, do nothing
+	} catch (error) {
+		console.error('Error monitoring main.composite:', error)
+	}
 }
 
 // Start monitoring every second
