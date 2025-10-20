@@ -5,6 +5,35 @@ import * as fs from 'fs/promises' // For file I/O
 
 let mainWindow: BrowserWindow | null = null
 
+// Project data structure
+interface Project {
+	id: string
+	name: string
+	path: string
+	createdAt: string
+	lastOpenedAt?: string
+}
+
+// Simple file-based storage for projects
+const getProjectsFilePath = (): string => {
+	return path.join(app.getPath('userData'), 'projects.json')
+}
+
+const loadProjects = async (): Promise<Project[]> => {
+	try {
+		const filePath = getProjectsFilePath()
+		const data = await fs.readFile(filePath, 'utf8')
+		return JSON.parse(data)
+	} catch {
+		return []
+	}
+}
+
+const saveProjects = async (projects: Project[]): Promise<void> => {
+	const filePath = getProjectsFilePath()
+	await fs.writeFile(filePath, JSON.stringify(projects, null, 2), 'utf8')
+}
+
 function createWindow(): void {
 	mainWindow = new BrowserWindow({
 		width: 800,
@@ -108,5 +137,41 @@ ipcMain.handle(
 	): Promise<void> => {
 		const fullPath = path.join(folderPath, fileName)
 		await fs.writeFile(fullPath, content, 'utf8')
+	}
+)
+
+// Project management IPC handlers
+ipcMain.handle('get-projects', async (): Promise<Project[]> => {
+	return await loadProjects()
+})
+
+ipcMain.handle(
+	'create-project',
+	async (
+		_event,
+		{ name, path: projectPath }: { name: string; path: string }
+	): Promise<Project> => {
+		const projects = await loadProjects()
+		const newProject: Project = {
+			id: Date.now().toString(),
+			name,
+			path: projectPath,
+			createdAt: new Date().toISOString(),
+		}
+		projects.push(newProject)
+		await saveProjects(projects)
+		return newProject
+	}
+)
+
+ipcMain.handle(
+	'update-project-last-opened',
+	async (_event, projectId: string): Promise<void> => {
+		const projects = await loadProjects()
+		const projectIndex = projects.findIndex((p) => p.id === projectId)
+		if (projectIndex !== -1) {
+			projects[projectIndex].lastOpenedAt = new Date().toISOString()
+			await saveProjects(projects)
+		}
 	}
 )

@@ -1,5 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
+interface Project {
+	id: string
+	name: string
+	path: string
+	createdAt: string
+	lastOpenedAt?: string
+}
+
 contextBridge.exposeInMainWorld('electronAPI', {
 	selectFolder: (): Promise<string | undefined> =>
 		ipcRenderer.invoke('select-folder'),
@@ -11,4 +19,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 		content: string
 	): Promise<void> =>
 		ipcRenderer.invoke('write-file', { folderPath, fileName, content }),
+	getProjects: (): Promise<Project[]> => ipcRenderer.invoke('get-projects'),
+	createProject: (name: string, path: string): Promise<Project> =>
+		ipcRenderer.invoke('create-project', { name, path }),
+	updateProjectLastOpened: (projectId: string): Promise<void> =>
+		ipcRenderer.invoke('update-project-last-opened', projectId),
 })

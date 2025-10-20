@@ -5,6 +5,24 @@ const path = require("path");
 const electron_updater_1 = require("electron-updater");
 const fs = require("fs/promises"); // For file I/O
 let mainWindow = null;
+// Simple file-based storage for projects
+const getProjectsFilePath = () => {
+    return path.join(electron_1.app.getPath('userData'), 'projects.json');
+};
+const loadProjects = async () => {
+    try {
+        const filePath = getProjectsFilePath();
+        const data = await fs.readFile(filePath, 'utf8');
+        return JSON.parse(data);
+    }
+    catch {
+        return [];
+    }
+};
+const saveProjects = async (projects) => {
+    const filePath = getProjectsFilePath();
+    await fs.writeFile(filePath, JSON.stringify(projects, null, 2), 'utf8');
+};
 function createWindow() {
     mainWindow = new electron_1.BrowserWindow({
         width: 800,
@@ -16,7 +34,9 @@ function createWindow() {
         },
     });
     const isDev = process.env.NODE_ENV === 'development';
-    mainWindow.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, 'build/index.html')}`);
+    mainWindow.loadURL(isDev
+        ? 'http://localhost:3000'
+        : `file://${path.join(__dirname, 'build/index.html')}`);
     if (isDev) {
         mainWindow.webContents.openDevTools({ mode: 'detach' });
     }
@@ -39,12 +59,14 @@ electron_updater_1.autoUpdater.on('update-available', () => {
     });
 });
 electron_updater_1.autoUpdater.on('update-downloaded', () => {
-    electron_1.dialog.showMessageBox({
+    electron_1.dialog
+        .showMessageBox({
         type: 'info',
         title: 'Update Ready',
         message: 'Update downloaded. Restart to apply?',
         buttons: ['Restart', 'Later'],
-    }).then(({ response }) => {
+    })
+        .then(({ response }) => {
         if (response === 0) {
             electron_updater_1.autoUpdater.quitAndInstall();
         }
@@ -72,7 +94,31 @@ electron_1.ipcMain.handle('read-file', async (_event, { folderPath, fileName }) 
     const fullPath = path.join(folderPath, fileName);
     return fs.readFile(fullPath, 'utf8');
 });
-electron_1.ipcMain.handle('write-file', async (_event, { folderPath, fileName, content }) => {
+electron_1.ipcMain.handle('write-file', async (_event, { folderPath, fileName, content, }) => {
     const fullPath = path.join(folderPath, fileName);
     await fs.writeFile(fullPath, content, 'utf8');
+});
+// Project management IPC handlers
+electron_1.ipcMain.handle('get-projects', async () => {
+    return await loadProjects();
+});
+electron_1.ipcMain.handle('create-project', async (_event, { name, path: projectPath }) => {
+    const projects = await loadProjects();
+    const newProject = {
+        id: Date.now().toString(),
+        name,
+        path: projectPath,
+        createdAt: new Date().toISOString(),
+    };
+    projects.push(newProject);
+    await saveProjects(projects);
+    return newProject;
+});
+electron_1.ipcMain.handle('update-project-last-opened', async (_event, projectId) => {
+    const projects = await loadProjects();
+    const projectIndex = projects.findIndex((p) => p.id === projectId);
+    if (projectIndex !== -1) {
+        projects[projectIndex].lastOpenedAt = new Date().toISOString();
+        await saveProjects(projects);
+    }
 });
