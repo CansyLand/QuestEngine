@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Project } from './types'
-import { QuestEditor } from './components/QuestEditor'
+import { Builder } from './questEditor/frontend/builder/Builder'
 
 declare global {
 	interface Window {
@@ -32,6 +32,7 @@ function App() {
 	const [loading, setLoading] = useState<boolean>(false)
 	const [currentProject, setCurrentProject] = useState<Project | null>(null)
 	const [showQuestEditor, setShowQuestEditor] = useState<boolean>(false)
+	const [openingProject, setOpeningProject] = useState<boolean>(false)
 
 	useEffect(() => {
 		loadProjects()
@@ -83,15 +84,19 @@ function App() {
 
 	const handleOpenProject = async (project: Project) => {
 		try {
+			setOpeningProject(true)
 			await window.electronAPI.updateProjectLastOpened(project.id)
 			setCurrentProject(project)
-			setShowQuestEditor(true)
 
-			// Initialize questEditor with the project path
+			// Initialize questEditor with the project path BEFORE showing the builder
 			await window.electronAPI.setQuestEditorProject(project.path)
+
+			setShowQuestEditor(true)
 		} catch (error) {
 			console.error('Failed to open project:', error)
 			alert('Failed to open project. Please try again.')
+		} finally {
+			setOpeningProject(false)
 		}
 	}
 
@@ -116,10 +121,12 @@ function App() {
 		setShowQuestEditor(false)
 	}
 
-	// Render QuestEditor interface if a project is selected
+	// Render Builder interface if a project is selected
 	if (showQuestEditor && currentProject) {
 		return (
-			<QuestEditor project={currentProject} onBack={handleBackToProjects} />
+			<div style={{ height: '100vh', width: '100vw' }}>
+				<Builder />
+			</div>
 		)
 	}
 
@@ -143,21 +150,39 @@ function App() {
 									border: '1px solid #ddd',
 									borderRadius: 8,
 									padding: 15,
-									cursor: 'pointer',
+									cursor: openingProject ? 'not-allowed' : 'pointer',
 									transition: 'all 0.2s',
-									backgroundColor: '#f9f9f9',
+									backgroundColor: openingProject ? '#e9ecef' : '#f9f9f9',
+									opacity: openingProject ? 0.7 : 1,
 								}}
 								onMouseEnter={(e) => {
-									e.currentTarget.style.backgroundColor = '#f0f0f0'
-									e.currentTarget.style.transform = 'translateY(-2px)'
+									if (!openingProject) {
+										e.currentTarget.style.backgroundColor = '#f0f0f0'
+										e.currentTarget.style.transform = 'translateY(-2px)'
+									}
 								}}
 								onMouseLeave={(e) => {
-									e.currentTarget.style.backgroundColor = '#f9f9f9'
-									e.currentTarget.style.transform = 'translateY(0)'
+									if (!openingProject) {
+										e.currentTarget.style.backgroundColor = '#f9f9f9'
+										e.currentTarget.style.transform = 'translateY(0)'
+									}
 								}}
-								onClick={() => handleOpenProject(project)}
+								onClick={() => !openingProject && handleOpenProject(project)}
 							>
-								<h3 style={{ margin: '0 0 8px 0' }}>{project.name}</h3>
+								<h3 style={{ margin: '0 0 8px 0' }}>
+									{project.name}
+									{openingProject && (
+										<span
+											style={{
+												marginLeft: 10,
+												fontSize: '14px',
+												color: '#666',
+											}}
+										>
+											Opening...
+										</span>
+									)}
+								</h3>
 								<p
 									style={{
 										margin: '0 0 8px 0',

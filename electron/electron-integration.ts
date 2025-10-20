@@ -290,13 +290,99 @@ export class QuestEditorIntegration {
 	private setupApiRoutes(): void {
 		const router = express.Router()
 
-		// Game data endpoint
+		// Game data endpoint (legacy)
 		router.get('/game', async (req, res) => {
 			try {
 				const game = await this.persistence.loadGame()
 				res.json(game)
 			} catch (error) {
 				res.status(500).json({ error: 'Failed to load game data' })
+			}
+		})
+
+		// Load game data endpoint (used by Builder)
+		router.get('/load', async (req, res) => {
+			try {
+				const game = await this.persistence.loadGame()
+				res.json({ success: true, data: game })
+			} catch (error) {
+				console.error('Error loading game data:', error)
+				res.json({
+					success: false,
+					error: error instanceof Error ? error.message : 'Unknown error',
+				})
+			}
+		})
+
+		// Save game data endpoint (used by Builder)
+		router.post('/save', async (req, res) => {
+			try {
+				const gameData = req.body
+				await this.persistence.saveGame(gameData)
+				res.json({ success: true })
+			} catch (error) {
+				console.error('Error saving game data:', error)
+				res.json({
+					success: false,
+					error: error instanceof Error ? error.message : 'Unknown error',
+				})
+			}
+		})
+
+		// Generate ID endpoint
+		router.post('/generate-id', async (req, res) => {
+			try {
+				const { name, entityType, currentEntityId, prefix } = req.body
+				// For now, generate a simple ID. In the future, this could use the backend's ID generation
+				const id = `${entityType}_${Date.now()}_${Math.random()
+					.toString(36)
+					.substr(2, 9)}`
+				res.json({ success: true, data: id })
+			} catch (error) {
+				res.json({
+					success: false,
+					error: error instanceof Error ? error.message : 'Unknown error',
+				})
+			}
+		})
+
+		// Start game session endpoint
+		router.post('/start', async (req, res) => {
+			try {
+				// Initialize game session if needed
+				res.json({ success: true })
+			} catch (error) {
+				res.json({
+					success: false,
+					error: error instanceof Error ? error.message : 'Unknown error',
+				})
+			}
+		})
+
+		// Reset game session endpoint
+		router.post('/reset', async (req, res) => {
+			try {
+				// Reset game session logic
+				res.json({ success: true })
+			} catch (error) {
+				res.json({
+					success: false,
+					error: error instanceof Error ? error.message : 'Unknown error',
+				})
+			}
+		})
+
+		// Interact endpoint
+		router.post('/interact', async (req, res) => {
+			try {
+				const { type, params } = req.body
+				// Handle interaction logic
+				res.json({ success: true })
+			} catch (error) {
+				res.json({
+					success: false,
+					error: error instanceof Error ? error.message : 'Unknown error',
+				})
 			}
 		})
 
@@ -319,7 +405,46 @@ export class QuestEditorIntegration {
 			}
 		})
 
-		// Add more endpoints as needed...
+		// EntityLinks endpoints
+		router.get('/entityLinks', async (req, res) => {
+			try {
+				const entityLinks = await this.persistence.loadEntityLinks()
+				res.json({ success: true, data: entityLinks })
+			} catch (error) {
+				console.error('Error loading entityLinks:', error)
+				res.json({
+					success: false,
+					error: error instanceof Error ? error.message : 'Unknown error',
+				})
+			}
+		})
+
+		router.patch('/entityLinks/:entityId', async (req, res) => {
+			try {
+				const { entityId } = req.params
+				const updateData = req.body
+
+				// Load current entityLinks
+				const entityLinks = await this.persistence.loadEntityLinks()
+
+				// Update the specific entity
+				if (!entityLinks[entityId]) {
+					entityLinks[entityId] = {}
+				}
+				Object.assign(entityLinks[entityId], updateData)
+
+				// Save back
+				await this.persistence.saveEntityLinks(entityLinks)
+
+				res.json({ success: true })
+			} catch (error) {
+				console.error('Error updating entityLinks:', error)
+				res.json({
+					success: false,
+					error: error instanceof Error ? error.message : 'Unknown error',
+				})
+			}
+		})
 
 		this.app.use('/api', router)
 	}
