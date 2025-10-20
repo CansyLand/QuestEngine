@@ -1,0 +1,1015 @@
+[
+  {
+    "id": "bassimus_looking_for_my_bass_string",
+    "name": "Looking for my Bass String",
+    "npcId": "bassimus",
+    "questStepId": "talk_to_bassimus",
+    "dialogs": [
+      {
+        "id": "hey_dude",
+        "text": "Hey dude, what's up?",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "There was this white bunny...",
+            "goToDialog": 1,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "bunny_response",
+        "text": "Whoa yeah, that hopper's been bouncing all over the place. I'm curious what he's up to. If you find out, come tell me!",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "I can't! The passage is blocked by a giant boulder!",
+            "goToDialog": 2,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "boulder_problem",
+        "text": "Oh, I see. That's nothing some deep riffs can't handle.",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "Some riffs?",
+            "goToDialog": 3,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "riffs_explanation",
+        "text": "Yeah! But my bass needs a new string first. Last gig was too groovy and the old one snapped. Think you can find one?",
+        "isQuestion": false,
+        "isEndOfDialog": true,
+        "onNext": [
+          {
+            "type": "activateQuest",
+            "params": {
+              "questId": "deep_tunes"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bassimus_default",
+    "name": "Default",
+    "npcId": "bassimus",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "default_greeting",
+        "text": "Hey, check out my bass! It's got that deep groove.",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "bassimus_have_you_found_my_bass_string",
+    "name": "Have you found my Bass String?",
+    "npcId": "bassimus",
+    "questStepId": "find_the_bass_string",
+    "dialogs": [
+      {
+        "id": "searching_text",
+        "text": "You're gonna love the sound of my beauty, but I need that new string first!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "bassimus_plays_riff",
+    "name": "Plays Riff",
+    "npcId": "bassimus",
+    "questStepId": "return_to_bassimus",
+    "dialogs": [
+      {
+        "id": "thanks_text",
+        "text": "Whooaaa! Thanks, dude! Now let's see what this baby can do...",
+        "isQuestion": false,
+        "isEndOfDialog": true,
+        "onNext": [
+          {
+            "type": "playSound",
+            "params": {
+              "audioPath": "assets/scene/audio/sfx/thunderous_riff.mp3",
+              "volume": 0.8
+            }
+          },
+          {
+            "type": "playAnimation",
+            "params": {
+              "entityName": "Stone_Boulder",
+              "animationName": "vibrate_and_fall"
+            }
+          },
+          {
+            "type": "setEntityInvisible",
+            "params": {
+              "entityName": "Stone_Boulder"
+            }
+          },
+          {
+            "type": "setEntityInvisible",
+            "params": {
+              "entityName": "NPC_Bunny_Cave"
+            }
+          },
+          {
+            "type": "setFlag",
+            "params": {
+              "flag": "boulder_moved",
+              "value": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "yeah_groove",
+        "text": "YEAH! See? Nothing beats a deep groove!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "echo_meet_echo",
+    "name": "Meet Echo",
+    "npcId": "echo",
+    "questStepId": "talk_to_echo",
+    "dialogs": [
+      {
+        "id": "who_are_you",
+        "text": "Whoa! Who are YOU?",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "Who are YOU?",
+            "goToDialog": 1,
+            "size": 300
+          },
+          {
+            "label": "Obviously not you",
+            "goToDialog": 2,
+            "size": 300
+          },
+          {
+            "label": "I don't know",
+            "goToDialog": 3,
+            "size": 300
+          },
+          {
+            "label": "You, of course",
+            "goToDialog": 4,
+            "size": 300
+          },
+          {
+            "label": "I am who I am",
+            "goToDialog": 5,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "who_are_you_response",
+        "text": "I am you, but the real question is... who are YOU?",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "Crystals!",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "Crystals?",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "...Crystals",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "CRYSTALS!",
+            "goToDialog": 6,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "not_you_response",
+        "text": "Well, if I am you and you are me, then I'm sure we share the same desire...",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "Crystals!",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "Crystals?",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "...Crystals",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "CRYSTALS!",
+            "goToDialog": 6,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "dont_know_response",
+        "text": "Well, if I am you and you are me, then I'm sure we share the same desire...",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "Crystals!",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "Crystals?",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "...Crystals",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "CRYSTALS!",
+            "goToDialog": 6,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "you_of_course_response",
+        "text": "Well, if I am you and you are me, then I'm sure we share the same desire...",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "Crystals!",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "Crystals?",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "...Crystals",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "CRYSTALS!",
+            "goToDialog": 6,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "i_am_who_i_am_response",
+        "text": "Well, if I am you and you are me, then I'm sure we share the same desire...",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "Crystals!",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "Crystals?",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "...Crystals",
+            "goToDialog": 6,
+            "size": 300
+          },
+          {
+            "label": "CRYSTALS!",
+            "goToDialog": 6,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "crystals_desire",
+        "text": "YES! Let's get some crystals. Please grab a few from that grumpy keeper up there.",
+        "isQuestion": false,
+        "isEndOfDialog": true,
+        "onNext": [
+          {
+            "type": "activateQuest",
+            "params": {
+              "questId": "mirror_self"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "echo_echo_earthquake_reaction",
+    "name": "Echo Earthquake Reaction",
+    "npcId": "echo",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "earthquake_what",
+        "text": "Whoaa what was that? What is happening?",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "Ok, heading back!",
+            "goToDialog": 1,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "come_back",
+        "text": "Come back!",
+        "isQuestion": false,
+        "isEndOfDialog": true,
+        "onNext": [
+          {
+            "type": "setFlag",
+            "params": {
+              "flag": "echo_earthquake_reaction_shown",
+              "value": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "echo_after_earthquake",
+    "name": "After Earthquake",
+    "npcId": "echo",
+    "questStepId": "bring_crystals_to_echo",
+    "dialogs": [
+      {
+        "id": "welp_happened",
+        "text": "Oh... welp. That wasn't supposed to happen.",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "...",
+            "goToDialog": 1,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "blocked_passage",
+        "text": "The problem is... the earthquake blocked the passage.",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "What now?",
+            "goToDialog": 2,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "mushroom_solution",
+        "text": "I need some special mushrooms to clear this mess. Can you bring some from the world above?",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "Sure!",
+            "goToDialog": 3,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "start_mushroom_run",
+        "text": "Great! Get 10 mushrooms and bring them back to me.",
+        "isQuestion": false,
+        "isEndOfDialog": true,
+        "onNext": [
+          {
+            "type": "activateQuest",
+            "params": {
+              "questId": "mushroom_run"
+            }
+          },
+          {
+            "type": "setFlag",
+            "params": {
+              "flag": "mushroom_quest_started",
+              "value": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "echo_crystals_reminder",
+    "name": "Crystals Reminder",
+    "npcId": "echo",
+    "questStepId": "get_the_crystals",
+    "dialogs": [
+      {
+        "id": "lets_get_crystals",
+        "text": "Let's get us some crystals!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "echo_mushroom_reminder",
+    "name": "Mushroom Reminder",
+    "npcId": "echo",
+    "questStepId": "go_to_the_shrooms",
+    "dialogs": [
+      {
+        "id": "get_10_mushrooms",
+        "text": "Get 10 Mushrooms and bring them back to me.",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "echo_mushroom_completion",
+    "name": "Mushroom Completion",
+    "npcId": "echo",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "enough_mushrooms",
+        "text": "You have collected enough mushrooms! Bring them back to the cave.",
+        "isQuestion": false,
+        "isEndOfDialog": true,
+        "onNext": [
+          {
+            "type": "setFlag",
+            "params": {
+              "flag": "mushroom_completion_shown",
+              "value": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "echo_mushrooms_delivered",
+    "name": "Mushrooms Delivered",
+    "npcId": "echo",
+    "questStepId": "bring_echo_mushrooms",
+    "dialogs": [
+      {
+        "id": "perfect_placement",
+        "text": "Perfect! Let me place these just right...",
+        "isQuestion": false,
+        "isEndOfDialog": true,
+        "onNext": [
+          {
+            "type": "playAnimation",
+            "params": {
+              "entityName": "Debris_Pile",
+              "animationName": "pulse_and_clear"
+            }
+          },
+          {
+            "type": "playAnimation",
+            "params": {
+              "entityName": "Debris_Pile_2",
+              "animationName": "pulse_and_clear"
+            }
+          },
+          {
+            "type": "setFlag",
+            "params": {
+              "flag": "debris_pile_cleared",
+              "value": true
+            }
+          },
+          {
+            "type": "setFlag",
+            "params": {
+              "flag": "debris_pile_2_cleared",
+              "value": true
+            }
+          },
+          {
+            "type": "completeQuest",
+            "params": {
+              "questId": "mushroom_run"
+            }
+          },
+          {
+            "type": "activateItem",
+            "params": {
+              "itemId": "path_to_persephone"
+            }
+          },
+          {
+            "type": "setFlag",
+            "params": {
+              "flag": "mushrooms_delivered",
+              "value": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "say_hello_bunny",
+        "text": "Say hello to the bunny for me!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "echo_confront_echo",
+    "name": "Confront Echo",
+    "npcId": "crystallia",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "what_have_you_done",
+        "text": "What have you done? The crystals... they were mine!",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "I needed them for...",
+            "goToDialog": 1,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "no_matter",
+        "text": "No matter. The damage is done. Take your path and go.",
+        "isQuestion": false,
+        "isEndOfDialog": true,
+        "onNext": [
+          {
+            "type": "setFlag",
+            "params": {
+              "flag": "echo_earthquake_reaction_shown",
+              "value": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "echo_default",
+    "name": "Default",
+    "npcId": "echo",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "echo_introduction",
+        "text": "I'm Echo. I see myself in everything around me.",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "crystallia_warning",
+    "name": "Warning",
+    "npcId": "crystallia",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "dont_touch",
+        "text": "Don't touch ANYTHING! Just move along!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "crystallia_touch_3_crystals",
+    "name": "Touch 3 Crystals",
+    "npcId": "crystallia",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "hey_stop",
+        "text": "HEY! Didn't I tell you NOT to touch anything? Just keep moving!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "crystallia_touch_5_crystals",
+    "name": "Touch 5 Crystals",
+    "npcId": "crystallia",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "follow_bunny",
+        "text": "Just follow the bunny!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "crystallia_touch_6_crystals",
+    "name": "Touch 6 Crystals",
+    "npcId": "crystallia",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "enough_out",
+        "text": "Enough is ENOUGH! Out! Go HERE!",
+        "isQuestion": false,
+        "isEndOfDialog": true,
+        "onNext": [
+          {
+            "type": "playAnimation",
+            "params": {
+              "entityName": "NPC_Crystallia",
+              "animationName": "point_to_exit"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "crystallia_second_visit_warning",
+    "name": "Second Visit Warning",
+    "npcId": "crystallia",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "you_again",
+        "text": "You again? Remember don't touch ANYTHING! Just move along!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "crystallia_steal_3_crystals",
+    "name": "Steal 3 Crystals",
+    "npcId": "crystallia",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "hey_put_back",
+        "text": "HEY! Didn't I tell you already NOT to touch those? Put them back!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "crystallia_steal_5_crystals",
+    "name": "Steal 5 Crystals",
+    "npcId": "crystallia",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "delicate_structure",
+        "text": "This is a DELICATE structure!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "crystallia_steal_6_crystals",
+    "name": "Steal 6 Crystals",
+    "npcId": "crystallia",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "aaargh",
+        "text": "Aaaargh!!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "crystallia_after_earthquake",
+    "name": "After Earthquake",
+    "npcId": "crystallia",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "move_on_clean",
+        "text": "Just move on and let me clean this mess!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "crystallia_mushroom_quest_interaction",
+    "name": "Mushroom Quest Interaction",
+    "npcId": "crystallia",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "wondering_bunny",
+        "text": "I am wondering where the bunny is...",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "persephone_initial_meeting",
+    "name": "Initial Meeting",
+    "npcId": "persephone",
+    "questStepId": "meet_persephone",
+    "dialogs": [
+      {
+        "id": "why_here",
+        "text": "Why... why am I here?",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "Are you okay?",
+            "goToDialog": 1,
+            "size": 300
+          },
+          {
+            "label": "Have you seen the white bunny?",
+            "goToDialog": 2,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "okay_response",
+        "text": "I'm... stuck. Trapped here forever.",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "What happened?",
+            "goToDialog": 3,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "bunny_response",
+        "text": "I'm... stuck. Trapped here forever.",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "What happened?",
+            "goToDialog": 3,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "pomegranate_story",
+        "text": "I ate from the pomegranate... now I can never leave this place. It's the curse of the underworld.",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "There must be a way out.",
+            "goToDialog": 4,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "portal_opening",
+        "text": "For you, maybe... but not for me. The path ahead is yours to take. I belong here now.",
+        "isQuestion": false,
+        "isEndOfDialog": true,
+        "onNext": [
+          {
+            "type": "activateQuest",
+            "params": {
+              "questId": "help_persephone"
+            }
+          },
+          {
+            "type": "setFlag",
+            "params": {
+              "flag": "persephone_conversation_complete",
+              "value": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "persephone_seed_reminder",
+    "name": "Seed Reminder",
+    "npcId": "persephone",
+    "questStepId": "activate_portal",
+    "dialogs": [
+      {
+        "id": "use_seeds",
+        "text": "Now use the pomegranate seeds to open the portal, but do not eat them.",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "persephone_portal_convincing",
+    "name": "Portal Convincing",
+    "npcId": "persephone",
+    "questStepId": "convince_persephone",
+    "dialogs": [
+      {
+        "id": "portal_open",
+        "text": "The portal is open.",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "Just follow me, it'll be fine!",
+            "goToDialog": 1,
+            "size": 300
+          },
+          {
+            "label": "You don't have to stay here forever.",
+            "goToDialog": 1,
+            "size": 300
+          },
+          {
+            "label": "I'm not leaving without you.",
+            "goToDialog": 1,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "denial_1",
+        "text": "You don't understand... it's not that simple.",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "persephone_convinced_followup",
+    "name": "Convinced Followup",
+    "npcId": "persephone",
+    "questStepId": null,
+    "dialogs": [
+      {
+        "id": "grateful",
+        "text": "I am so grateful that you are helping me. Thank you.",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "persephone_default",
+    "name": "Default",
+    "npcId": "persephone",
+    "dialogs": [
+      {
+        "id": "dialog_1760478727473",
+        "text": "I am Persephone, queen of the 4 seasons!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "pumpking_guy_default",
+    "name": "Default",
+    "npcId": "pumpking_guy",
+    "dialogs": [
+      {
+        "id": "dialog_1760664071661",
+        "text": "Happy VibeHackathon!",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "Wohooo!",
+            "goToDialog": 1,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "dialog_1760702317268",
+        "text": "Spooky!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ]
+  },
+  {
+    "id": "pumpking_guy_quest_looking_for_cat",
+    "name": "Quest: Looking for cat",
+    "dialogs": [
+      {
+        "id": "dialog_1760884792209",
+        "text": "Mew must be here somewhere!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ],
+    "npcId": "pumpking_guy",
+    "questStepId": "find_cat_mew"
+  },
+  {
+    "id": "pumpking_guy_quest_return_cat_mew_to_pumpkin_guy",
+    "name": "Quest: Return Cat Mew To Pumpkin Guy",
+    "dialogs": [
+      {
+        "id": "dialog_1760884967263",
+        "text": "There you are Mew!",
+        "isQuestion": false,
+        "isEndOfDialog": false
+      },
+      {
+        "id": "dialog_1760885025799",
+        "text": " Thank you so much dear traveller! Let me give you this key!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ],
+    "npcId": "pumpking_guy",
+    "questStepId": "bring_mew_back_to_pumpkin_guy"
+  },
+  {
+    "id": "pumpking_guy_i_lost_my_cat_mew",
+    "name": "I lost my cat Mew",
+    "dialogs": [
+      {
+        "id": "dialog_1760887925560",
+        "text": "Hey, Have you seen my cat Mew?",
+        "isQuestion": true,
+        "isEndOfDialog": false,
+        "buttons": [
+          {
+            "label": "No",
+            "goToDialog": 1,
+            "size": 300
+          }
+        ]
+      },
+      {
+        "id": "dialog_1760887975263",
+        "text": "If you see him, let me know!",
+        "isQuestion": false,
+        "isEndOfDialog": true
+      }
+    ],
+    "npcId": "pumpking_guy",
+    "questStepId": "talk_to_pumpkin_guy"
+  }
+]

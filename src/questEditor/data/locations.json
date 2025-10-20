@@ -1,0 +1,90 @@
+[
+  {
+    "id": "main_stage",
+    "name": "Main Stage",
+    "backgroundMusic": "/assets/music/forest.mp3",
+    "image": "http://localhost:5173/assets/images/hobbit-land.jpg",
+    "items": [
+      "special_mushroom",
+      "special_mushroom_1",
+      "special_mushroom_6",
+      "special_mushroom_5",
+      "special_mushroom_4",
+      "special_mushroom_3",
+      "special_mushroom_2",
+      "special_mushroom_7",
+      "special_mushroom_8",
+      "special_mushroom_9",
+      "special_mushroom_10",
+      "special_mushroom_11",
+      "bass_string",
+      "stage_glb",
+      "boulder_blocking",
+      "cave_glb",
+      "boulder_unblocking",
+      "debris_pile_1"
+    ],
+    "npcs": [
+      "persephone"
+    ],
+    "portals": [
+      "portal_to_cave",
+      "portal_to_abyss"
+    ]
+  },
+  {
+    "id": "mycelium_caves",
+    "name": "Mycelium Caves",
+    "backgroundMusic": "/assets/music/midnight-dreary.mp3",
+    "image": "http://localhost:5173/assets/images/mordor.jpg",
+    "items": [
+      "bass_string",
+      "crystal_2",
+      "crystal_3",
+      "crystal_4",
+      "crystal_5",
+      "crystal_6",
+      "crystal_7",
+      "crystal_8",
+      "crystal_9",
+      "crystal_10",
+      "vessel_1",
+      "vessel_2",
+      "vessel_3",
+      "vessel_4",
+      "vessel_5",
+      "pomegranate_seed",
+      "pomegranate_seed_2",
+      "pomegranate_seed_1",
+      "pomegranate_seed_3",
+      "pomegranate_seed_4",
+      "debris_pile_1",
+      "debris_pile"
+    ],
+    "npcs": [
+      "bassimus",
+      "crystallia",
+      "echo",
+      "persephone"
+    ],
+    "portals": [
+      "portal_to_main_stage"
+    ]
+  },
+  {
+    "id": "abyss",
+    "name": "Abyss",
+    "backgroundMusic": "",
+    "image": "/assets/images/Achievement_Zone_ZaralekCavern.png",
+    "items": [
+      "cat",
+      "crystal_7"
+    ],
+    "npcs": [
+      "pumpking_guy"
+    ],
+    "portals": [
+      "new_portal_xd_1"
+    ]
+  }
+]

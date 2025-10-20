@@ -1,0 +1,91 @@
+[
+  {
+    "id": "bassimus",
+    "name": "Bassimus",
+    "image": "http://localhost:5173/assets/images/npc_shroom.png",
+    "state": "world",
+    "dialogueSequences": [
+      "bassimus_quest_start",
+      "bassimus_default",
+      "bassimus_searching_reminder",
+      "bassimus_string_returned"
+    ],
+    "spawned": true,
+    "cleared": false,
+    "onInteract": []
+  },
+  {
+    "id": "crystallia",
+    "name": "Crystallia",
+    "image": "http://localhost:5173/assets/images/npc_3.png",
+    "state": "world",
+    "dialogueSequences": [
+      "crystallia_warning",
+      "crystallia_touch_3_crystals",
+      "crystallia_touch_5_crystals",
+      "crystallia_touch_6_crystals",
+      "crystallia_second_visit_warning",
+      "crystallia_steal_3_crystals",
+      "crystallia_steal_5_crystals",
+      "crystallia_steal_6_crystals",
+      "crystallia_after_earthquake",
+      "crystallia_mushroom_quest_interaction"
+    ],
+    "spawned": true,
+    "cleared": false,
+    "onInteract": []
+  },
+  {
+    "id": "echo",
+    "name": "Echo",
+    "image": "http://localhost:5173/assets/images/npc_1.png",
+    "state": "world",
+    "dialogueSequences": [
+      "echo_quest_start",
+      "echo_earthquake_reaction",
+      "echo_after_earthquake",
+      "echo_crystal_quest_active",
+      "echo_crystal_reminder",
+      "echo_after_crystal_stealing",
+      "echo_mushroom_reminder",
+      "echo_mushroom_completion",
+      "echo_mushrooms_delivered",
+      "echo_confront_echo",
+      "echo_default"
+    ],
+    "spawned": true,
+    "cleared": false,
+    "onInteract": []
+  },
+  {
+    "id": "persephone",
+    "name": "Persephone",
+    "image": "http://localhost:5173/assets/images/npc_4.png",
+    "state": "world",
+    "dialogueSequences": [
+      "persephone_initial_meeting",
+      "persephone_seed_reminder",
+      "persephone_portal_convincing",
+      "persephone_convinced_followup"
+    ],
+    "spawned": true,
+    "cleared": false,
+    "onInteract": []
+  },
+  {
+    "id": "bunny_cave",
+    "name": "Bunny Cave",
+    "image": "http://localhost:5173/assets/images/npc_2.png",
+    "state": "world",
+    "dialogueSequences": [],
+    "spawned": true,
+    "cleared": false,
+    "onInteract": []
+  },
+  {
+    "id": "pumpking_guy",
+    "name": "Pumpking Guy",
+    "image": "/assets/images/pumpkin.png",
+    "state": "world"
+  }
+]

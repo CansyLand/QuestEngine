@@ -1,0 +1,485 @@
+[
+  {
+    "id": "bass_string",
+    "name": "Bass String",
+    "image": "http://localhost:5173/assets/images/ring.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "crystal",
+    "name": "Crystal",
+    "image": "http://localhost:5173/assets/images/crystal_6.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "touch_crystal",
+          "crystalId": "crystal_1"
+        }
+      }
+    ]
+  },
+  {
+    "id": "crystal_2",
+    "name": "Crystal",
+    "image": "http://localhost:5173/assets/images/crystal_6.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "touch_crystal",
+          "crystalId": "crystal_2"
+        }
+      }
+    ]
+  },
+  {
+    "id": "crystal_3",
+    "name": "Crystal",
+    "image": "http://localhost:5173/assets/images/crystal_6.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "touch_crystal",
+          "crystalId": "crystal_3"
+        }
+      }
+    ]
+  },
+  {
+    "id": "crystal_4",
+    "name": "Crystal",
+    "image": "http://localhost:5173/assets/images/crystal_6.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "touch_crystal",
+          "crystalId": "crystal_4"
+        }
+      }
+    ]
+  },
+  {
+    "id": "crystal_5",
+    "name": "Crystal",
+    "image": "http://localhost:5173/assets/images/crystal_6.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "touch_crystal",
+          "crystalId": "crystal_5"
+        }
+      }
+    ]
+  },
+  {
+    "id": "crystal_6",
+    "name": "Crystal",
+    "image": "http://localhost:5173/assets/images/crystal_6.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "touch_crystal",
+          "crystalId": "crystal_6"
+        }
+      }
+    ]
+  },
+  {
+    "id": "crystal_7",
+    "name": "Crystal",
+    "image": "http://localhost:5173/assets/images/crystal_6.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "touch_crystal",
+          "crystalId": "crystal_7"
+        }
+      }
+    ]
+  },
+  {
+    "id": "crystal_8",
+    "name": "Crystal",
+    "image": "http://localhost:5173/assets/images/crystal_6.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "touch_crystal",
+          "crystalId": "crystal_8"
+        }
+      }
+    ]
+  },
+  {
+    "id": "crystal_9",
+    "name": "Crystal",
+    "image": "http://localhost:5173/assets/images/crystal_6.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "touch_crystal",
+          "crystalId": "crystal_9"
+        }
+      }
+    ]
+  },
+  {
+    "id": "crystal_10",
+    "name": "Crystal",
+    "image": "http://localhost:5173/assets/images/crystal_6.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "touch_crystal",
+          "crystalId": "crystal_10"
+        }
+      }
+    ]
+  },
+  {
+    "id": "pomegranate_seed",
+    "name": "Pomegranate Seed",
+    "image": "http://localhost:5173/assets/images/crystal_2.png",
+    "state": "void",
+    "interactive": "grabbable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "collect_seed"
+        }
+      }
+    ]
+  },
+  {
+    "id": "pomegranate_seed_2",
+    "name": "Pomegranate Seed",
+    "image": "http://localhost:5173/assets/images/crystal_2.png",
+    "state": "void",
+    "interactive": "grabbable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "collect_seed"
+        }
+      }
+    ]
+  },
+  {
+    "id": "pomegranate_seed_1",
+    "name": "Pomegranate Seed",
+    "image": "http://localhost:5173/assets/images/crystal_2.png",
+    "state": "void",
+    "interactive": "grabbable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "collect_seed"
+        }
+      }
+    ]
+  },
+  {
+    "id": "pomegranate_seed_3",
+    "name": "Pomegranate Seed",
+    "image": "http://localhost:5173/assets/images/crystal_2.png",
+    "state": "void",
+    "interactive": "grabbable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "collect_seed"
+        }
+      }
+    ]
+  },
+  {
+    "id": "pomegranate_seed_4",
+    "name": "Pomegranate Seed",
+    "image": "http://localhost:5173/assets/images/crystal_2.png",
+    "state": "void",
+    "interactive": "grabbable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "collect_seed"
+        }
+      }
+    ]
+  },
+  {
+    "id": "vessel_1",
+    "name": "Ancient Vessel 1",
+    "image": "http://localhost:5173/assets/images/crystal_1.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "place_seed",
+          "vesselId": "vessel_1"
+        }
+      }
+    ]
+  },
+  {
+    "id": "vessel_2",
+    "name": "Ancient Vessel 2",
+    "image": "http://localhost:5173/assets/images/crystal_1.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "place_seed",
+          "vesselId": "vessel_2"
+        }
+      }
+    ]
+  },
+  {
+    "id": "vessel_3",
+    "name": "Ancient Vessel 3",
+    "image": "http://localhost:5173/assets/images/crystal_1.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "place_seed",
+          "vesselId": "vessel_3"
+        }
+      }
+    ]
+  },
+  {
+    "id": "vessel_4",
+    "name": "Ancient Vessel 4",
+    "image": "http://localhost:5173/assets/images/crystal_1.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "place_seed",
+          "vesselId": "vessel_4"
+        }
+      }
+    ]
+  },
+  {
+    "id": "vessel_5",
+    "name": "Ancient Vessel 5",
+    "image": "http://localhost:5173/assets/images/crystal_1.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "custom",
+        "params": {
+          "action": "place_seed",
+          "vesselId": "vessel_5"
+        }
+      }
+    ]
+  },
+  {
+    "id": "special_mushroom",
+    "name": "Special Mushroom",
+    "image": "http://localhost:5173/assets/images/shroom_3.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "special_mushroom_1",
+    "name": "Special Mushroom",
+    "image": "http://localhost:5173/assets/images/shroom_3.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "special_mushroom_2",
+    "name": "Special Mushroom",
+    "image": "http://localhost:5173/assets/images/shroom_3.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "special_mushroom_3",
+    "name": "Special Mushroom",
+    "image": "http://localhost:5173/assets/images/shroom_3.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "special_mushroom_4",
+    "name": "Special Mushroom",
+    "image": "http://localhost:5173/assets/images/shroom_3.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "special_mushroom_5",
+    "name": "Special Mushroom",
+    "image": "http://localhost:5173/assets/images/shroom_3.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "special_mushroom_6",
+    "name": "Special Mushroom",
+    "image": "http://localhost:5173/assets/images/shroom_3.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "special_mushroom_7",
+    "name": "Special Mushroom",
+    "image": "http://localhost:5173/assets/images/shroom_3.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "special_mushroom_8",
+    "name": "Special Mushroom",
+    "image": "http://localhost:5173/assets/images/shroom_3.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "special_mushroom_9",
+    "name": "Special Mushroom",
+    "image": "http://localhost:5173/assets/images/shroom_3.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "special_mushroom_10",
+    "name": "Special Mushroom",
+    "image": "http://localhost:5173/assets/images/shroom_3.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "special_mushroom_11",
+    "name": "Special Mushroom",
+    "image": "http://localhost:5173/assets/images/shroom_3.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "boulder_blocking",
+    "name": "Boulder Blocking",
+    "image": "http://localhost:5173/assets/images/boulder.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "debris_pile",
+    "name": "Debris Pile",
+    "image": "http://localhost:5173/assets/images/rune_stone.png",
+    "state": "void",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "debris_pile_1",
+    "name": "Debris Pile",
+    "image": "http://localhost:5173/assets/images/rune_stone.png",
+    "state": "void",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "stage_glb",
+    "name": "Stage GLB",
+    "image": "/assets/images/Trade_Archaeology_Sand Castle.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "cave_glb",
+    "name": "Cave GLB",
+    "image": "/assets/images/Achievement_Zone_ZaralekCavern.png",
+    "state": "world",
+    "interactive": "grabbable",
+    "onInteract": []
+  },
+  {
+    "id": "boulder_unblocking",
+    "name": "Boulder Unblocking",
+    "image": "http://localhost:5173/assets/images/boulder.png",
+    "state": "void",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "stage_2_face_previes",
+    "name": "stage 2 face previes",
+    "image": "/assets/images/INV_BabyTentacleFace_Pale.png",
+    "state": "world",
+    "interactive": "notInteractive",
+    "onInteract": []
+  },
+  {
+    "id": "cat",
+    "name": "Cat",
+    "image": "/assets/images/Spell_Misc_PetHeal.png",
+    "state": "void",
+    "interactive": "grabbable",
+    "onInteract": []
+  }
+]

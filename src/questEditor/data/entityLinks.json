@@ -1,0 +1,792 @@
+{
+  "512": {
+    "position": {
+      "x": -19.75,
+      "y": 12,
+      "z": -16.25
+    },
+    "parent": 518,
+    "name": "Bunny Trigger Area_2",
+    "questEntityId": "debug_test"
+  },
+  "513": {
+    "position": {
+      "x": -19.25,
+      "y": 36.5,
+      "z": -15.5
+    },
+    "parent": 523,
+    "name": "NPC Crystallia",
+    "questEntityId": "bass_string"
+  },
+  "514": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "parent": 523,
+    "name": "Cave",
+    "questEntityId": "crystal_3"
+  },
+  "515": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "parent": 518,
+    "name": "Stage",
+    "questEntityId": "crystal_4"
+  },
+  "516": {
+    "position": {
+      "x": -0.9899855852127075,
+      "y": 44.20458221435547,
+      "z": -4.901730537414551
+    },
+    "parent": 523,
+    "name": "Portal_to_Main_Stage",
+    "questEntityId": "crystal_5"
+  },
+  "517": {
+    "position": {
+      "x": -8.75,
+      "y": 43.5,
+      "z": -5
+    },
+    "parent": 523,
+    "name": "Stone_Boulder",
+    "questEntityId": "crystal_6"
+  },
+  "518": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "parent": 0,
+    "name": "Location Stage",
+    "questEntityId": "crystal_7"
+  },
+  "519": {
+    "position": {
+      "x": -3.5,
+      "y": 1.5,
+      "z": -7.25
+    },
+    "parent": 523,
+    "name": "demo-material.gltf",
+    "questEntityId": "crystal_8"
+  },
+  "520": {
+    "position": {
+      "x": -3.5,
+      "y": 1.5,
+      "z": -11.25
+    },
+    "parent": 523,
+    "name": "demo-material.gltf_2",
+    "questEntityId": "pomegranate_seed"
+  },
+  "521": {
+    "position": {
+      "x": -2.25,
+      "y": 2,
+      "z": -30.75
+    },
+    "parent": 523,
+    "name": "Portal to Stage",
+    "questEntityId": "pomegranate_seed"
+  },
+  "522": {
+    "position": {
+      "x": -4.25,
+      "y": 2,
+      "z": -30.75
+    },
+    "parent": 518,
+    "name": "Portal to Cave",
+    "questEntityId": "portal_to_abyss"
+  },
+  "523": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "parent": 0,
+    "name": "Location Cave",
+    "questEntityId": "pomegranate_seed_1"
+  },
+  "524": {
+    "position": {
+      "x": -18.25,
+      "y": 19.5,
+      "z": -16.5
+    },
+    "parent": 523,
+    "name": "NPC Echo",
+    "questEntityId": "pomegranate_seed_3"
+  },
+  "525": {
+    "position": {
+      "x": -8.25,
+      "y": 42.75,
+      "z": -7
+    },
+    "parent": 523,
+    "name": "NPC_Bunny_Cave",
+    "questEntityId": "pomegranate_seed_4"
+  },
+  "526": {
+    "position": {
+      "x": -5.5,
+      "y": 0.5,
+      "z": -16
+    },
+    "parent": 523,
+    "name": "NPC Persephone",
+    "questEntityId": "vessel_1"
+  },
+  "527": {
+    "position": {
+      "x": -20.75,
+      "y": 9,
+      "z": -7.5
+    },
+    "parent": 518,
+    "name": "NPC Bunny",
+    "questEntityId": "vessel_2"
+  },
+  "528": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "parent": 0,
+    "name": "Location Abyss",
+    "questEntityId": "vessel_3"
+  },
+  "529": {
+    "position": {
+      "x": -12.75,
+      "y": 2.75,
+      "z": -5.75
+    },
+    "parent": 518,
+    "name": "Bunny Trigger Area",
+    "questEntityId": "vessel_4"
+  },
+  "530": {
+    "position": {
+      "x": 14,
+      "y": 0,
+      "z": 11
+    },
+    "parent": 528,
+    "name": "Spider Net 01",
+    "questEntityId": null
+  },
+  "531": {
+    "position": {
+      "x": -15.5,
+      "y": 39.5,
+      "z": -29.25
+    },
+    "parent": 523,
+    "name": "NPC Bassimus",
+    "questEntityId": "vessel_5"
+  },
+  "532": {
+    "position": {
+      "x": -24.25,
+      "y": 42.25,
+      "z": -27
+    },
+    "parent": 523,
+    "name": "Item Bass String",
+    "questEntityId": "special_mushroom"
+  },
+  "533": {
+    "position": {
+      "x": -20.25,
+      "y": 35.25,
+      "z": -12
+    },
+    "parent": 523,
+    "name": "Stone_Boulder_2",
+    "questEntityId": "special_mushroom_1"
+  },
+  "534": {
+    "position": {
+      "x": -15.75,
+      "y": 36,
+      "z": -16.5
+    },
+    "parent": 523,
+    "name": "Item_Crystal_1",
+    "questEntityId": "special_mushroom_2"
+  },
+  "535": {
+    "position": {
+      "x": -20.5,
+      "y": 38.25,
+      "z": -14.75
+    },
+    "parent": 523,
+    "name": "Debris_Pile_2",
+    "questEntityId": "special_mushroom_3"
+  },
+  "536": {
+    "position": {
+      "x": 14,
+      "y": 3,
+      "z": 10.75
+    },
+    "parent": 528,
+    "name": "Spider Net 01_2",
+    "questEntityId": null
+  },
+  "537": {
+    "position": {
+      "x": 11,
+      "y": 0,
+      "z": 13.75
+    },
+    "parent": 528,
+    "name": "Grave 15",
+    "questEntityId": null
+  },
+  "538": {
+    "position": {
+      "x": -25.75,
+      "y": 20.25,
+      "z": -21
+    },
+    "parent": 523,
+    "name": "Small Stone Stair",
+    "questEntityId": "boulder_blocking"
+  },
+  "539": {
+    "position": {
+      "x": 13.5,
+      "y": 0,
+      "z": 14.75
+    },
+    "parent": 528,
+    "name": "Grave 15_2",
+    "questEntityId": null
+  },
+  "540": {
+    "position": {
+      "x": 15.75,
+      "y": 0,
+      "z": 13.25
+    },
+    "parent": 528,
+    "name": "Grave 15_2_3",
+    "questEntityId": null
+  },
+  "541": {
+    "position": {
+      "x": -21.75,
+      "y": 36,
+      "z": -24.75
+    },
+    "parent": 523,
+    "name": "Item_Crystal_2",
+    "questEntityId": "debris_pile"
+  },
+  "542": {
+    "position": {
+      "x": -12.75,
+      "y": 36,
+      "z": -17.75
+    },
+    "parent": 523,
+    "name": "Item_Crystal_3",
+    "questEntityId": "debris_pile_1"
+  },
+  "543": {
+    "position": {
+      "x": -19.5,
+      "y": 36,
+      "z": -12.25
+    },
+    "parent": 523,
+    "name": "Item_Crystal_4",
+    "questEntityId": "stage_glb"
+  },
+  "544": {
+    "position": {
+      "x": -17.75,
+      "y": 36,
+      "z": -20.25
+    },
+    "parent": 523,
+    "name": "Item_Crystal_5",
+    "questEntityId": "boulder_unblocking"
+  },
+  "545": {
+    "position": {
+      "x": -13.75,
+      "y": 36,
+      "z": -9.5
+    },
+    "parent": 523,
+    "name": "Item_Crystal_6",
+    "questEntityId": "special_mushroom_4"
+  },
+  "546": {
+    "position": {
+      "x": -16.5,
+      "y": 36,
+      "z": -13.25
+    },
+    "parent": 523,
+    "name": "Item_Crystal_7",
+    "questEntityId": "special_mushroom_5"
+  },
+  "547": {
+    "position": {
+      "x": -21.75,
+      "y": 36,
+      "z": -20.25
+    },
+    "parent": 523,
+    "name": "Item_Crystal_8",
+    "questEntityId": "special_mushroom_6"
+  },
+  "548": {
+    "position": {
+      "x": -13.5,
+      "y": 36,
+      "z": -20
+    },
+    "parent": 523,
+    "name": "Item_Crystal_9",
+    "questEntityId": "special_mushroom_7"
+  },
+  "549": {
+    "position": {
+      "x": -17,
+      "y": 36,
+      "z": -23.25
+    },
+    "parent": 523,
+    "name": "Item_Crystal_10",
+    "questEntityId": "new_portal_4"
+  },
+  "550": {
+    "position": {
+      "x": 13.722099304199219,
+      "y": 0,
+      "z": 10.382861137390137
+    },
+    "parent": 528,
+    "name": "Skull&Candles ",
+    "questEntityId": null
+  },
+  "551": {
+    "position": {
+      "x": -24.75,
+      "y": 0,
+      "z": -27.25
+    },
+    "parent": 518,
+    "name": "Item_Special_Mushroom_12",
+    "questEntityId": "new_portal_5"
+  },
+  "552": {
+    "position": {
+      "x": -24.75,
+      "y": 0,
+      "z": -29.321809768676758
+    },
+    "parent": 518,
+    "name": "Item_Special_Mushroom_1",
+    "questEntityId": "new_portal_3"
+  },
+  "553": {
+    "position": {
+      "x": -24.75,
+      "y": 0,
+      "z": -25.10150909423828
+    },
+    "parent": 518,
+    "name": "Item_Special_Mushroom_2",
+    "questEntityId": "new_portal_2"
+  },
+  "554": {
+    "position": {
+      "x": -26.53130340576172,
+      "y": 0,
+      "z": -25.323139190673828
+    },
+    "parent": 518,
+    "name": "Item_Special_Mushroom_3",
+    "questEntityId": "new_portal_1"
+  },
+  "555": {
+    "position": {
+      "x": -26.53130340576172,
+      "y": 0,
+      "z": -27.23270034790039
+    },
+    "parent": 518,
+    "name": "Item_Special_Mushroom_4",
+    "questEntityId": "portal_to_main_stage"
+  },
+  "556": {
+    "position": {
+      "x": -26.53130340576172,
+      "y": 0,
+      "z": -29.401016235351562
+    },
+    "parent": 518,
+    "name": "Item_Special_Mushroom_5",
+    "questEntityId": "bunny_cave"
+  },
+  "557": {
+    "position": {
+      "x": -28.697528839111328,
+      "y": 0,
+      "z": -29.401016235351562
+    },
+    "parent": 518,
+    "name": "Item_Special_Mushroom_6",
+    "questEntityId": "portal_to_cave"
+  },
+  "558": {
+    "position": {
+      "x": -28.697528839111328,
+      "y": 0,
+      "z": -27.152240753173828
+    },
+    "parent": 518,
+    "name": "Item_Special_Mushroom_7",
+    "questEntityId": "echo"
+  },
+  "559": {
+    "position": {
+      "x": -28.697528839111328,
+      "y": 0,
+      "z": -25.31105613708496
+    },
+    "parent": 518,
+    "name": "Item_Special_Mushroom_8",
+    "questEntityId": "bassimus"
+  },
+  "560": {
+    "position": {
+      "x": -28.697528839111328,
+      "y": 0,
+      "z": -23.949600219726562
+    },
+    "parent": 518,
+    "name": "Item_Special_Mushroom_9",
+    "questEntityId": "crystallia"
+  },
+  "561": {
+    "position": {
+      "x": -21.849367141723633,
+      "y": 11.75,
+      "z": -15.949600219726562
+    },
+    "parent": 518,
+    "name": "Item_Special_Mushroom_10",
+    "questEntityId": "cave_glb"
+  },
+  "562": {
+    "position": {
+      "x": -24.81660270690918,
+      "y": 0,
+      "z": -23.949600219726562
+    },
+    "parent": 518,
+    "name": "Item_Special_Mushroom_11",
+    "questEntityId": "special_mushroom_11"
+  },
+  "563": {
+    "position": {
+      "x": -19.650245666503906,
+      "y": 3.2275712490081787,
+      "z": -15.624879837036133
+    },
+    "parent": 523,
+    "name": "Item_Pomegranate_Seed_1",
+    "questEntityId": "abyss"
+  },
+  "564": {
+    "position": {
+      "x": -19.650245666503906,
+      "y": 3.2275712490081787,
+      "z": -16.624879837036133
+    },
+    "parent": 523,
+    "name": "Item_Pomegranate_Seed_2",
+    "questEntityId": "mycelium_caves"
+  },
+  "565": {
+    "position": {
+      "x": -19.650245666503906,
+      "y": 3.2275712490081787,
+      "z": -17.874879837036133
+    },
+    "parent": 523,
+    "name": "Item_Pomegranate_Seed_3",
+    "questEntityId": "main_stage"
+  },
+  "566": {
+    "position": {
+      "x": -19.650245666503906,
+      "y": 3.2275712490081787,
+      "z": -17.374879837036133
+    },
+    "parent": 523,
+    "name": "Item_Pomegranate_Seed_4",
+    "questEntityId": "new_portal"
+  },
+  "567": {
+    "position": {
+      "x": -19.650245666503906,
+      "y": 3.2275712490081787,
+      "z": -18.374879837036133
+    },
+    "parent": 523,
+    "name": "Item_Pomegranate_Seed_5",
+    "questEntityId": "persephone"
+  },
+  "568": {
+    "position": {
+      "x": -25.75,
+      "y": 2.25,
+      "z": -15.75
+    },
+    "parent": 523,
+    "name": "Portal_to_Abyss",
+    "questEntityId": "crystal"
+  },
+  "569": {
+    "position": {
+      "x": -24.75,
+      "y": 18.5,
+      "z": -10.5
+    },
+    "parent": 523,
+    "name": "Debris_Pile",
+    "questEntityId": "crystal_9"
+  },
+  "570": {
+    "position": {
+      "x": -27,
+      "y": 1.5,
+      "z": -17.099843978881836
+    },
+    "parent": 523,
+    "name": "Item_Vessel_1",
+    "questEntityId": "crystal_2"
+  },
+  "571": {
+    "position": {
+      "x": 6.75,
+      "y": 0,
+      "z": 7.25
+    },
+    "parent": 528,
+    "name": "Cat",
+    "questEntityId": "cat"
+  },
+  "572": {
+    "position": {
+      "x": 14.5,
+      "y": 0,
+      "z": 18
+    },
+    "parent": 528,
+    "name": " Ironf Fence 3",
+    "questEntityId": null
+  },
+  "573": {
+    "position": {
+      "x": -27,
+      "y": 1.25,
+      "z": -15.349843978881836
+    },
+    "parent": 523,
+    "name": "Item_Vessel_2",
+    "questEntityId": "crystal_10"
+  },
+  "574": {
+    "position": {
+      "x": -25.5,
+      "y": 1.25,
+      "z": -14.349843978881836
+    },
+    "parent": 523,
+    "name": "Item_Vessel_3",
+    "questEntityId": "special_mushroom_8"
+  },
+  "575": {
+    "position": {
+      "x": -23.75,
+      "y": 1,
+      "z": -15.599843978881836
+    },
+    "parent": 523,
+    "name": "Item_Vessel_4",
+    "questEntityId": "special_mushroom_9"
+  },
+  "576": {
+    "position": {
+      "x": -25,
+      "y": 1.5,
+      "z": -17.349843978881836
+    },
+    "parent": 523,
+    "name": "Item_Vessel_5",
+    "questEntityId": "special_mushroom_10"
+  },
+  "577": {
+    "position": {
+      "x": 19,
+      "y": 0,
+      "z": 13
+    },
+    "parent": 528,
+    "name": "Iron Fence 2",
+    "questEntityId": null
+  },
+  "578": {
+    "position": {
+      "x": 16.5,
+      "y": 0,
+      "z": 16.25
+    },
+    "parent": 528,
+    "name": "Iron Door 01",
+    "questEntityId": null
+  },
+  "579": {
+    "position": {
+      "x": 11.5,
+      "y": 0.9969428777694702,
+      "z": 11.569402694702148
+    },
+    "parent": 528,
+    "name": "PUMPKIN GUY",
+    "questEntityId": "pumpking_guy"
+  },
+  "580": {
+    "position": {
+      "x": 14,
+      "y": 0,
+      "z": 10.75
+    },
+    "parent": 528,
+    "name": "Tree ",
+    "questEntityId": null
+  },
+  "581": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "parent": 528,
+    "name": "Ground",
+    "questEntityId": null
+  },
+  "582": {
+    "position": {
+      "x": 8,
+      "y": 0,
+      "z": 24
+    },
+    "parent": 581,
+    "name": "Tile 1",
+    "questEntityId": null
+  },
+  "583": {
+    "position": {
+      "x": 24,
+      "y": 0,
+      "z": 24
+    },
+    "parent": 581,
+    "name": "Tile 2",
+    "questEntityId": null
+  },
+  "584": {
+    "position": {
+      "x": 8,
+      "y": 0,
+      "z": 8
+    },
+    "parent": 581,
+    "name": "Tile 3",
+    "questEntityId": null
+  },
+  "585": {
+    "position": {
+      "x": 24,
+      "y": 0,
+      "z": 8
+    },
+    "parent": 581,
+    "name": "Tile 4",
+    "questEntityId": null
+  },
+  "586": {
+    "position": {
+      "x": 9,
+      "y": 0,
+      "z": 13.75
+    },
+    "parent": 528,
+    "name": "Lamp 01",
+    "questEntityId": null
+  },
+  "587": {
+    "position": {
+      "x": 12,
+      "y": 0,
+      "z": 12
+    },
+    "parent": 528,
+    "name": "Small Green Grass Mound",
+    "questEntityId": null
+  },
+  "588": {
+    "position": {
+      "x": 11,
+      "y": 0,
+      "z": 12.5
+    },
+    "parent": 528,
+    "name": "Brown Mountain",
+    "questEntityId": null
+  },
+  "589": {
+    "position": {
+      "x": -3.6739405577555036e-16,
+      "y": 0,
+      "z": -3
+    },
+    "parent": 518,
+    "name": "stage-2-facepreview.glb",
+    "questEntityId": "stage_2_face_previes"
+  },
+  "590": {
+    "position": {
+      "x": 10,
+      "y": 0,
+      "z": 1.25
+    },
+    "parent": 528,
+    "name": "Wooden Door",
+    "questEntityId": "new_portal_xd_1"
+  }
+}

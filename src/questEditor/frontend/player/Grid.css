@@ -1,0 +1,242 @@
+.grid-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(1rem, 5vw, 3rem);
+  font-family: 'Courier New', monospace;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 1px;
+  width: min(70vw, 70vh, 600px);
+  height: min(70vw, 70vh, 600px);
+  max-width: 600px;
+  max-height: 600px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(15, 15, 25, 0.8) 100%);
+  border: 2px solid;
+  border-image: linear-gradient(45deg, #00ffff, #ff00ff) 1;
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow:
+    0 0 40px rgba(0, 255, 255, 0.2),
+    inset 0 0 40px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.grid::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, transparent, rgba(0, 255, 255, 0.1), transparent, rgba(255, 0, 255, 0.1), transparent);
+  border-radius: 14px;
+  animation: gridPulse 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+.grid-cell {
+  background: linear-gradient(135deg, rgba(10, 10, 10, 0.8) 0%, rgba(25, 25, 35, 0.8) 100%);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.grid-cell::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(0, 255, 255, 0.05), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.grid-cell:hover:not(.not-interactive) {
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 255, 255, 0.05) 100%);
+  border-color: rgba(0, 255, 255, 0.4);
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+.grid-cell:hover:not(.not-interactive)::before {
+  opacity: 1;
+}
+
+.grid-cell.has-entity {
+  background: linear-gradient(135deg, rgba(255, 0, 255, 0.1) 0%, rgba(255, 0, 255, 0.05) 100%);
+  border-color: rgba(255, 0, 255, 0.4);
+  box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
+}
+
+.grid-cell.has-entity::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background: #ff00ff;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255, 0, 255, 0.8);
+}
+
+.grid-cell.not-interactive.has-entity::after,
+.grid-cell.cleared.has-entity::after,
+.grid-cell.in-inventory.has-entity::after {
+  background: #666666;
+  box-shadow: 0 0 6px rgba(102, 102, 102, 0.8);
+}
+
+.entity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.entity-image {
+  max-width: 85%;
+  max-height: 85%;
+  object-fit: contain;
+  border-radius: 6px;
+  filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.3));
+  transition: all 0.3s ease;
+}
+
+.grid-cell:not(.not-interactive) .entity:hover .entity-image {
+  filter: drop-shadow(0 0 12px rgba(0, 255, 255, 0.4));
+  transform: scale(1.05);
+}
+
+.entity-name {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(15, 15, 25, 0.95) 0%, rgba(25, 25, 45, 0.95) 100%);
+  color: #00ffff;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.8);
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.grid-cell:hover:not(.not-interactive) .entity-name {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+/* Entity Tooltip Styles */
+.entity-tooltip {
+  background: linear-gradient(135deg, rgba(15, 15, 25, 0.98) 0%, rgba(25, 25, 45, 0.98) 100%);
+  border: 1px solid #00ffff;
+  padding: 0.75rem;
+  box-shadow:
+    0 0 20px rgba(0, 255, 255, 0.3),
+    0 10px 30px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  animation: tooltipFadeIn 0.2s ease;
+  z-index: 1001;
+  position: relative;
+  border-radius: 6px;
+}
+
+.entity-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  background: linear-gradient(135deg,
+    rgba(0, 255, 255, 0.3) 0%,
+    transparent 25%,
+    rgba(255, 0, 255, 0.3) 75%,
+    transparent 100%);
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 6px;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(10px, 10px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(10px, 10px) scale(1);
+  }
+}
+
+.tooltip-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tooltip-content strong {
+  color: #00ffff;
+  font-size: 0.9rem;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.8);
+  font-family: 'Courier New', monospace;
+}
+
+.tooltip-image {
+  overflow: hidden;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.tooltip-image img {
+  object-fit: contain;
+}
+
+/* Cleared Entity Styles */
+.grid-cell.cleared .entity-image {
+  filter: grayscale(100%) opacity(0.4);
+  transition: all 0.3s ease;
+}
+
+
+/* Not Spawned Entity Styles */
+.grid-cell.not-spawned .entity-image {
+  filter: grayscale(100%) opacity(0.4);
+  transition: all 0.3s ease;
+}
+
+/* In Inventory Entity Styles */
+.grid-cell.in-inventory .entity-image {
+  filter: grayscale(100%) opacity(0.4);
+  transition: all 0.3s ease;
+}

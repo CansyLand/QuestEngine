@@ -1,0 +1,163 @@
+/* Base Builder Styles */
+
+/* CSS Custom Properties for theming */
+:root {
+  /* Color Palette */
+  --primary-color: #00ffff;
+  --primary-dark: #0080ff;
+  --secondary-color: #ff00ff;
+  --danger-color: #ff0040;
+  --warning-color: #ffd700;
+  --success-color: #4caf50;
+
+  /* Neutral Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #e0e0e0;
+  --text-muted: #b0b0b0;
+  --text-disabled: #666666;
+
+  /* Background Colors */
+  --bg-primary: rgba(15, 15, 25, 0.98);
+  --bg-secondary: rgba(25, 25, 45, 0.98);
+  --bg-overlay: rgba(0, 0, 0, 0.8);
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-hover: rgba(255, 255, 255, 0.1);
+
+  /* Border Colors */
+  --border-primary: rgba(0, 255, 255, 0.3);
+  --border-secondary: rgba(255, 255, 255, 0.1);
+  --border-focus: #00ffff;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.75rem;
+  --spacing-lg: 1rem;
+  --spacing-xl: 1.5rem;
+  --spacing-xxl: 2rem;
+
+  /* Typography */
+  --font-family-primary: 'Courier New', monospace;
+  --font-family-secondary: inherit;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8rem;
+  --font-size-base: 0.9rem;
+  --font-size-lg: 1rem;
+  --font-size-xl: 1.1rem;
+  --font-size-xxl: 1.2rem;
+
+  /* Border Radius */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+
+  /* Shadows */
+  --shadow-sm: 0 0 5px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 0 15px rgba(0, 255, 255, 0.3);
+  --shadow-lg: 0 0 25px rgba(0, 255, 255, 0.6);
+  --shadow-xl: 0 0 50px rgba(0, 255, 255, 0.3);
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* Z-index */
+  --z-dropdown: 100;
+  --z-modal: 1000;
+  --z-tooltip: 1100;
+
+  /* Layout */
+  --modal-max-width-sm: 400px;
+  --modal-max-width-md: 600px;
+  --modal-max-width-lg: 800px;
+  --modal-max-width-xl: 1200px;
+
+  --form-field-padding: 0.75rem;
+  --array-max-height: 200px;
+}
+
+/* Reset body margin */
+body {
+  margin: 0;
+}
+.builder {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+  background-attachment: fixed;
+  color: #e0e0e0;
+  font-family: 'Courier New', monospace;
+}
+
+.builder::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.builder-content {
+  padding: 2rem;
+}
+
+/* Loading Styles */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.2rem;
+  color: #00ffff;
+  font-family: inherit;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+}
+
+.loading::before {
+  content: '⟳';
+  animation: spin 2s linear infinite;
+  margin-right: 1rem;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Empty State Styles */
+.empty-state {
+  padding: 3rem;
+  text-align: center;
+  color: #666666;
+  font-style: italic;
+  font-family: inherit;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.empty-state::before {
+  content: '⚠ SYSTEM OFFLINE ⚠';
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ff4081;
+  font-size: 0.8rem;
+  text-shadow: 0 0 5px rgba(255, 64, 129, 0.8);
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}

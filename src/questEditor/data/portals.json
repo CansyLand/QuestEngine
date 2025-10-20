@@ -1,0 +1,130 @@
+[
+  {
+    "id": "portal_to_cave",
+    "name": "Portal to Cave",
+    "image": "http://localhost:5173/assets/images/portal_3.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "changeLocation",
+        "params": {
+          "locationId": "mycelium_caves"
+        }
+      }
+    ],
+    "destinationLocationId": "mycelium_caves"
+  },
+  {
+    "id": "portal_to_main_stage",
+    "name": "Portal to Main Stage",
+    "image": "http://localhost:5173/assets/images/portal_2.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "changeLocation",
+        "params": {
+          "locationId": "main_stage"
+        }
+      }
+    ],
+    "destinationLocationId": "main_stage"
+  },
+  {
+    "id": "new_portal",
+    "name": "New Portal",
+    "image": "/assets/images/Spell_Magic_PolymorphChicken.png",
+    "state": "world",
+    "interactive": "grabbable",
+    "onInteract": [
+      {
+        "type": "changeLocation",
+        "params": {
+          "locationId": "mycelium_caves"
+        }
+      }
+    ],
+    "destinationLocationId": "mycelium_caves"
+  },
+  {
+    "id": "new_portal_1",
+    "name": "New Portal",
+    "image": "/assets/images/npc_3.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "changeLocation",
+        "params": {
+          "locationId": "abyss"
+        }
+      }
+    ],
+    "destinationLocationId": "abyss"
+  },
+  {
+    "id": "new_portal_2",
+    "name": "New Portal",
+    "image": "/assets/images/icon-set.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "changeLocation",
+        "params": {
+          "locationId": "main_stage"
+        }
+      }
+    ],
+    "destinationLocationId": "main_stage"
+  },
+  {
+    "id": "portal_to_abyss",
+    "name": "Portal to Abyss",
+    "image": "/assets/images/crystal_3.png",
+    "state": "world",
+    "interactive": "interactive",
+    "onInteract": [
+      {
+        "type": "changeLocation",
+        "params": {
+          "locationId": "abyss"
+        }
+      }
+    ],
+    "destinationLocationId": "abyss"
+  },
+  {
+    "id": "new_portal_xd_1",
+    "name": "New Portal xd",
+    "image": "/assets/images/Spell_Magic_PolymorphRabbit.png",
+    "state": "world",
+    "interactive": "interactive",
+    "onInteract": [
+      {
+        "type": "changeLocation",
+        "params": {
+          "locationId": "main_stage"
+        }
+      }
+    ],
+    "destinationLocationId": "main_stage"
+  },
+  {
+    "id": "new_portal_xd",
+    "name": "New Portal xd",
+    "image": "/assets/images/particle.png",
+    "state": "world",
+    "interactive": "touchable",
+    "onInteract": [
+      {
+        "type": "changeLocation",
+        "params": {
+          "locationId": "mycelium_caves"
+        }
+      }
+    ],
+    "destinationLocationId": "mycelium_caves"
+  }
+]

@@ -1,0 +1,423 @@
+[
+  {
+    "id": "enter_mycelium_cave",
+    "chapter": "The Mycelium Cave",
+    "title": "Enter Mycelium Cave",
+    "description": "Go through the portal into the mycelium cave",
+    "order": 0,
+    "steps": [
+      {
+        "id": "go_through_portal_into_the_mycelium_cave",
+        "name": "Go through portal into the mycelium cave",
+        "objectiveType": "goToLocation",
+        "objectiveParams": {
+          "locationId": "mycelium_caves"
+        },
+        "onStart": [],
+        "onComplete": [
+          {
+            "type": "activateQuest",
+            "params": {
+              "questId": "deep_tunes"
+            }
+          },
+          {
+            "type": "activateQuest",
+            "params": {
+              "questId": "help_persephone_find_her_light"
+            }
+          }
+        ],
+        "isCompleted": true
+      }
+    ],
+    "activeStepId": "find_crystal",
+    "completed": true
+  },
+  {
+    "id": "deep_tunes",
+    "chapter": "The Mycelium Cave",
+    "title": "Deep Tunes",
+    "description": "Help Bassimus find a new bass string so he can play his groovy riffs and clear the boulder blocking the path.",
+    "order": 1,
+    "steps": [
+      {
+        "id": "talk_to_bassimus",
+        "name": "Talk to Bassimus",
+        "objectiveType": "talkTo",
+        "objectiveParams": {
+          "npcId": "bassimus"
+        },
+        "onStart": [],
+        "onComplete": [],
+        "isCompleted": true
+      },
+      {
+        "id": "find_the_bass_string",
+        "name": "Find the Bass String",
+        "objectiveType": "collectEntities",
+        "objectiveParams": {
+          "entityIds": [
+            "bass_string"
+          ]
+        },
+        "onStart": [
+          {
+            "type": "setInteractiveByName",
+            "params": {
+              "itemName": "Bass String",
+              "interactiveMode": "grabbable"
+            }
+          }
+        ],
+        "onComplete": [],
+        "isCompleted": true
+      },
+      {
+        "id": "return_to_bassimus",
+        "name": "Return to Bassimus",
+        "objectiveType": "talkTo",
+        "objectiveParams": {
+          "npcId": "bassimus"
+        },
+        "onStart": [],
+        "onComplete": [
+          {
+            "type": "clearEntity",
+            "params": {
+              "entityId": "boulder"
+            }
+          },
+          {
+            "type": "activateQuest",
+            "params": {
+              "questId": "the_mirror_self"
+            }
+          },
+          {
+            "type": "removeFromInventoryByName",
+            "params": {
+              "itemName": "Bass String"
+            }
+          }
+        ],
+        "isCompleted": false
+      }
+    ],
+    "completed": false,
+    "activeStepId": "return_to_bassimus"
+  },
+  {
+    "id": "the_mirror_self",
+    "chapter": "The Mycelium Cave",
+    "title": "The Mirror Self",
+    "description": "Help Echo get crystals from Crystallia, but beware the consequences!",
+    "order": 2,
+    "steps": [
+      {
+        "id": "talk_to_echo",
+        "name": "Talk to Echo",
+        "objectiveType": "talkTo",
+        "objectiveParams": {
+          "npcId": "echo"
+        },
+        "onStart": [],
+        "onComplete": [],
+        "isCompleted": false
+      },
+      {
+        "id": "get_the_crystals",
+        "name": "Get the Crystals",
+        "objectiveType": "collectByName",
+        "objectiveParams": {
+          "itemName": "Crystal",
+          "count": 5
+        },
+        "onStart": [
+          {
+            "type": "setInteractiveByName",
+            "params": {
+              "itemName": "Crystal",
+              "interactiveMode": "grabbable"
+            }
+          }
+        ],
+        "onComplete": [
+          {
+            "type": "spawnEntity",
+            "params": {
+              "entityId": "debris_pile"
+            }
+          },
+          {
+            "type": "spawnEntity",
+            "params": {
+              "entityId": "debris_pile_1"
+            }
+          },
+          {
+            "type": "startDialogue",
+            "params": {
+              "dialogueSequenceId": "echo_echo_earthquake_reaction"
+            }
+          }
+        ],
+        "isCompleted": false
+      },
+      {
+        "id": "bring_crystals_to_echo",
+        "name": "Bring Crystals to Echo",
+        "objectiveType": "talkTo",
+        "objectiveParams": {
+          "npcId": "echo"
+        },
+        "onStart": [],
+        "onComplete": [
+          {
+            "type": "removeFromInventoryByName",
+            "params": {
+              "itemName": "Crystal",
+              "count": 6
+            }
+          },
+          {
+            "type": "activateQuest",
+            "params": {
+              "questId": "the_mushroom_run"
+            }
+          }
+        ],
+        "isCompleted": false
+      }
+    ],
+    "completed": false
+  },
+  {
+    "id": "the_mushroom_run",
+    "chapter": "The Mycelium Cave",
+    "title": "The Mushroom Run",
+    "description": "Return to the surface world and collect 10 special mushrooms to clear the debris blocking the path.",
+    "order": 3,
+    "steps": [
+      {
+        "id": "go_to_the_shrooms",
+        "name": "Go to the Shrooms",
+        "objectiveType": "goToLocation",
+        "objectiveParams": {
+          "locationId": "main_stage"
+        },
+        "onStart": [],
+        "onComplete": [],
+        "isCompleted": false
+      },
+      {
+        "id": "collect_mushrooms",
+        "name": "Collect Mushrooms",
+        "objectiveType": "collectByName",
+        "objectiveParams": {
+          "itemName": "Special Mushroom",
+          "count": 3
+        },
+        "onStart": [
+          {
+            "type": "setInteractiveByName",
+            "params": {
+              "itemName": "Special Mushroom",
+              "interactiveMode": "grabbable"
+            }
+          }
+        ],
+        "onComplete": [
+          {
+            "type": "startDialogue",
+            "params": {
+              "dialogueSequenceId": "echo_mushroom_completion"
+            }
+          }
+        ],
+        "isCompleted": false
+      },
+      {
+        "id": "return_to_the_caves",
+        "name": "Return to the Caves",
+        "objectiveType": "goToLocation",
+        "objectiveParams": {
+          "locationId": "mycelium_caves"
+        },
+        "onStart": [],
+        "onComplete": [],
+        "isCompleted": false
+      },
+      {
+        "id": "bring_echo_mushrooms",
+        "name": "Bring Echo Mushrooms",
+        "objectiveType": "talkTo",
+        "objectiveParams": {
+          "npcId": "echo"
+        },
+        "onStart": [],
+        "onComplete": [
+          {
+            "type": "removeFromInventoryByName",
+            "params": {
+              "itemName": "Special Mushroom",
+              "count": 2
+            }
+          },
+          {
+            "type": "clearEntity",
+            "params": {
+              "entityId": "debris_pile_1"
+            }
+          },
+          {
+            "type": "activateQuest",
+            "params": {
+              "questId": "help_persephone_find_her_light"
+            }
+          }
+        ],
+        "isCompleted": false
+      }
+    ],
+    "completed": false
+  },
+  {
+    "id": "help_persephone_find_her_light",
+    "chapter": "The Mycelium Cave",
+    "title": "Help Persephone Find Her Light",
+    "description": "Help Persephone escape her curse by collecting pomegranate seeds and opening the portal.",
+    "order": 4,
+    "steps": [
+      {
+        "id": "meet_persephone",
+        "name": "Meet Persephone",
+        "objectiveType": "talkTo",
+        "objectiveParams": {
+          "npcId": "persephone"
+        },
+        "onStart": [],
+        "onComplete": [],
+        "isCompleted": false
+      },
+      {
+        "id": "activate_portal",
+        "name": "Activate Portal",
+        "objectiveType": "custom",
+        "objectiveParams": {
+          "targetId": "seeds_placed",
+          "requiredCount": 5
+        },
+        "onStart": [
+          {
+            "type": "spawnEntity",
+            "params": {
+              "entityId": "pomegranate_seed"
+            }
+          },
+          {
+            "type": "spawnEntity",
+            "params": {
+              "entityId": "pomegranate_seed_2"
+            }
+          },
+          {
+            "type": "spawnEntity",
+            "params": {
+              "entityId": "pomegranate_seed_1"
+            }
+          },
+          {
+            "type": "spawnEntity",
+            "params": {
+              "entityId": "pomegranate_seed_3"
+            }
+          },
+          {
+            "type": "spawnEntity",
+            "params": {
+              "entityId": "pomegranate_seed_4"
+            }
+          },
+          {
+            "type": "setInteractiveByName",
+            "params": {
+              "itemName": "Pomegranate Seed",
+              "interactiveMode": "grabbable"
+            }
+          }
+        ],
+        "onComplete": [],
+        "isCompleted": false
+      },
+      {
+        "id": "convince_persephone",
+        "name": "Convince Persephone",
+        "objectiveType": "custom",
+        "objectiveParams": {
+          "targetId": "persephone_convinced"
+        },
+        "onStart": [],
+        "onComplete": [
+          {
+            "type": "setInteractive",
+            "params": {
+              "entityId": "portal_to_abyss",
+              "interactiveMode": "touchable"
+            }
+          }
+        ],
+        "isCompleted": false
+      }
+    ],
+    "completed": false
+  },
+  {
+    "id": "its_halloween",
+    "chapter": "Chapter Halloween",
+    "title": "It's Halloween!",
+    "description": "Help Pumpkin Guy to find his lost cat",
+    "order": 5,
+    "steps": [
+      {
+        "id": "talk_to_pumpkin_guy",
+        "name": "Talk to Pumpkin Guy",
+        "objectiveType": "talkTo",
+        "objectiveParams": {
+          "npcId": "pumpking_guy"
+        },
+        "onStart": [],
+        "onComplete": []
+      },
+      {
+        "id": "find_cat_mew",
+        "name": "Find Cat Mew",
+        "objectiveType": "collectByName",
+        "objectiveParams": {
+          "itemName": "Cat",
+          "count": 1
+        },
+        "onStart": [
+          {
+            "type": "spawnEntity",
+            "params": {
+              "entityId": "cat"
+            }
+          }
+        ],
+        "onComplete": []
+      },
+      {
+        "id": "bring_mew_back_to_pumpkin_guy",
+        "name": "Bring Mew Back to Pumpkin Guy",
+        "objectiveType": "talkTo",
+        "objectiveParams": {
+          "npcId": "pumpking_guy"
+        },
+        "onStart": [],
+        "onComplete": []
+      }
+    ],
+    "completed": false
+  }
+]

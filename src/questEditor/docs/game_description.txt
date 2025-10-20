@@ -1,0 +1,209 @@
+GameEngine
+
+
+I want to create a game engine with game builder that runs with simple node web app on local host.
+
+
+
+====
+
+frontend game builder:
+here i want to to be able to cerate NPCs, npc Dialogues,  items,  locations, quests, queststeps in quests.
+
+ui should have 5 collumns: Chapter, Quests, QuestSteps, NPC, Dialogue
+(chapter is defined in quest, if there is no quests jet just show first collumn empty and a card in the second that says crate quest after first quest is created the chepter shows a card with the chepters name from the first quest.)
+if i click on a chapter collumn 2 shows me the quests in this chepter.
+if i clik on a quest then collumn 3 shows me the steps in 
+if i click on a step then the collumn 4 shows me the npcs and items in the quest
+if i click on an npc then collumn 5 schors me the dialogue this npcs has
+if i click on an item then noting happens
+
+evey element shoud have an edit button to edit this element
+
+the idea is that the quest step coordinated what dialogues an npc tells and setting for items
+Example:
+Crystall:
+    - visible
+    - touchable
+(in this example crystalla are in the scene from the get go and you can touch them (play an mp4 for example)
+but onyly quest step makes item grabbale so it can be set to invisible and not interactive aka cleared)
+we can not use the word remove for reasons jet to come.
+
+Quest gett crystalls
+step1: talk to npc 
+    - npc dialogue: greetinf
+step2: collect 3 crystals 
+    -npc diaogue: find more crystals
+    -items [
+        crystal 1: set to grabbable
+        crystal 2: set to grabbable
+        crystal 3: set to grabbable
+        crystal 4: set to grabbable 
+        crystal 5: set to grabbable (notice how i made more crystalls grabbale as palyer has to collct just 3, this a wanted behavipur )
+    ]
+step3: talk to npc (bring them)
+    - npc dialogue: thank you
+    - items [
+        mushrooms 1 spawn
+        mushroom 2 spawn 
+        portal spawn  
+    ]
+    npc [npc_a clear,
+    npc_b spawn] 
+    - activateQuest(TalkToMushroomGardener)
+
+
+
+======
+
+items should have a button to copy it
+
+you should b eable to remove items npcs dialogeus quest lcoations and so on
+
+======
+
+frontend game player 
+
+to test the game flow we net absolute minimal implementation.
+meanign audio player
+backgroind image
+items and npcs are just icons on a grid.
+create a 16x 16 grid and place items randomly (with seed, so its always same spot) into thsi grid.
+if i click an item that is interactable it plays its sound and if it is grabbable it is cleared
+if i click npc on the righ is a collumn it show me the picture and the text togeteher with the button options. that i can click interact woth to get to next dialogue sequence.
+
+poratl change location to the one defined in portal. 
+
+also i want 
+
+====
+
+
+
+front end:
+- define item
+- define npc
+- define dialogue
+- define 
+
+
+
+
+Game object Structure:
+
+GameEngine:{
+        locations: []
+        quest:
+        [
+            chapter: string
+            title: string
+            descritpion: string
+            order: 0
+            steps [
+                step:{
+                    name
+                    objective
+                }
+            ]
+        ]
+}
+
+     
+
+
+    
+
+
+NPC: {
+    name
+    portrait
+    dialogues:[
+        dialogueSequence {
+            name
+            dialogues: [ // we need better naming
+                dialogues: [ // becasue dualogues appears 2 time ,
+                dialog{
+                    text
+                    isQuestion: bool 
+                    buttons: [
+                        Button: {
+                            label:"hello",
+                            goToDialog: number
+                        }
+                    ]
+                    isEndOfDialog: bool,
+                    trigger by next(){}
+                    }
+                ]
+            ]
+            
+        }
+    ]
+}
+
+Location: {
+    backgroundMusic: string
+    backgroundImage: string
+    Portals: [
+        Portal {
+            destination: location
+            rest is sane like item
+        }
+    ]
+    Items: [
+        Item: {
+            name: string
+            image: string
+            audio: sting
+            audioOnInteraction: string
+            audioOnGrab: sting
+            spawned: boolean
+            destroyed: boolean
+            interactive: notInteractive| grabbable | touchable
+            onInputAction: {
+                if grabbable 
+                inventory.crystal ++  
+                playSound
+            } 
+        }
+    ]
+    NPCs: [
+        NPC: {}
+    ]
+}
+
+when location changes then curernt location and all its items and npcs are cleared
+Abd new locations items and npcs are spawend
+also backround music changes.
+and background image
+
+inventory [items]
+
+
+
+
+
+game engine should call front end like api 
+game engine should ask the frontend to create or clear items and play sound and so forth
+engine is lowest level is the backend. frontend shuld be easily switchable as i am inteding to use game engine in different environments
+
+so all funcitons that are related to play audio spawn or clear somethign have to clearly separate for esy swaps
+location swaps is basically an envelope of these player viewable funtions. but the funtion that changes the location and item management on the sceen shoul be too on the frontend
+
+gameengine jsut tell what to do very clear separation it is only respisible for smooth game flow
+
+========================
+
+
+Constrains
+- only typesrcipt! and keep files small that are easily to manage
+- the items and quests generated in the builder have to be saved on hard drive. but how?
+- the saved gameDescription file has to be easily readable by the typescript game engine
+- the saved game Description file has to be easily readable by the editor so we can edit it and resave new definition.
+- if possible and if it makes sense  i woudl seperate this into multiple files
+like game, quests, npcs dialogues items if it is easeier to have one file is also ok.
+
+
+=======================
+
+

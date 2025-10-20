@@ -1,0 +1,63 @@
+/* Tab Navigation Styles */
+.builder-tabs {
+  background: linear-gradient(90deg, rgba(15, 15, 25, 0.95) 0%, rgba(25, 25, 45, 0.95) 100%);
+  border-bottom: 1px solid #ff00ff;
+  border-image: linear-gradient(90deg, #ff00ff, #00ffff) 1;
+  display: flex;
+  backdrop-filter: blur(10px);
+}
+
+.builder-tabs button {
+  padding: 1rem 2rem;
+  border: none;
+  background: none;
+  color: #b0b0b0;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.builder-tabs button:hover {
+  background: linear-gradient(135deg, rgba(255, 0, 255, 0.1) 0%, rgba(0, 255, 255, 0.1) 100%);
+  color: #ffffff;
+}
+
+.builder-tabs button.active {
+  border-bottom: 2px solid #00ffff;
+  color: #00ffff;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+}
+
+.builder-tabs button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #00ffff, #ff00ff);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+}
+
+.builder-tabs button.has-changes {
+  color: #ff4444;
+  border-bottom: 2px solid #ff4444;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
+  }
+}
