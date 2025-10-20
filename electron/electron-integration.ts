@@ -256,6 +256,9 @@ export class QuestEditorIntegration {
 
 		// Engine will be initialized when project path is set
 		// API routes will be mounted after engine initialization
+
+		// Setup static file serving for project assets
+		this.setupStaticRoutes()
 	}
 
 	/**
@@ -267,6 +270,7 @@ export class QuestEditorIntegration {
 		await this.updateDataDirectory(projectPath)
 		await this.initializeEngine()
 		this.setupSceneMonitoring(projectPath)
+		this.setupStaticRoutes() // Update static routes for new project
 		console.log('QuestEditorIntegration: Project path set successfully')
 	}
 
@@ -291,6 +295,22 @@ export class QuestEditorIntegration {
 
 		// Create a simple API router that works with our persistence
 		this.setupApiRoutes()
+	}
+
+	/**
+	 * Setup static file serving for project assets
+	 */
+	private setupStaticRoutes(): void {
+		// Add static serving for project assets if project path is set
+		if (this.projectPath) {
+			const assetsPath = path.join(this.projectPath, 'assets')
+			console.log('Setting up static serving for assets at:', assetsPath)
+			console.log(
+				'Assets directory exists:',
+				require('fs').existsSync(assetsPath)
+			)
+			this.app.use('/assets', express.static(assetsPath))
+		}
 	}
 
 	/**
@@ -564,23 +584,38 @@ export class QuestEditorIntegration {
 					console.log('API: No thumbnails folder accessible')
 				}
 
-				// 2. Check assets/images folder (new requirement) - temporarily disabled due to route issues
-				// const assetsImagesPath = path.join(this.projectPath, 'assets', 'images')
-				// try {
-				// 	console.log('API: Checking assets/images folder:', assetsImagesPath)
-				// 	const assetsImages = await getAllImageFiles(
-				// 		assetsImagesPath,
-				// 		`http://localhost:31234/api/assets-images/${path.basename(
-				// 			this.projectPath
-				// 		)}`
-				// 	)
-				// 	console.log(
-				// 		`API: Found ${assetsImages.length} images in assets/images`
-				// 	)
-				// 	images.push(...assetsImages)
-				// } catch (error) {
-				// 	console.log('API: No assets/images folder accessible')
-				// }
+				// 2. Check assets/images folder (new requirement)
+				const assetsImagesPath = path.join(
+					currentProjectPath,
+					'assets',
+					'images'
+				)
+				console.log(
+					'API: About to check assets/images folder:',
+					assetsImagesPath
+				)
+				console.log(
+					'API: Does assets/images path exist?',
+					require('fs').existsSync(assetsImagesPath) ? 'YES' : 'NO'
+				)
+				try {
+					console.log('API: Checking assets/images folder:', assetsImagesPath)
+					const assetsImages = await getAllImageFiles(
+						assetsImagesPath,
+						`http://localhost:31234/assets/images`,
+						'assets'
+					)
+					console.log(
+						`API: Found ${assetsImages.length} images in assets/images`
+					)
+					images.push(...assetsImages)
+				} catch (error) {
+					console.log(
+						'API: No assets/images folder accessible:',
+						error instanceof Error ? error.message : String(error)
+					)
+					console.log('API: Full error details:', error)
+				}
 
 				console.log(`API: Total images found: ${images.length}`)
 

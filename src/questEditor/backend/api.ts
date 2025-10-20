@@ -671,12 +671,10 @@ export function createApiRouter(
 				res.json({})
 			}
 		} catch (error) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					error: error instanceof Error ? error.message : 'Unknown error',
-				})
+			res.status(500).json({
+				success: false,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			})
 		}
 	})
 
@@ -725,24 +723,52 @@ export function createApiRouter(
 				res.status(404).json({ success: false, error: 'Entity not found' })
 			}
 		} catch (error) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					error: error instanceof Error ? error.message : 'Unknown error',
-				})
+			res.status(500).json({
+				success: false,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			})
 		}
 	})
 
-	// Get thumbnail images from DCL projects
+	// Get thumbnail images from DCL projects and assets/images
 	router.get('/thumbnails', (req, res) => {
 		try {
 			const dclProjectsPath = path.join(process.cwd(), '..')
 			const images: Array<{ name: string; url: string; project: string }> = []
 
+			// First, load images from assets/images directory
+			const assetsImagesPath = path.join(
+				__dirname,
+				'../../frontend/public/assets/images'
+			)
+			if (fs.existsSync(assetsImagesPath)) {
+				try {
+					const imageFiles = fs.readdirSync(assetsImagesPath).filter((file) => {
+						const ext = path.extname(file).toLowerCase()
+						return ['.png', '.jpg', '.jpeg', '.gif', '.webp'].includes(ext)
+					})
+
+					// Add each image to the images array
+					for (const fileName of imageFiles) {
+						const url = `/assets/images/${fileName}`
+						images.push({
+							name: fileName,
+							url: url,
+							project: 'assets',
+						})
+					}
+				} catch (error) {
+					console.warn('Failed to read images from assets/images:', error)
+				}
+			}
+
 			// Check if the DCL projects directory exists
 			if (!fs.existsSync(dclProjectsPath)) {
-				return res.json({ success: true, data: images })
+				const response: ApiResponse = {
+					success: true,
+					data: images,
+				}
+				return res.json(response)
 			}
 
 			// Get all directories in the DCL projects folder
