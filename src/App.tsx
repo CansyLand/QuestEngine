@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Project } from './types'
+import { QuestEditor } from './components/QuestEditor'
 
 declare global {
 	interface Window {
@@ -14,6 +15,11 @@ declare global {
 			getProjects: () => Promise<Project[]>
 			createProject: (name: string, path: string) => Promise<Project>
 			updateProjectLastOpened: (projectId: string) => Promise<void>
+			deleteProject: (projectId: string) => Promise<void>
+			// QuestEditor API methods
+			setQuestEditorProject: (projectPath: string) => Promise<void>
+			getQuestData: (dataType: string) => Promise<any>
+			saveQuestData: (dataType: string, data: any) => Promise<void>
 		}
 	}
 }
@@ -24,6 +30,8 @@ function App() {
 	const [newProjectName, setNewProjectName] = useState<string>('')
 	const [selectedPath, setSelectedPath] = useState<string>('')
 	const [loading, setLoading] = useState<boolean>(false)
+	const [currentProject, setCurrentProject] = useState<Project | null>(null)
+	const [showQuestEditor, setShowQuestEditor] = useState<boolean>(false)
 
 	useEffect(() => {
 		loadProjects()
@@ -76,12 +84,43 @@ function App() {
 	const handleOpenProject = async (project: Project) => {
 		try {
 			await window.electronAPI.updateProjectLastOpened(project.id)
-			// Here you would navigate to the project workspace
-			// For now, just show an alert
-			alert(`Opening project: ${project.name} at ${project.path}`)
+			setCurrentProject(project)
+			setShowQuestEditor(true)
+
+			// Initialize questEditor with the project path
+			await window.electronAPI.setQuestEditorProject(project.path)
 		} catch (error) {
 			console.error('Failed to open project:', error)
+			alert('Failed to open project. Please try again.')
 		}
+	}
+
+	const handleDeleteProject = async (project: Project) => {
+		const confirmDelete = window.confirm(
+			`Are you sure you want to delete the project "${project.name}"?\n\nThis action cannot be undone.`
+		)
+
+		if (!confirmDelete) return
+
+		try {
+			await window.electronAPI.deleteProject(project.id)
+			setProjects((prev) => prev.filter((p) => p.id !== project.id))
+		} catch (error) {
+			console.error('Failed to delete project:', error)
+			alert('Failed to delete project. Please try again.')
+		}
+	}
+
+	const handleBackToProjects = () => {
+		setCurrentProject(null)
+		setShowQuestEditor(false)
+	}
+
+	// Render QuestEditor interface if a project is selected
+	if (showQuestEditor && currentProject) {
+		return (
+			<QuestEditor project={currentProject} onBack={handleBackToProjects} />
+		)
 	}
 
 	return (
@@ -128,15 +167,48 @@ function App() {
 								>
 									{project.path}
 								</p>
-								<p style={{ margin: 0, color: '#888', fontSize: '12px' }}>
-									Created: {new Date(project.createdAt).toLocaleDateString()}
-									{project.lastOpenedAt && (
-										<span style={{ marginLeft: 15 }}>
-											Last opened:{' '}
-											{new Date(project.lastOpenedAt).toLocaleDateString()}
-										</span>
-									)}
-								</p>
+								<div
+									style={{
+										display: 'flex',
+										justifyContent: 'space-between',
+										alignItems: 'center',
+										marginBottom: '8px',
+									}}
+								>
+									<p style={{ margin: 0, color: '#888', fontSize: '12px' }}>
+										Created: {new Date(project.createdAt).toLocaleDateString()}
+										{project.lastOpenedAt && (
+											<span style={{ marginLeft: 15 }}>
+												Last opened:{' '}
+												{new Date(project.lastOpenedAt).toLocaleDateString()}
+											</span>
+										)}
+									</p>
+									<button
+										onClick={(e) => {
+											e.stopPropagation()
+											handleDeleteProject(project)
+										}}
+										style={{
+											padding: '4px 8px',
+											fontSize: '12px',
+											backgroundColor: '#dc3545',
+											color: 'white',
+											border: 'none',
+											borderRadius: 4,
+											cursor: 'pointer',
+											transition: 'background-color 0.2s',
+										}}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.backgroundColor = '#c82333'
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.backgroundColor = '#dc3545'
+										}}
+									>
+										Delete
+									</button>
+								</div>
 							</div>
 						))}
 					</div>

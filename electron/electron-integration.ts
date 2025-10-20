@@ -1,0 +1,655 @@
+import express from 'express'
+import cors from 'cors'
+import * as path from 'path'
+import * as fs from 'fs/promises'
+// Removed imports from backend files to avoid compilation issues
+import { BrowserWindow } from 'electron'
+import {
+	Game,
+	Location,
+	SavedLocation,
+	Quest,
+	NPC,
+	Item,
+	Portal,
+	DialogueSequence,
+} from '../src/questEditor/models'
+
+class ElectronPersistenceManager {
+	private dataDir: string
+
+	constructor(dataDir: string) {
+		this.dataDir = dataDir
+	}
+
+	private async ensureDataDir(): Promise<void> {
+		try {
+			await fs.mkdir(this.dataDir, { recursive: true })
+		} catch (error) {
+			// Directory already exists or other error, ignore
+		}
+	}
+
+	private getFilePath(filename: string): string {
+		return path.join(this.dataDir, filename)
+	}
+
+	async loadQuests(): Promise<Quest[]> {
+		try {
+			const filePath = this.getFilePath('quests.json')
+			const data = await fs.readFile(filePath, 'utf-8')
+			return JSON.parse(data)
+		} catch (error) {
+			console.error('Error loading quests:', error)
+			return []
+		}
+	}
+
+	async saveQuests(quests: Quest[]): Promise<void> {
+		await this.ensureDataDir()
+		const filePath = this.getFilePath('quests.json')
+		const tempPath = filePath + '.tmp'
+		await fs.writeFile(tempPath, JSON.stringify(quests, null, 2))
+		await fs.rename(tempPath, filePath)
+	}
+
+	async loadLocations(
+		items: Item[],
+		npcs: NPC[],
+		portals: Portal[]
+	): Promise<Location[]> {
+		try {
+			const filePath = this.getFilePath('locations.json')
+			const data = await fs.readFile(filePath, 'utf-8')
+			const savedLocations = JSON.parse(data) as SavedLocation[]
+
+			return savedLocations.map((location) => ({
+				...location,
+				items: location.items
+					.map((itemId: string) => items.find((i) => i.id === itemId))
+					.filter(Boolean) as Item[],
+				npcs: location.npcs
+					.map((npcId: string) => npcs.find((n) => n.id === npcId))
+					.filter(Boolean) as NPC[],
+				portals: location.portals
+					.map((portalId: string) => portals.find((p) => p.id === portalId))
+					.filter(Boolean) as Portal[],
+			}))
+		} catch (error) {
+			console.error('Error loading locations:', error)
+			return []
+		}
+	}
+
+	async saveLocations(locations: Location[]): Promise<void> {
+		await this.ensureDataDir()
+		const filePath = this.getFilePath('locations.json')
+		const savedLocations: SavedLocation[] = locations.map((location) => ({
+			id: location.id,
+			name: location.name,
+			backgroundMusic: location.backgroundMusic,
+			image: location.image,
+			items: location.items.map((item) => item.id),
+			npcs: location.npcs.map((npc) => npc.id),
+			portals: location.portals.map((portal) => portal.id),
+		}))
+
+		const tempPath = filePath + '.tmp'
+		await fs.writeFile(tempPath, JSON.stringify(savedLocations, null, 2))
+		await fs.rename(tempPath, filePath)
+	}
+
+	async loadNPCs(): Promise<NPC[]> {
+		try {
+			const filePath = this.getFilePath('npcs.json')
+			const data = await fs.readFile(filePath, 'utf-8')
+			return JSON.parse(data)
+		} catch (error) {
+			console.error('Error loading NPCs:', error)
+			return []
+		}
+	}
+
+	async saveNPCs(npcs: NPC[]): Promise<void> {
+		await this.ensureDataDir()
+		const filePath = this.getFilePath('npcs.json')
+		const tempPath = filePath + '.tmp'
+		await fs.writeFile(tempPath, JSON.stringify(npcs, null, 2))
+		await fs.rename(tempPath, filePath)
+	}
+
+	async loadItems(): Promise<Item[]> {
+		try {
+			const filePath = this.getFilePath('items.json')
+			const data = await fs.readFile(filePath, 'utf-8')
+			return JSON.parse(data)
+		} catch (error) {
+			console.error('Error loading items:', error)
+			return []
+		}
+	}
+
+	async saveItems(items: Item[]): Promise<void> {
+		await this.ensureDataDir()
+		const filePath = this.getFilePath('items.json')
+		const tempPath = filePath + '.tmp'
+		await fs.writeFile(tempPath, JSON.stringify(items, null, 2))
+		await fs.rename(tempPath, filePath)
+	}
+
+	async loadPortals(): Promise<Portal[]> {
+		try {
+			const filePath = this.getFilePath('portals.json')
+			const data = await fs.readFile(filePath, 'utf-8')
+			return JSON.parse(data)
+		} catch (error) {
+			console.error('Error loading portals:', error)
+			return []
+		}
+	}
+
+	async savePortals(portals: Portal[]): Promise<void> {
+		await this.ensureDataDir()
+		const filePath = this.getFilePath('portals.json')
+		const tempPath = filePath + '.tmp'
+		await fs.writeFile(tempPath, JSON.stringify(portals, null, 2))
+		await fs.rename(tempPath, filePath)
+	}
+
+	async loadDialogues(): Promise<DialogueSequence[]> {
+		try {
+			const filePath = this.getFilePath('dialogues.json')
+			const data = await fs.readFile(filePath, 'utf-8')
+			return JSON.parse(data)
+		} catch (error) {
+			console.error('Error loading dialogues:', error)
+			return []
+		}
+	}
+
+	async saveDialogues(dialogues: DialogueSequence[]): Promise<void> {
+		await this.ensureDataDir()
+		const filePath = this.getFilePath('dialogues.json')
+		const tempPath = filePath + '.tmp'
+		await fs.writeFile(tempPath, JSON.stringify(dialogues, null, 2))
+		await fs.rename(tempPath, filePath)
+	}
+
+	async loadEntityLinks(): Promise<Record<string, any>> {
+		try {
+			const filePath = this.getFilePath('entityLinks.json')
+			const data = await fs.readFile(filePath, 'utf-8')
+			return JSON.parse(data)
+		} catch (error) {
+			console.error('Error loading entity links:', error)
+			return {}
+		}
+	}
+
+	async saveEntityLinks(entityLinks: Record<string, any>): Promise<void> {
+		await this.ensureDataDir()
+		const filePath = this.getFilePath('entityLinks.json')
+		const tempPath = filePath + '.tmp'
+		await fs.writeFile(tempPath, JSON.stringify(entityLinks, null, 2))
+		await fs.rename(tempPath, filePath)
+	}
+
+	async loadGame(): Promise<Game> {
+		const quests = await this.loadQuests()
+		const npcs = await this.loadNPCs()
+		const items = await this.loadItems()
+		const portals = await this.loadPortals()
+		const dialogues = await this.loadDialogues()
+		const locations = await this.loadLocations(items, npcs, portals)
+
+		// Create default game state
+		const myceliumCaves = locations.find((l) => l.id === 'mycelium_caves')
+		return {
+			locations,
+			quests,
+			npcs,
+			items,
+			portals,
+			dialogues,
+			currentLocationId: myceliumCaves
+				? myceliumCaves.id
+				: locations.length > 0
+				? locations[0].id
+				: '',
+			activeQuests: [],
+			inventory: [],
+		}
+	}
+
+	async saveGame(game: Game): Promise<void> {
+		await this.saveLocations(game.locations)
+		await this.saveQuests(game.quests)
+		await this.saveNPCs(game.npcs)
+		await this.saveItems(game.items)
+		await this.savePortals(game.portals)
+		await this.saveDialogues(game.dialogues)
+	}
+
+	async compileDataToTypescript(): Promise<void> {
+		// Stub implementation - could generate TypeScript types from JSON data
+		console.log(
+			'Data compilation not implemented in ElectronPersistenceManager'
+		)
+	}
+}
+
+export class QuestEditorIntegration {
+	private app: express.Application
+	private server: any
+	private engine: any = null
+	private persistence: ElectronPersistenceManager
+	private projectPath: string | null = null
+	private sceneMonitoringInterval: NodeJS.Timeout | null = null
+
+	constructor() {
+		this.app = express()
+		this.app.use(cors())
+		this.app.use(express.json())
+
+		// Initialize backend components
+		this.persistence = new ElectronPersistenceManager('')
+
+		// Engine will be initialized when project path is set
+		// API routes will be mounted after engine initialization
+	}
+
+	/**
+	 * Set the active project path and update data directory
+	 */
+	async setProjectPath(projectPath: string): Promise<void> {
+		this.projectPath = projectPath
+		await this.updateDataDirectory(projectPath)
+		await this.initializeEngine()
+		this.setupSceneMonitoring(projectPath)
+	}
+
+	/**
+	 * Initialize the game engine after setting the project path
+	 */
+	private async initializeEngine(): Promise<void> {
+		// For now, create a simple mock engine that delegates to persistence
+		// In a full implementation, we'd modify GameEngine to be async-compatible
+		this.engine = {
+			getGame: async () => await this.persistence.loadGame(),
+			saveGame: async (game: any) => await this.persistence.saveGame(game),
+			// Add other methods as needed for the API
+		} as any
+
+		// Create a simple API router that works with our persistence
+		this.setupApiRoutes()
+	}
+
+	/**
+	 * Setup API routes for questEditor
+	 */
+	private setupApiRoutes(): void {
+		const router = express.Router()
+
+		// Game data endpoint
+		router.get('/game', async (req, res) => {
+			try {
+				const game = await this.persistence.loadGame()
+				res.json(game)
+			} catch (error) {
+				res.status(500).json({ error: 'Failed to load game data' })
+			}
+		})
+
+		// Quests endpoints
+		router.get('/quests', async (req, res) => {
+			try {
+				const quests = await this.persistence.loadQuests()
+				res.json(quests)
+			} catch (error) {
+				res.status(500).json({ error: 'Failed to load quests' })
+			}
+		})
+
+		router.post('/quests', async (req, res) => {
+			try {
+				await this.persistence.saveQuests(req.body)
+				res.json({ success: true })
+			} catch (error) {
+				res.status(500).json({ error: 'Failed to save quests' })
+			}
+		})
+
+		// Add more endpoints as needed...
+
+		this.app.use('/api', router)
+	}
+
+	/**
+	 * Update the persistence manager's data directory
+	 */
+	private async updateDataDirectory(projectPath: string): Promise<void> {
+		const dataDir = path.join(projectPath, 'src/questEngine/data')
+
+		// Create new persistence instance with the project-specific data directory
+		this.persistence = new ElectronPersistenceManager(dataDir)
+	}
+
+	/**
+	 * Initialize default data for a new project
+	 */
+	private async initializeDefaultData(dataDir: string): Promise<void> {
+		// Use process.cwd() to get the main project directory, then navigate to src/questEditor/data
+		const defaultDataDir = path.join(process.cwd(), 'src/questEditor/data')
+		console.log('__dirname:', __dirname)
+		console.log('process.cwd():', process.cwd())
+		console.log('defaultDataDir:', defaultDataDir)
+		console.log('target dataDir:', dataDir)
+
+		// Check if any data files exist
+		try {
+			const files = await fs.readdir(dataDir)
+			if (files.length > 0) {
+				// Data already exists, don't overwrite
+				console.log('Data already exists in project, skipping initialization')
+				return
+			}
+		} catch (error) {
+			console.log('Data directory does not exist, will create:', error)
+		}
+
+		// Ensure target directory exists
+		await fs.mkdir(dataDir, { recursive: true })
+		console.log('Created data directory:', dataDir)
+
+		// Copy default data files
+		const dataFiles = [
+			'quests.json',
+			'locations.json',
+			'npcs.json',
+			'portals.json',
+			'dialogues.json',
+			'entityLinks.json',
+			'items.json',
+		]
+
+		for (const file of dataFiles) {
+			try {
+				const sourcePath = path.join(defaultDataDir, file)
+				const targetPath = path.join(dataDir, file)
+
+				console.log(
+					`Attempting to copy ${file} from ${sourcePath} to ${targetPath}`
+				)
+
+				// Check if source file exists and copy it
+				try {
+					await fs.access(sourcePath)
+					await fs.copyFile(sourcePath, targetPath)
+					console.log(`✅ Successfully copied ${file} to project`)
+				} catch (copyError) {
+					// If source file doesn't exist, create an empty JSON file
+					console.warn(
+						`Source file ${file} not found, creating empty JSON file`
+					)
+					const emptyData = this.getEmptyDataForFile(file)
+					await fs.writeFile(targetPath, JSON.stringify(emptyData, null, 2))
+					console.log(`✅ Created empty ${file} in project`)
+				}
+			} catch (error) {
+				console.error(`❌ Failed to create ${file}:`, error)
+			}
+		}
+
+		console.log('Data initialization complete')
+	}
+
+	/**
+	 * Get empty data structure for a specific file type
+	 */
+	private getEmptyDataForFile(filename: string): any {
+		switch (filename) {
+			case 'quests.json':
+				return []
+			case 'npcs.json':
+				return []
+			case 'items.json':
+				return []
+			case 'locations.json':
+				return []
+			case 'portals.json':
+				return []
+			case 'dialogues.json':
+				return []
+			case 'entityLinks.json':
+				return {}
+			default:
+				return {}
+		}
+	}
+
+	/**
+	 * Setup DCL scene monitoring for the project
+	 */
+	private setupSceneMonitoring(projectPath: string): void {
+		// Clear existing monitoring
+		if (this.sceneMonitoringInterval) {
+			clearInterval(this.sceneMonitoringInterval)
+		}
+
+		const compositePath = path.join(projectPath, 'assets/scene/main.composite')
+		const linksPath = path.join(
+			projectPath,
+			'src/questEngine/data/entityLinks.json'
+		)
+
+		let lastHash: string | null = null
+
+		let heartbeatCount = 0
+
+		const monitorChanges = async () => {
+			try {
+				// Check if composite file exists
+				await fs.access(compositePath)
+
+				const compositeData = JSON.parse(
+					await fs.readFile(compositePath, 'utf8')
+				)
+				const currentHash = this.computeHash(compositeData)
+
+				if (currentHash !== lastHash) {
+					lastHash = currentHash
+					const newLinks = this.extractEntityData(compositeData)
+					await this.updateEntityLinks(newLinks, linksPath)
+					console.log('DCL scene entities updated in project:', projectPath)
+				}
+
+				// Show heartbeat every 10 checks (30 seconds)
+				heartbeatCount++
+				if (heartbeatCount % 10 === 0) {
+					console.log('DCL monitoring active for project:', projectPath)
+				}
+			} catch (error) {
+				// File might not exist or be invalid JSON - silently ignore
+				if (heartbeatCount % 10 === 0) {
+					console.log(
+						'DCL monitoring waiting for main.composite file in project:',
+						projectPath
+					)
+				}
+				heartbeatCount++
+			}
+		}
+
+		// Run initial check
+		monitorChanges()
+
+		// Monitor every 3 seconds
+		this.sceneMonitoringInterval = setInterval(monitorChanges, 3000)
+		console.log('DCL scene monitoring started for project:', projectPath)
+		console.log('Monitoring file:', compositePath)
+		console.log('Will update:', linksPath)
+	}
+
+	/**
+	 * Compute hash for change detection
+	 */
+	private computeHash(data: any): string {
+		const transformData =
+			data.components?.find((c: any) => c.name === 'core::Transform')?.data ||
+			{}
+		const nameData =
+			data.components?.find((c: any) => c.name === 'core-schema::Name')?.data ||
+			{}
+
+		const entities = Object.keys(transformData)
+		let hashData = entities.length.toString()
+
+		const sortedEntities = entities.sort()
+
+		sortedEntities.forEach((entityId) => {
+			const transform = transformData[entityId]?.json
+			const name = nameData[entityId]?.json?.value
+
+			if (transform) {
+				hashData += `${entityId}:${transform.position?.x || 0},${
+					transform.position?.y || 0
+				},${transform.position?.z || 0}`
+			}
+			if (name) {
+				hashData += `:${name}`
+			}
+		})
+
+		return hashData
+	}
+
+	/**
+	 * Extract entity data from composite
+	 */
+	private extractEntityData(compositeData: any) {
+		const links: Record<string, any> = {}
+		const transformData =
+			compositeData.components?.find((c: any) => c.name === 'core::Transform')
+				?.data || {}
+		const nameData =
+			compositeData.components?.find((c: any) => c.name === 'core-schema::Name')
+				?.data || {}
+
+		for (const entityId of Object.keys(transformData)) {
+			if (nameData[entityId]) {
+				const transform = transformData[entityId].json
+				const name = nameData[entityId].json.value
+				links[entityId] = {
+					position: transform.position || { x: 0, y: 0, z: 0 },
+					parent: transform.parent || 0,
+					name: name || 'Unknown',
+					questEntityId: null,
+				}
+			}
+		}
+		return links
+	}
+
+	/**
+	 * Update entity links file
+	 */
+	private async updateEntityLinks(
+		newLinks: Record<string, any>,
+		linksPath: string
+	): Promise<void> {
+		let existingLinks: Record<string, any> = {}
+		try {
+			const data = await fs.readFile(linksPath, 'utf8')
+			existingLinks = JSON.parse(data)
+		} catch {
+			// File doesn't exist, use empty object
+		}
+
+		const updatedLinks: Record<string, any> = {}
+
+		// Process existing entities
+		for (const entityId in existingLinks) {
+			const existingEntity = existingLinks[entityId]
+
+			if (newLinks[entityId]) {
+				// Entity still exists, update with new data (including name changes)
+				updatedLinks[entityId] = {
+					...newLinks[entityId],
+					questEntityId: existingEntity.questEntityId, // Preserve existing quest entity links
+				}
+			} else {
+				// Entity was removed from main.composite - delete it entirely
+				console.log(
+					`Removing entity ${entityId} (${existingEntity.name}) from entityLinks.json`
+				)
+			}
+		}
+
+		// Add any new entities from main.composite
+		for (const entityId in newLinks) {
+			if (!existingLinks[entityId]) {
+				updatedLinks[entityId] = newLinks[entityId]
+				console.log(
+					`Adding new entity ${entityId} (${newLinks[entityId].name}) to entityLinks.json`
+				)
+			}
+		}
+
+		// Ensure directory exists
+		await fs.mkdir(path.dirname(linksPath), { recursive: true })
+
+		// Write back to file
+		await fs.writeFile(linksPath, JSON.stringify(updatedLinks, null, 2))
+		console.log('entityLinks.json updated.')
+	}
+
+	/**
+	 * Start the questEditor backend server
+	 */
+	async start(port: number = 3001): Promise<void> {
+		return new Promise((resolve) => {
+			this.server = this.app.listen(port, () => {
+				console.log(`QuestEditor backend running on port ${port}`)
+				resolve()
+			})
+		})
+	}
+
+	/**
+	 * Stop the questEditor backend server
+	 */
+	stop(): void {
+		if (this.server) {
+			this.server.close()
+			this.server = null
+		}
+		if (this.sceneMonitoringInterval) {
+			clearInterval(this.sceneMonitoringInterval)
+			this.sceneMonitoringInterval = null
+		}
+	}
+
+	/**
+	 * Get the Express app instance for additional configuration
+	 */
+	getApp(): express.Application {
+		return this.app
+	}
+
+	/**
+	 * Get API methods that can be exposed via IPC
+	 */
+	getApiMethods() {
+		return {
+			// These methods can be called via IPC to interact with the questEditor backend
+			getGameData: async () =>
+				this.engine ? await this.engine.getGame() : null,
+			saveGameData: async (data: any) =>
+				this.engine ? await this.engine.saveGame(data) : null,
+			getQuests: () => this.persistence.loadQuests(),
+			saveQuests: (quests: any[]) => this.persistence.saveQuests(quests),
+			persistence: this.persistence,
+			// Add more methods as needed
+		}
+	}
+}

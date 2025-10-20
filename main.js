@@ -1,10 +1,45 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
-const path = require("path");
+const path = __importStar(require("path"));
 const electron_updater_1 = require("electron-updater");
-const fs = require("fs/promises"); // For file I/O
+const fs = __importStar(require("fs/promises")); // For file I/O
+const electron_integration_1 = require("./electron/electron-integration");
 let mainWindow = null;
+let questEditor = null;
 // Simple file-based storage for projects
 const getProjectsFilePath = () => {
     return path.join(electron_1.app.getPath('userData'), 'projects.json');
@@ -47,8 +82,11 @@ function createWindow() {
 // Auto-update setup
 electron_updater_1.autoUpdater.autoDownload = true;
 electron_updater_1.autoUpdater.autoInstallOnAppQuit = true;
-electron_1.app.whenReady().then(() => {
+electron_1.app.whenReady().then(async () => {
     createWindow();
+    // Initialize QuestEditor backend
+    questEditor = new electron_integration_1.QuestEditorIntegration();
+    await questEditor.start(3001); // Use port 3001 to avoid conflict with React dev server
     electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
 });
 electron_updater_1.autoUpdater.on('update-available', () => {
@@ -74,6 +112,11 @@ electron_updater_1.autoUpdater.on('update-downloaded', () => {
 });
 electron_1.app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
+        // Clean up questEditor before quitting
+        if (questEditor) {
+            questEditor.stop();
+            questEditor = null;
+        }
         electron_1.app.quit();
     }
 });
@@ -112,6 +155,36 @@ electron_1.ipcMain.handle('create-project', async (_event, { name, path: project
     };
     projects.push(newProject);
     await saveProjects(projects);
+    // Create questEngine folder and data files in the project's src directory
+    try {
+        const questEnginePath = path.join(projectPath, 'src', 'questEngine');
+        const dataPath = path.join(questEnginePath, 'data');
+        await fs.mkdir(dataPath, { recursive: true });
+        console.log(`Created questEngine folder: ${questEnginePath}`);
+        // Create empty JSON files
+        const jsonFiles = [
+            'quests.json',
+            'locations.json',
+            'npcs.json',
+            'portals.json',
+            'dialogues.json',
+            'entityLinks.json',
+            'items.json',
+        ];
+        for (const file of jsonFiles) {
+            const filePath = path.join(dataPath, file);
+            let emptyData = '[]'; // Default empty array for most files
+            if (file === 'entityLinks.json') {
+                emptyData = '{}'; // Object for entity links
+            }
+            await fs.writeFile(filePath, emptyData, 'utf8');
+            console.log(`Created ${file} in ${dataPath}`);
+        }
+        console.log('All data files created successfully');
+    }
+    catch (error) {
+        console.error('Failed to create questEngine folder and files:', error);
+    }
     return newProject;
 });
 electron_1.ipcMain.handle('update-project-last-opened', async (_event, projectId) => {
@@ -120,5 +193,73 @@ electron_1.ipcMain.handle('update-project-last-opened', async (_event, projectId
     if (projectIndex !== -1) {
         projects[projectIndex].lastOpenedAt = new Date().toISOString();
         await saveProjects(projects);
+    }
+});
+electron_1.ipcMain.handle('delete-project', async (_event, projectId) => {
+    const projects = await loadProjects();
+    const filteredProjects = projects.filter((p) => p.id !== projectId);
+    await saveProjects(filteredProjects);
+});
+// QuestEditor IPC handlers
+electron_1.ipcMain.handle('set-quest-editor-project', async (_event, projectPath) => {
+    if (questEditor) {
+        await questEditor.setProjectPath(projectPath);
+    }
+});
+electron_1.ipcMain.handle('get-quest-data', async (_event, dataType) => {
+    if (!questEditor)
+        return null;
+    // Access persistence directly from the questEditor instance
+    const persistence = questEditor.persistence;
+    if (!persistence)
+        return null;
+    switch (dataType) {
+        case 'quests':
+            return await persistence.loadQuests();
+        case 'npcs':
+            return await persistence.loadNPCs();
+        case 'items':
+            return await persistence.loadItems();
+        case 'locations':
+            const items = await persistence.loadItems();
+            const npcs = await persistence.loadNPCs();
+            const portals = await persistence.loadPortals();
+            return await persistence.loadLocations(items, npcs, portals);
+        case 'portals':
+            return await persistence.loadPortals();
+        case 'dialogues':
+            return await persistence.loadDialogues();
+        case 'entityLinks':
+            return await persistence.loadEntityLinks();
+        case 'game':
+            return await persistence.loadGame();
+        default:
+            return null;
+    }
+});
+electron_1.ipcMain.handle('save-quest-data', async (_event, dataType, data) => {
+    if (!questEditor)
+        return;
+    // Access persistence directly from the questEditor instance
+    const persistence = questEditor.persistence;
+    if (!persistence)
+        return;
+    switch (dataType) {
+        case 'quests':
+            return await persistence.saveQuests(data);
+        case 'npcs':
+            return await persistence.saveNPCs(data);
+        case 'items':
+            return await persistence.saveItems(data);
+        case 'locations':
+            return await persistence.saveLocations(data);
+        case 'portals':
+            return await persistence.savePortals(data);
+        case 'dialogues':
+            return await persistence.saveDialogues(data);
+        case 'entityLinks':
+            return await persistence.saveEntityLinks(data);
+        case 'game':
+            return await persistence.saveGame(data);
     }
 });

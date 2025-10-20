@@ -20,5 +20,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "main.ts", "preload.ts"]
+  "include": ["src", "main.ts", "preload.ts"],
+  "exclude": ["src/questEditor/backend/**", "electron/**"]
 }

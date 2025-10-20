@@ -8,4 +8,9 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     getProjects: () => electron_1.ipcRenderer.invoke('get-projects'),
     createProject: (name, path) => electron_1.ipcRenderer.invoke('create-project', { name, path }),
     updateProjectLastOpened: (projectId) => electron_1.ipcRenderer.invoke('update-project-last-opened', projectId),
+    deleteProject: (projectId) => electron_1.ipcRenderer.invoke('delete-project', projectId),
+    // QuestEditor API methods
+    setQuestEditorProject: (projectPath) => electron_1.ipcRenderer.invoke('set-quest-editor-project', projectPath),
+    getQuestData: (dataType) => electron_1.ipcRenderer.invoke('get-quest-data', dataType),
+    saveQuestData: (dataType, data) => electron_1.ipcRenderer.invoke('save-quest-data', dataType, data),
 });

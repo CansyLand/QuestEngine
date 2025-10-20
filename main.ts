@@ -2,8 +2,10 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import * as path from 'path'
 import { autoUpdater } from 'electron-updater'
 import * as fs from 'fs/promises' // For file I/O
+import { QuestEditorIntegration } from './electron/electron-integration'
 
 let mainWindow: BrowserWindow | null = null
+let questEditor: QuestEditorIntegration | null = null
 
 // Project data structure
 interface Project {
@@ -65,8 +67,13 @@ function createWindow(): void {
 autoUpdater.autoDownload = true
 autoUpdater.autoInstallOnAppQuit = true
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
 	createWindow()
+
+	// Initialize QuestEditor backend
+	questEditor = new QuestEditorIntegration()
+	await questEditor.start(3001) // Use port 3001 to avoid conflict with React dev server
+
 	autoUpdater.checkForUpdatesAndNotify()
 })
 
@@ -95,6 +102,11 @@ autoUpdater.on('update-downloaded', () => {
 
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') {
+		// Clean up questEditor before quitting
+		if (questEditor) {
+			questEditor.stop()
+			questEditor = null
+		}
 		app.quit()
 	}
 })
@@ -160,6 +172,42 @@ ipcMain.handle(
 		}
 		projects.push(newProject)
 		await saveProjects(projects)
+
+		// Create questEngine folder and data files in the project's src directory
+		try {
+			const questEnginePath = path.join(projectPath, 'src', 'questEngine')
+			const dataPath = path.join(questEnginePath, 'data')
+			await fs.mkdir(dataPath, { recursive: true })
+			console.log(`Created questEngine folder: ${questEnginePath}`)
+
+			// Create empty JSON files
+			const jsonFiles = [
+				'quests.json',
+				'locations.json',
+				'npcs.json',
+				'portals.json',
+				'dialogues.json',
+				'entityLinks.json',
+				'items.json',
+			]
+
+			for (const file of jsonFiles) {
+				const filePath = path.join(dataPath, file)
+				let emptyData = '[]' // Default empty array for most files
+
+				if (file === 'entityLinks.json') {
+					emptyData = '{}' // Object for entity links
+				}
+
+				await fs.writeFile(filePath, emptyData, 'utf8')
+				console.log(`Created ${file} in ${dataPath}`)
+			}
+
+			console.log('All data files created successfully')
+		} catch (error) {
+			console.error('Failed to create questEngine folder and files:', error)
+		}
+
 		return newProject
 	}
 )
@@ -172,6 +220,90 @@ ipcMain.handle(
 		if (projectIndex !== -1) {
 			projects[projectIndex].lastOpenedAt = new Date().toISOString()
 			await saveProjects(projects)
+		}
+	}
+)
+
+ipcMain.handle(
+	'delete-project',
+	async (_event, projectId: string): Promise<void> => {
+		const projects = await loadProjects()
+		const filteredProjects = projects.filter((p) => p.id !== projectId)
+		await saveProjects(filteredProjects)
+	}
+)
+
+// QuestEditor IPC handlers
+ipcMain.handle(
+	'set-quest-editor-project',
+	async (_event, projectPath: string): Promise<void> => {
+		if (questEditor) {
+			await questEditor.setProjectPath(projectPath)
+		}
+	}
+)
+
+ipcMain.handle(
+	'get-quest-data',
+	async (_event, dataType: string): Promise<any> => {
+		if (!questEditor) return null
+
+		// Access persistence directly from the questEditor instance
+		const persistence = (questEditor as any).persistence
+		if (!persistence) return null
+
+		switch (dataType) {
+			case 'quests':
+				return await persistence.loadQuests()
+			case 'npcs':
+				return await persistence.loadNPCs()
+			case 'items':
+				return await persistence.loadItems()
+			case 'locations':
+				const items = await persistence.loadItems()
+				const npcs = await persistence.loadNPCs()
+				const portals = await persistence.loadPortals()
+				return await persistence.loadLocations(items, npcs, portals)
+			case 'portals':
+				return await persistence.loadPortals()
+			case 'dialogues':
+				return await persistence.loadDialogues()
+			case 'entityLinks':
+				return await persistence.loadEntityLinks()
+			case 'game':
+				return await persistence.loadGame()
+			default:
+				return null
+		}
+	}
+)
+
+ipcMain.handle(
+	'save-quest-data',
+	async (_event, dataType: string, data: any): Promise<void> => {
+		if (!questEditor) return
+
+		// Access persistence directly from the questEditor instance
+		const persistence = (questEditor as any).persistence
+		if (!persistence) return
+
+		switch (dataType) {
+			case 'quests':
+				return await persistence.saveQuests(data)
+			case 'npcs':
+				return await persistence.saveNPCs(data)
+			case 'items':
+				return await persistence.saveItems(data)
+			case 'locations':
+				return await persistence.saveLocations(data)
+			case 'portals':
+				return await persistence.savePortals(data)
+			case 'dialogues':
+				return await persistence.saveDialogues(data)
+			case 'entityLinks':
+				return await persistence.saveEntityLinks(data)
+			case 'game':
+				return await persistence.saveGame(data)
 		}
 	}
 )
