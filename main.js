@@ -86,7 +86,8 @@ electron_1.app.whenReady().then(async () => {
     createWindow();
     // Initialize QuestEditor backend
     questEditor = new electron_integration_1.QuestEditorIntegration();
-    await questEditor.start(3001); // Use port 3001 to avoid conflict with React dev server
+    const backendPort = await questEditor.start(); // Start on fixed port 31234
+    console.log(`QuestEngine backend running on port ${backendPort}`);
     electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
 });
 electron_updater_1.autoUpdater.on('update-available', () => {

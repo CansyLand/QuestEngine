@@ -729,13 +729,21 @@ export class QuestEditorIntegration {
 	}
 
 	/**
-	 * Start the questEditor backend server
+	 * Start the questEditor backend server on a fixed uncommon port
 	 */
-	async start(port: number = 3001): Promise<void> {
-		return new Promise((resolve) => {
+	async start(): Promise<number> {
+		const port = 31234 // Uncommon port that's unlikely to conflict with user projects
+
+		return new Promise((resolve, reject) => {
 			this.server = this.app.listen(port, () => {
 				console.log(`QuestEditor backend running on port ${port}`)
-				resolve()
+				resolve(port)
+			})
+
+			this.server.on('error', (err: any) => {
+				reject(
+					new Error(`Failed to start server on port ${port}: ${err.message}`)
+				)
 			})
 		})
 	}

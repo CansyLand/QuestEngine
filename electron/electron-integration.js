@@ -661,13 +661,17 @@ class QuestEditorIntegration {
         console.log('entityLinks.json updated.');
     }
     /**
-     * Start the questEditor backend server
+     * Start the questEditor backend server on a fixed uncommon port
      */
-    async start(port = 3001) {
-        return new Promise((resolve) => {
+    async start() {
+        const port = 31234; // Uncommon port that's unlikely to conflict with user projects
+        return new Promise((resolve, reject) => {
             this.server = this.app.listen(port, () => {
                 console.log(`QuestEditor backend running on port ${port}`);
-                resolve();
+                resolve(port);
+            });
+            this.server.on('error', (err) => {
+                reject(new Error(`Failed to start server on port ${port}: ${err.message}`));
             });
         });
     }

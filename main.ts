@@ -72,7 +72,8 @@ app.whenReady().then(async () => {
 
 	// Initialize QuestEditor backend
 	questEditor = new QuestEditorIntegration()
-	await questEditor.start(3001) // Use port 3001 to avoid conflict with React dev server
+	const backendPort = await questEditor.start() // Start on fixed port 31234
+	console.log(`QuestEngine backend running on port ${backendPort}`)
 
 	autoUpdater.checkForUpdatesAndNotify()
 })

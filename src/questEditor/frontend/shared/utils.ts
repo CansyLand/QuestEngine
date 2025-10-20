@@ -13,9 +13,9 @@ export async function apiRequest(
 	options?: RequestInit
 ): Promise<ApiResponse> {
 	try {
-		// Use localhost:3001 for Electron environment, localhost:3000 for web
+		// Use fixed port 31234 for Electron environment (uncommon port to avoid conflicts)
 		const isElectron = !!(window as any).electronAPI
-		const baseUrl = isElectron ? 'http://localhost:3001' : ''
+		const baseUrl = isElectron ? 'http://localhost:31234' : ''
 		const url =
 			options?.method === 'GET' || !options?.method
 				? `${baseUrl}/api${endpoint}?t=${Date.now()}`
