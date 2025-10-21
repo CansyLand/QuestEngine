@@ -24,10 +24,12 @@
 			"main.js",
 			"preload.js",
 			"electron-integration.js",
+			"src/questEditor/backend/generate-data.js",
 			"node_modules/**/*"
 		],
 		"asarUnpack": [
-			"build/**/*"
+			"build/**/*",
+			"src/questEditor/backend/generate-data.js"
 		],
 		"mac": {
 			"target": "dmg"

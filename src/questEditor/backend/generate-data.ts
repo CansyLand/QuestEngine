@@ -17,8 +17,7 @@ const path = require('path')
  * Output: data.ts (in execution directory)
  */
 
-const dataDir = path.join(process.cwd(), 'data')
-const outputFile = path.join(process.cwd(), 'data.ts')
+// dataDir and outputFile are now calculated dynamically in generateDataFile()
 
 // File mappings: JSON filename -> TypeScript constant name
 const fileMappings = {
@@ -71,6 +70,9 @@ function stringifyObject(obj: any, indent = 0): string {
  * Generate the TypeScript file content
  */
 function generateDataFile() {
+	const dataDir = path.join(process.cwd(), 'data')
+	const outputFile = path.join(process.cwd(), 'data.ts')
+
 	let output = `// src/questEngine/data.ts - Embedded game data for Decentraland scene
 // This file contains all the game configuration data embedded as constants
 // Auto-generated from questEditor/data/*.json files - DO NOT EDIT MANUALLY
@@ -106,5 +108,58 @@ function generateDataFile() {
 	console.log('🎉 Data generation complete!')
 }
 
-// Run the generation
-generateDataFile()
+// Shared compilation function that can be used by both Electron and backend
+export async function compileDataToTypescriptShared(
+	dataDir: string
+): Promise<void> {
+	return new Promise((resolve, reject) => {
+		try {
+			console.log('🔄 Starting data compilation for project...')
+			console.log('Data directory:', dataDir)
+
+			// Calculate the correct paths relative to the data directory
+			const questEngineDir = path.dirname(dataDir) // src/questEngine/
+
+			console.log('QuestEngine directory:', questEngineDir)
+
+			// Store current working directory
+			const originalCwd = process.cwd()
+
+			try {
+				// Change to questEngine directory (where generate-data expects to run)
+				process.chdir(questEngineDir)
+				console.log(`Changed working directory to: ${questEngineDir}`)
+				console.log('New working directory:', process.cwd())
+
+				// Execute the generate-data function directly in this process
+				console.log('🔄 Running generateDataFile()...')
+				generateDataFile()
+				console.log('✅ generateDataFile() completed successfully')
+
+				console.log('✅ Data compilation completed successfully')
+				resolve()
+			} catch (scriptError) {
+				console.error('❌ Error running generate-data script:', scriptError)
+				console.error('Error stack:', (scriptError as Error).stack)
+				reject(scriptError)
+			} finally {
+				// Always restore original working directory
+				try {
+					process.chdir(originalCwd)
+					console.log('Restored working directory to:', originalCwd)
+				} catch (cwdError) {
+					console.warn(
+						'Could not restore original working directory:',
+						cwdError
+					)
+				}
+			}
+		} catch (error) {
+			console.error('❌ Error compiling data to TypeScript:', error)
+			console.error('Error stack:', (error as Error).stack)
+			reject(error)
+		}
+	})
+}
+
+// generateDataFile() is now only called when explicitly needed via compileDataToTypescriptShared()

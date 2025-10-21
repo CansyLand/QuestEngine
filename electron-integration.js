@@ -41,8 +41,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs/promises"));
-const child_process_1 = require("child_process");
-const electron_1 = require("electron");
+const generate_data_js_1 = require("./src/questEditor/backend/generate-data.js");
 class ElectronPersistenceManager {
     constructor(dataDir) {
         this.dataDir = dataDir;
@@ -231,6 +230,7 @@ class ElectronPersistenceManager {
         };
     }
     async saveGame(game) {
+        console.log('📁 ElectronPersistenceManager.saveGame called');
         await this.saveLocations(game.locations);
         await this.saveQuests(game.quests);
         await this.saveNPCs(game.npcs);
@@ -238,41 +238,12 @@ class ElectronPersistenceManager {
         await this.savePortals(game.portals);
         await this.saveDialogues(game.dialogues);
         // Compile data after all saves are complete
+        console.log('🔄 About to call compileDataToTypescript');
         await this.compileDataToTypescript();
+        console.log('✅ saveGame completed');
     }
     async compileDataToTypescript() {
-        return new Promise((resolve, reject) => {
-            try {
-                console.log('🔄 Starting data compilation for project...');
-                // Get the application directory (works for both dev and packaged apps)
-                const appPath = electron_1.app.getAppPath();
-                const scriptPath = path.resolve(appPath, 'src/questEditor/backend/generate-data.js');
-                const workingDir = path.dirname(this.dataDir); // src/questEngine/
-                const command = `cd "${workingDir}" && node "${scriptPath}"`;
-                console.log('App path:', appPath);
-                console.log('Script path:', scriptPath);
-                console.log('Working directory:', workingDir);
-                console.log('Command:', command);
-                (0, child_process_1.exec)(command, (error, stdout, stderr) => {
-                    if (stdout)
-                        console.log('Data compilation output:', stdout);
-                    if (stderr)
-                        console.log('Data compilation stderr:', stderr);
-                    if (error) {
-                        console.error('❌ Data compilation failed:', error);
-                        reject(error);
-                    }
-                    else {
-                        console.log('✅ Data compilation completed successfully');
-                        resolve();
-                    }
-                });
-            }
-            catch (error) {
-                console.error('❌ Error compiling data to TypeScript:', error);
-                reject(error);
-            }
-        });
+        return (0, generate_data_js_1.compileDataToTypescriptShared)(this.dataDir);
     }
 }
 class QuestEditorIntegration {

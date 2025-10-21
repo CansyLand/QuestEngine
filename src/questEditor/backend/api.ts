@@ -620,6 +620,24 @@ export function createApiRouter(
 		}
 	})
 
+	// Compile data to TypeScript
+	router.post('/compile-data', express.json(), async (req, res) => {
+		try {
+			await persistence.compileDataToTypescript()
+			const response: ApiResponse = {
+				success: true,
+			}
+			res.json(response)
+		} catch (error) {
+			console.error('Error compiling data:', error)
+			const response: ApiResponse = {
+				success: false,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			}
+			res.status(500).json(response)
+		}
+	})
+
 	// Get dialogue sequence for player
 	router.post('/dialogue', express.json(), (req, res) => {
 		try {
