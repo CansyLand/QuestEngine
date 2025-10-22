@@ -442,12 +442,12 @@ export function createApiRouter(
 			}
 
 			if (gameData.portals) {
-				// Filter out any items that might have been mixed into portals array
+				// Validate portals - ensure they have basic required fields
 				gameData.portals = gameData.portals.filter(
-					(portal: any) => portal.destinationLocationId
+					(portal: any) => portal.id && portal.name
 				)
 				console.log(
-					`API SAVE: Filtered portals array, now contains ${gameData.portals.length} portals`
+					`API SAVE: Validated portals array, now contains ${gameData.portals.length} portals`
 				)
 			}
 
