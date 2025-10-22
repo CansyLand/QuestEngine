@@ -14,7 +14,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
-    "outDir": "./dist",
+    "outDir": "../../build/src/questEditor",
     "rootDir": ".",
     "jsx": "react-jsx"
   },

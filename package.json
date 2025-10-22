@@ -1,12 +1,13 @@
 {
 	"name": "questengine",
 	"version": "1.0.0",
-	"main": "main.js",
+	"main": "build/main.js",
 	"scripts": {
 		"start": "cross-env NODE_ENV=development concurrently \"npm run start:react\" \"wait-on http://localhost:3000 && electron .\"",
 		"start:react": "cross-env BROWSER=none react-scripts start",
-		"build": "react-scripts build && npm run fix-html-paths && npm run build:electron",
-		"build:electron": "tsc main.ts preload.ts electron-integration.ts --outDir . --target es2020 --module commonjs --esModuleInterop",
+		"build": "react-scripts build && npm run fix-html-paths && npm run build:quest-editor && npm run build:electron",
+		"build:quest-editor": "cd src/questEditor && tsc",
+		"build:electron": "tsc main.ts preload.ts electron-integration.ts --outDir build --target es2020 --module commonjs --esModuleInterop",
 		"fix-html-paths": "node -e \"const fs=require('fs'); const html=fs.readFileSync('build/index.html','utf8').replace(/\\/static\\//g,'./static/'); fs.writeFileSync('build/index.html',html); console.log('Fixed HTML paths for Electron');\"",
 		"package": "npm run build && electron-builder",
 		"publish": "npm run build && electron-builder --publish always",
@@ -21,15 +22,10 @@
 		"productName": "QuestEngine",
 		"files": [
 			"build/**/*",
-			"main.js",
-			"preload.js",
-			"electron-integration.js",
-			"src/questEditor/backend/generate-data.js",
 			"node_modules/**/*"
 		],
 		"asarUnpack": [
-			"build/**/*",
-			"src/questEditor/backend/generate-data.js"
+			"build/**/*"
 		],
 		"mac": {
 			"target": "dmg"
