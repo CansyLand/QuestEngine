@@ -2,8 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import * as path from 'path'
 import { BrowserWindow } from 'electron'
-import { ElectronPersistenceManager } from './persistence/electron-persistence-manager'
-import { setupApiRoutes } from './api/routes'
+import { PersistenceManager } from '../core/persistence'
+import { GameEngine } from '../core/engine'
+import { createApiRouter } from '../core/api'
 import { setupThumbnailRoutes } from './api/thumbnails-handler'
 import { setupStaticRoutes } from './server/static-server'
 import { SceneMonitor } from './monitoring/scene-monitor'
@@ -12,8 +13,8 @@ import { initializeDefaultData } from './utils/data-utils'
 export class QuestEditorIntegration {
 	private app: express.Application
 	private server: any
-	private engine: any = null
-	private persistence: ElectronPersistenceManager
+	private engine: GameEngine | null = null
+	private persistence: PersistenceManager
 	private projectPath: string | null = null
 	private sceneMonitor: SceneMonitor
 
@@ -23,7 +24,7 @@ export class QuestEditorIntegration {
 		this.app.use(express.json())
 
 		// Initialize backend components
-		this.persistence = new ElectronPersistenceManager('')
+		this.persistence = new PersistenceManager('')
 		this.sceneMonitor = new SceneMonitor()
 
 		// Engine will be initialized when project path is set
@@ -57,17 +58,12 @@ export class QuestEditorIntegration {
 	 * Initialize the game engine after setting the project path
 	 */
 	private async initializeEngine(): Promise<void> {
-		// For now, create a simple mock engine that delegates to persistence
-		// In a full implementation, we'd modify GameEngine to be async-compatible
-		this.engine = {
-			getGame: async () => await this.persistence.loadGame(),
-			saveGame: async (game: any) => await this.persistence.saveGame(game),
-			// Add other methods as needed for the API
-		} as any
+		// Initialize the real game engine
+		this.engine = new GameEngine(this.persistence)
+		await this.engine.initializeGame()
 
-		// Setup API routes
-		const router = express.Router()
-		setupApiRoutes(router, this.persistence, this.projectPath)
+		// Setup comprehensive API routes
+		const router = createApiRouter(this.engine, this.persistence)
 		this.app.use('/api', router)
 
 		// Setup thumbnail routes
@@ -81,7 +77,7 @@ export class QuestEditorIntegration {
 		const dataDir = path.join(projectPath, 'src/questEngine/data')
 
 		// Create new persistence instance with the project-specific data directory
-		this.persistence = new ElectronPersistenceManager(dataDir)
+		this.persistence = new PersistenceManager(dataDir)
 
 		// Initialize default data if needed
 		await initializeDefaultData(dataDir)
@@ -131,13 +127,16 @@ export class QuestEditorIntegration {
 	getApiMethods() {
 		return {
 			// These methods can be called via IPC to interact with the questEditor backend
-			getGameData: async () =>
-				this.engine ? await this.engine.getGame() : null,
+			getGameData: () => (this.engine ? this.engine.getGameState() : null),
 			saveGameData: async (data: any) =>
-				this.engine ? await this.engine.saveGame(data) : null,
-			getQuests: () => this.persistence.loadQuests(),
-			saveQuests: (quests: any[]) => this.persistence.saveQuests(quests),
+				this.engine ? await this.engine.saveGame() : null,
+			processInteraction: (type: string, params: any) =>
+				this.engine ? this.engine.processInteraction(type, params) : [],
+			getQuests: async () => await this.persistence.loadQuests(),
+			saveQuests: async (quests: any[]) =>
+				await this.persistence.saveQuests(quests),
 			persistence: this.persistence,
+			engine: this.engine,
 			// Add more methods as needed
 		}
 	}

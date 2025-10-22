@@ -16,13 +16,16 @@ import {
 import { PersistenceManager } from '../core/persistence'
 
 export class GameEngine {
-	private game: Game
+	private game!: Game // Definite assignment assertion - will be set by initializeGame()
 	private persistence: PersistenceManager
 
 	constructor(persistence: PersistenceManager) {
 		this.persistence = persistence
-		this.game = this.persistence.loadGame()
-		// Reset cleared states for a fresh game session
+		// Game will be loaded asynchronously via initializeGame()
+	}
+
+	async initializeGame(): Promise<void> {
+		this.game = await this.persistence.loadGame()
 		this.resetClearedStates()
 	}
 
@@ -965,18 +968,18 @@ export class GameEngine {
 		return this.game.locations.find((l) => l.id === this.game.currentLocationId)
 	}
 
-	// Get current game state
-	getGameState() {
-		return { ...this.game }
+	// Get current game state (sync version for backward compatibility - requires initializeGame to be called first)
+	getGameState(): Game {
+		return this.game
+	}
+
+	// Load game state (async version)
+	async loadGame(): Promise<Game> {
+		return await this.persistence.loadGame()
 	}
 
 	// Save game state
 	async saveGame(): Promise<void> {
 		await this.persistence.saveGame(this.game)
-	}
-
-	// Load game state
-	loadGame(): void {
-		this.game = this.persistence.loadGame()
 	}
 }

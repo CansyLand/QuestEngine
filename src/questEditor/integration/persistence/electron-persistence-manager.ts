@@ -1,6 +1,6 @@
 import * as path from 'path'
 import * as fs from 'fs/promises'
-import { compileDataToTypescriptShared } from '../../../questEditor/backend/generate-data.js'
+import { compileDataToTypescriptShared } from '../../core/generate-data'
 import {
 	Game,
 	Location,

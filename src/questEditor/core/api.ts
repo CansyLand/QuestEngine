@@ -1,9 +1,9 @@
 import express from 'express'
 import fs from 'fs'
 import path from 'path'
-import { GameEngine } from './engine.js'
-import { PersistenceManager } from './persistence.js'
-import { ApiResponse, Game, Quest } from '../models'
+import { GameEngine } from './engine'
+import { PersistenceManager } from './persistence'
+import { ApiResponse, Game, Quest } from './models'
 
 // ID generation utilities
 function generateIdFromName(

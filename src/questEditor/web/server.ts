@@ -4,9 +4,9 @@ import { fileURLToPath } from 'url'
 import cors from 'cors'
 import fs from 'fs'
 
-import { GameEngine } from './engine.js'
-import { PersistenceManager } from './persistence.js'
-import { createApiRouter } from './api.js'
+import { GameEngine } from '../core/engine'
+import { PersistenceManager } from '../core/persistence'
+import { createApiRouter } from '../core/api'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -18,8 +18,9 @@ const PORT = 3000
 app.use(cors())
 
 // Initialize backend components
-const persistence = new PersistenceManager()
+const persistence = new PersistenceManager(path.join(__dirname, '../../data'))
 const engine = new GameEngine(persistence)
+await engine.initializeGame()
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../../public')))
@@ -60,7 +61,7 @@ app.listen(PORT, () => {
 })
 
 // DCL Entity Monitoring Setup
-// Paths (relative to questEditor/backend/)
+// Paths (relative to questEditor/web/)
 const compositePath = path.join(
 	__dirname,
 	'../../../assets/scene/main.composite'
@@ -131,11 +132,16 @@ function extractEntityData(compositeData: any) {
 }
 
 // Function to update entityLinks.json
-function updateLinks(newLinks: Record<string, any>) {
+async function updateLinks(newLinks: Record<string, any>) {
 	// Load existing links
 	let existingLinks: Record<string, any> = {}
-	if (fs.existsSync(linksPath)) {
-		existingLinks = JSON.parse(fs.readFileSync(linksPath, 'utf8'))
+	try {
+		if (fs.existsSync(linksPath)) {
+			const data = await fs.promises.readFile(linksPath, 'utf8')
+			existingLinks = JSON.parse(data)
+		}
+	} catch (error) {
+		console.error('Error reading existing links:', error)
 	}
 
 	// Create updated links
@@ -171,25 +177,34 @@ function updateLinks(newLinks: Record<string, any>) {
 	}
 
 	// Write back to file
-	fs.writeFileSync(linksPath, JSON.stringify(updatedLinks, null, 2))
-	console.log('entityLinks.json updated.')
+	try {
+		await fs.promises.writeFile(
+			linksPath,
+			JSON.stringify(updatedLinks, null, 2)
+		)
+		console.log('entityLinks.json updated.')
+	} catch (error) {
+		console.error('Error writing links file:', error)
+	}
 }
 
 // Main monitoring function
-function monitorChanges() {
+async function monitorChanges() {
 	if (!fs.existsSync(compositePath)) {
 		console.error(`File not found: ${compositePath}`)
 		return
 	}
 
 	try {
-		const compositeData = JSON.parse(fs.readFileSync(compositePath, 'utf8'))
+		const compositeData = JSON.parse(
+			await fs.promises.readFile(compositePath, 'utf8')
+		)
 		const currentHash = computeHash(compositeData)
 
 		if (currentHash !== lastHash) {
 			lastHash = currentHash // Update cache
 			const newLinks = extractEntityData(compositeData)
-			updateLinks(newLinks)
+			await updateLinks(newLinks)
 		}
 		// No else: File unchanged, do nothing
 	} catch (error) {
@@ -197,6 +212,6 @@ function monitorChanges() {
 	}
 }
 
-// Start monitoring every second
+// Start monitoring every 3 seconds
 setInterval(monitorChanges, 3000)
-console.log('DCL change monitoring started. Checking every 1 second.')
+console.log('DCL change monitoring started. Checking every 3 seconds.')

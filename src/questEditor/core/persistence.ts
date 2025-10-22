@@ -1,8 +1,7 @@
-import * as fs from 'fs'
+import * as fs from 'fs/promises'
 import * as path from 'path'
-import { fileURLToPath } from 'url'
-import { spawn, exec } from 'child_process'
-import { compileDataToTypescriptShared } from './generate-data.js'
+import * as fsSync from 'fs'
+import { compileDataToTypescriptShared } from './generate-data'
 import {
 	Game,
 	Location,
@@ -12,30 +11,38 @@ import {
 	Item,
 	Portal,
 	DialogueSequence,
-} from '../models'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const DATA_DIR = path.join(__dirname, '../../data')
+} from './models'
 
 export class PersistenceManager {
-	private ensureDataDir(): void {
-		if (!fs.existsSync(DATA_DIR)) {
-			fs.mkdirSync(DATA_DIR, { recursive: true })
+	private dataDir: string
+
+	constructor(dataDir: string) {
+		this.dataDir = dataDir
+	}
+
+	private async ensureDataDir(): Promise<void> {
+		try {
+			await fs.mkdir(this.dataDir, { recursive: true })
+		} catch (error) {
+			// Directory already exists or other error, ignore
 		}
 	}
 
 	private getFilePath(filename: string): string {
-		return path.join(DATA_DIR, filename)
+		return path.join(this.dataDir, filename)
 	}
 
-	loadLocations(items: Item[], npcs: NPC[], portals: Portal[]): Location[] {
+	async loadLocations(
+		items: Item[],
+		npcs: NPC[],
+		portals: Portal[]
+	): Promise<Location[]> {
 		try {
 			const filePath = this.getFilePath('locations.json')
-			if (!fs.existsSync(filePath)) {
+			if (!fsSync.existsSync(filePath)) {
 				return []
 			}
-			const data = fs.readFileSync(filePath, 'utf-8')
+			const data = await fs.readFile(filePath, 'utf-8')
 			const savedLocations = JSON.parse(data) as SavedLocation[]
 
 			// Convert references to full objects
@@ -78,8 +85,8 @@ export class PersistenceManager {
 		}
 	}
 
-	saveLocations(locations: Location[]): void {
-		this.ensureDataDir()
+	async saveLocations(locations: Location[]): Promise<void> {
+		await this.ensureDataDir()
 		const filePath = this.getFilePath('locations.json')
 
 		// Convert full objects to references (IDs)
@@ -95,17 +102,17 @@ export class PersistenceManager {
 
 		// Write to temp file first for atomicity
 		const tempPath = filePath + '.tmp'
-		fs.writeFileSync(tempPath, JSON.stringify(savedLocations, null, 2))
-		fs.renameSync(tempPath, filePath)
+		await fs.writeFile(tempPath, JSON.stringify(savedLocations, null, 2))
+		await fs.rename(tempPath, filePath)
 	}
 
-	loadQuests(): Quest[] {
+	async loadQuests(): Promise<Quest[]> {
 		try {
 			const filePath = this.getFilePath('quests.json')
-			if (!fs.existsSync(filePath)) {
+			if (!fsSync.existsSync(filePath)) {
 				return []
 			}
-			const data = fs.readFileSync(filePath, 'utf-8')
+			const data = await fs.readFile(filePath, 'utf-8')
 			return JSON.parse(data)
 		} catch (error) {
 			console.error('Error loading quests:', error)
@@ -113,21 +120,21 @@ export class PersistenceManager {
 		}
 	}
 
-	saveQuests(quests: Quest[]): void {
-		this.ensureDataDir()
+	async saveQuests(quests: Quest[]): Promise<void> {
+		await this.ensureDataDir()
 		const filePath = this.getFilePath('quests.json')
 		const tempPath = filePath + '.tmp'
-		fs.writeFileSync(tempPath, JSON.stringify(quests, null, 2))
-		fs.renameSync(tempPath, filePath)
+		await fs.writeFile(tempPath, JSON.stringify(quests, null, 2))
+		await fs.rename(tempPath, filePath)
 	}
 
-	loadNPCs(): NPC[] {
+	async loadNPCs(): Promise<NPC[]> {
 		try {
 			const filePath = this.getFilePath('npcs.json')
-			if (!fs.existsSync(filePath)) {
+			if (!fsSync.existsSync(filePath)) {
 				return []
 			}
-			const data = fs.readFileSync(filePath, 'utf-8')
+			const data = await fs.readFile(filePath, 'utf-8')
 			return JSON.parse(data)
 		} catch (error) {
 			console.error('Error loading NPCs:', error)
@@ -135,21 +142,21 @@ export class PersistenceManager {
 		}
 	}
 
-	saveNPCs(npcs: NPC[]): void {
-		this.ensureDataDir()
+	async saveNPCs(npcs: NPC[]): Promise<void> {
+		await this.ensureDataDir()
 		const filePath = this.getFilePath('npcs.json')
 		const tempPath = filePath + '.tmp'
-		fs.writeFileSync(tempPath, JSON.stringify(npcs, null, 2))
-		fs.renameSync(tempPath, filePath)
+		await fs.writeFile(tempPath, JSON.stringify(npcs, null, 2))
+		await fs.rename(tempPath, filePath)
 	}
 
-	loadItems(): Item[] {
+	async loadItems(): Promise<Item[]> {
 		try {
 			const filePath = this.getFilePath('items.json')
-			if (!fs.existsSync(filePath)) {
+			if (!fsSync.existsSync(filePath)) {
 				return []
 			}
-			const data = fs.readFileSync(filePath, 'utf-8')
+			const data = await fs.readFile(filePath, 'utf-8')
 			return JSON.parse(data)
 		} catch (error) {
 			console.error('Error loading items:', error)
@@ -157,21 +164,21 @@ export class PersistenceManager {
 		}
 	}
 
-	saveItems(items: Item[]): void {
-		this.ensureDataDir()
+	async saveItems(items: Item[]): Promise<void> {
+		await this.ensureDataDir()
 		const filePath = this.getFilePath('items.json')
 		const tempPath = filePath + '.tmp'
-		fs.writeFileSync(tempPath, JSON.stringify(items, null, 2))
-		fs.renameSync(tempPath, filePath)
+		await fs.writeFile(tempPath, JSON.stringify(items, null, 2))
+		await fs.rename(tempPath, filePath)
 	}
 
-	loadPortals(): Portal[] {
+	async loadPortals(): Promise<Portal[]> {
 		try {
 			const filePath = this.getFilePath('portals.json')
-			if (!fs.existsSync(filePath)) {
+			if (!fsSync.existsSync(filePath)) {
 				return []
 			}
-			const data = fs.readFileSync(filePath, 'utf-8')
+			const data = await fs.readFile(filePath, 'utf-8')
 			return JSON.parse(data)
 		} catch (error) {
 			console.error('Error loading portals:', error)
@@ -179,21 +186,21 @@ export class PersistenceManager {
 		}
 	}
 
-	savePortals(portals: Portal[]): void {
-		this.ensureDataDir()
+	async savePortals(portals: Portal[]): Promise<void> {
+		await this.ensureDataDir()
 		const filePath = this.getFilePath('portals.json')
 		const tempPath = filePath + '.tmp'
-		fs.writeFileSync(tempPath, JSON.stringify(portals, null, 2))
-		fs.renameSync(tempPath, filePath)
+		await fs.writeFile(tempPath, JSON.stringify(portals, null, 2))
+		await fs.rename(tempPath, filePath)
 	}
 
-	loadDialogues(): DialogueSequence[] {
+	async loadDialogues(): Promise<DialogueSequence[]> {
 		try {
 			const filePath = this.getFilePath('dialogues.json')
-			if (!fs.existsSync(filePath)) {
+			if (!fsSync.existsSync(filePath)) {
 				return []
 			}
-			const data = fs.readFileSync(filePath, 'utf-8')
+			const data = await fs.readFile(filePath, 'utf-8')
 			return JSON.parse(data)
 		} catch (error) {
 			console.error('Error loading dialogues:', error)
@@ -201,21 +208,21 @@ export class PersistenceManager {
 		}
 	}
 
-	saveDialogues(dialogues: DialogueSequence[]): void {
-		this.ensureDataDir()
+	async saveDialogues(dialogues: DialogueSequence[]): Promise<void> {
+		await this.ensureDataDir()
 		const filePath = this.getFilePath('dialogues.json')
 		const tempPath = filePath + '.tmp'
-		fs.writeFileSync(tempPath, JSON.stringify(dialogues, null, 2))
-		fs.renameSync(tempPath, filePath)
+		await fs.writeFile(tempPath, JSON.stringify(dialogues, null, 2))
+		await fs.rename(tempPath, filePath)
 	}
 
-	loadGame(): Game {
-		const quests = this.loadQuests()
-		const npcs = this.loadNPCs()
-		const items = this.loadItems()
-		const portals = this.loadPortals()
-		const dialogues = this.loadDialogues()
-		const locations = this.loadLocations(items, npcs, portals)
+	async loadGame(): Promise<Game> {
+		const quests = await this.loadQuests()
+		const npcs = await this.loadNPCs()
+		const items = await this.loadItems()
+		const portals = await this.loadPortals()
+		const dialogues = await this.loadDialogues()
+		const locations = await this.loadLocations(items, npcs, portals)
 
 		// Create default game state
 		const myceliumCaves = locations.find((l) => l.id === 'mycelium_caves')
@@ -237,18 +244,18 @@ export class PersistenceManager {
 	}
 
 	async saveGame(game: Game): Promise<void> {
-		this.saveLocations(game.locations)
-		this.saveQuests(game.quests)
-		this.saveNPCs(game.npcs)
-		this.saveItems(game.items)
-		this.savePortals(game.portals)
-		this.saveDialogues(game.dialogues)
+		await this.saveLocations(game.locations)
+		await this.saveQuests(game.quests)
+		await this.saveNPCs(game.npcs)
+		await this.saveItems(game.items)
+		await this.savePortals(game.portals)
+		await this.saveDialogues(game.dialogues)
 
 		// After all JSONs are saved, compile them into data.ts
 		await this.compileDataToTypescript()
 	}
 
-	public compileDataToTypescript(): Promise<void> {
-		return compileDataToTypescriptShared(DATA_DIR)
+	async compileDataToTypescript(): Promise<void> {
+		return compileDataToTypescriptShared(this.dataDir)
 	}
 }
