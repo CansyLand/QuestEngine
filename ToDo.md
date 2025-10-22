@@ -1,8 +1,8 @@
-- Refactor electron app, some files are getting huge!
-- auto compile all ts foles to js
-- remove everything that looks like the dcl file structure form project otherwise ai is permanently confusing where to edit files
+- initialize the dcl scene on project creation if questEngine folder does not exist
 
-- if thre is no npc in location then i get this errors:
+- in app the id is not updated
+
+- if thre is no npc in location then i get this error in DCL:
   (they disappear when i attacha n npc to location)
 
 decentraland://realm=http%3A%2F%2F127.0.0.1%3A8000&position=0%2C0&dclenv=org&local-scene=true&hub=true&skip-auth-screen=true&landscape-terrain-enabled=true

@@ -20,7 +20,7 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
 					Reload
 				</button>
 				<button
-					onClick={() => window.open('http://localhost:5173/player/', '_blank')}
+					onClick={() => window.open('http://localhost:3000/player/', '_blank')}
 				>
 					Test Quest Flow
 				</button>

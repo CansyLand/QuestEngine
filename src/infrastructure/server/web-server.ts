@@ -17,6 +17,9 @@ const PORT = 3000
 // Enable CORS for all routes
 app.use(cors())
 
+// Parse JSON bodies
+app.use(express.json())
+
 // Initialize backend components
 const persistence = new PersistenceManager(path.join(__dirname, '../../data'))
 const engine = new GameEngine(persistence)
@@ -31,23 +34,49 @@ app.use(
 	express.static(path.join(__dirname, '../../../node_modules'))
 )
 
-// API routes
-app.use('/api', createApiRouter(engine, persistence, null))
+// Proxy API requests to the QuestEditor backend on port 31234
+app.use('/api', (req, res) => {
+	const http = require('http')
+	const options = {
+		hostname: 'localhost',
+		port: 31234,
+		path: req.originalUrl,
+		method: req.method,
+		headers: req.headers,
+	}
+
+	const proxyReq = http.request(options, (proxyRes: any) => {
+		res.status(proxyRes.statusCode)
+		Object.keys(proxyRes.headers).forEach((key) => {
+			res.setHeader(key, proxyRes.headers[key])
+		})
+		proxyRes.pipe(res)
+	})
+
+	proxyReq.on('error', (err: any) => {
+		console.error('Proxy error:', err)
+		res.status(500).json({ success: false, error: 'Backend not available' })
+	})
+
+	if (req.body) {
+		proxyReq.write(JSON.stringify(req.body))
+	}
+	proxyReq.end()
+})
 
 // Serve builder at /builder
 app.get('/builder', (req, res) => {
-	res.sendFile(path.join(__dirname, '../../dist/frontend/index.html'))
+	res.sendFile(path.join(__dirname, '../../../build/index.html'))
 })
 
 // Serve player at /player
 app.get('/player', (req, res) => {
-	res.sendFile(path.join(__dirname, '../../dist/frontend/index.html'))
+	res.sendFile(path.join(__dirname, '../../../build/index.html'))
 })
 
 // Serve static files from built frontend directories (after specific routes)
-app.use('/builder', express.static(path.join(__dirname, '../../dist/frontend')))
-app.use('/player', express.static(path.join(__dirname, '../../dist/frontend')))
-app.use('/shared', express.static(path.join(__dirname, '../../dist/frontend')))
+app.use('/builder', express.static(path.join(__dirname, '../../../build')))
+app.use('/player', express.static(path.join(__dirname, '../../../build')))
 
 // Default route redirects to builder
 app.get('/', (req, res) => {

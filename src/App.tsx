@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Project } from '@/shared/types'
 import { QuestBuilder } from '@/features/quest-builder/components/QuestBuilder'
+import { GamePlayer } from '@/features/game-player/components/GamePlayer'
 
 declare global {
 	interface Window {
@@ -33,6 +34,9 @@ function App() {
 	const [currentProject, setCurrentProject] = useState<Project | null>(null)
 	const [showQuestEditor, setShowQuestEditor] = useState<boolean>(false)
 	const [openingProject, setOpeningProject] = useState<boolean>(false)
+
+	// Check if we're in player mode (accessed via /player route)
+	const isPlayerMode = window.location.pathname.startsWith('/player')
 
 	useEffect(() => {
 		loadProjects()
@@ -119,6 +123,15 @@ function App() {
 	const handleBackToProjects = () => {
 		setCurrentProject(null)
 		setShowQuestEditor(false)
+	}
+
+	// Render Player interface if accessed via /player route
+	if (isPlayerMode) {
+		return (
+			<div style={{ height: '100vh', width: '100vw' }}>
+				<GamePlayer />
+			</div>
+		)
 	}
 
 	// Render Builder interface if a project is selected
