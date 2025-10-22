@@ -24,6 +24,7 @@ import {
 	TooltipEntity,
 } from '@/shared/components/ui/EntityTooltip'
 import { DialogueEditForm } from './modals/DialogueEditForm'
+import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 
 interface LocationSelectorState {
 	isOpen: boolean
@@ -727,15 +728,12 @@ export const EditModal: React.FC<EditModalProps> = ({
 							<div key={index} className='array-item location-item'>
 								<div className='item-display'>
 									<div className='item-icon'>
-										{item.image ? (
-											<img
-												src={item.image}
-												alt={item.name}
-												className='item-thumbnail'
-											/>
-										) : (
-											<div className='no-thumbnail'>?</div>
-										)}
+										<ImageDisplay
+											src={item.image || ''}
+											alt={item.name}
+											className='item-thumbnail'
+											fallback={<div className='no-thumbnail'>?</div>}
+										/>
 									</div>
 									<span className='item-info'>
 										<span className='item-name'>{item.name}</span>
@@ -772,15 +770,12 @@ export const EditModal: React.FC<EditModalProps> = ({
 							<div key={index} className='array-item location-npc'>
 								<div className='npc-display'>
 									<div className='npc-icon'>
-										{npc.image ? (
-											<img
-												src={npc.image}
-												alt={npc.name}
-												className='npc-thumbnail'
-											/>
-										) : (
-											<div className='no-thumbnail'>?</div>
-										)}
+										<ImageDisplay
+											src={npc.image || ''}
+											alt={npc.name}
+											className='npc-thumbnail'
+											fallback={<div className='no-thumbnail'>?</div>}
+										/>
 									</div>
 									<span className='npc-info'>
 										<span className='npc-name'>{npc.name}</span>
@@ -815,15 +810,12 @@ export const EditModal: React.FC<EditModalProps> = ({
 							<div key={index} className='array-item location-portal'>
 								<div className='portal-display'>
 									<div className='portal-icon'>
-										{portal.image ? (
-											<img
-												src={portal.image}
-												alt={portal.name}
-												className='portal-thumbnail'
-											/>
-										) : (
-											<div className='no-thumbnail'>?</div>
-										)}
+										<ImageDisplay
+											src={portal.image || ''}
+											alt={portal.name}
+											className='portal-thumbnail'
+											fallback={<div className='no-thumbnail'>?</div>}
+										/>
 									</div>
 									<span className='portal-info'>
 										<span className='portal-name'>{portal.name}</span>
@@ -974,15 +966,12 @@ export const EditModal: React.FC<EditModalProps> = ({
 							{selectedLocation ? (
 								<div className='selected-location'>
 									<div className='item-icon'>
-										{selectedLocation.image ? (
-											<img
-												src={selectedLocation.image}
-												alt={selectedLocation.name}
-												className='item-thumbnail'
-											/>
-										) : (
-											<div className='no-thumbnail'>?</div>
-										)}
+										<ImageDisplay
+											src={selectedLocation.image || ''}
+											alt={selectedLocation.name}
+											className='item-thumbnail'
+											fallback={<div className='no-thumbnail'>?</div>}
+										/>
 									</div>
 									<span className='item-info'>
 										<span className='item-name'>{selectedLocation.name}</span>
@@ -1094,15 +1083,12 @@ export const EditModal: React.FC<EditModalProps> = ({
 										}}
 									>
 										<div className='item-image-container'>
-											{item.image ? (
-												<img
-													src={item.image}
-													alt={item.name}
-													className='item-image'
-												/>
-											) : (
-												<div className='no-image'>No Image</div>
-											)}
+											<ImageDisplay
+												src={item.image || ''}
+												alt={item.name}
+												className='item-image'
+												fallback={<div className='no-image'>No Image</div>}
+											/>
 										</div>
 										<div className='item-name'>{item.name}</div>
 									</div>
@@ -1221,15 +1207,12 @@ export const EditModal: React.FC<EditModalProps> = ({
 										}}
 									>
 										<div className='portal-image-container'>
-											{portal.image ? (
-												<img
-													src={portal.image}
-													alt={portal.name}
-													className='portal-image'
-												/>
-											) : (
-												<div className='no-image'>No Image</div>
-											)}
+											<ImageDisplay
+												src={portal.image || ''}
+												alt={portal.name}
+												className='portal-image'
+												fallback={<div className='no-image'>No Image</div>}
+											/>
 										</div>
 										<div className='portal-name'>{portal.name}</div>
 									</div>
@@ -1334,15 +1317,12 @@ export const EditModal: React.FC<EditModalProps> = ({
 										}}
 									>
 										<div className='npc-image-container'>
-											{npc.image ? (
-												<img
-													src={npc.image}
-													alt={npc.name}
-													className='npc-image'
-												/>
-											) : (
-												<div className='no-image'>No Image</div>
-											)}
+											<ImageDisplay
+												src={npc.image || ''}
+												alt={npc.name}
+												className='npc-image'
+												fallback={<div className='no-image'>No Image</div>}
+											/>
 										</div>
 										<div className='npc-name'>{npc.name}</div>
 									</div>
@@ -1412,15 +1392,12 @@ export const EditModal: React.FC<EditModalProps> = ({
 										}}
 									>
 										<div className='item-image-container'>
-											{location.image ? (
-												<img
-													src={location.image}
-													alt={location.name}
-													className='item-image'
-												/>
-											) : (
-												<div className='no-image'>No Image</div>
-											)}
+											<ImageDisplay
+												src={location.image || ''}
+												alt={location.name}
+												className='item-image'
+												fallback={<div className='no-image'>No Image</div>}
+											/>
 										</div>
 										<div className='item-name'>{location.name}</div>
 									</div>

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Portal } from '@/core/models/types'
 import { EntityPanel } from './EntityPanel'
+import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 
 interface PortalPanelProps {
 	portals: Portal[]
@@ -29,15 +30,12 @@ export const PortalPanel: React.FC<PortalPanelProps> = ({
 				return (
 					<div className='entity-card portal-card'>
 						<div className='portal-image'>
-							{displayImage ? (
-								<img
-									src={displayImage}
-									alt={`${portal.name} image`}
-									className='portal-image-preview'
-								/>
-							) : (
-								<div className='no-image'>No Image</div>
-							)}
+							<ImageDisplay
+								src={displayImage || ''}
+								alt={`${portal.name} image`}
+								className='portal-image-preview'
+								fallback={<div className='no-image'>No Image</div>}
+							/>
 						</div>
 						<div className='portal-details'>
 							<h3>{portal.name}</h3>

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Location } from '@/core/models/types'
 import { EntityPanel } from './EntityPanel'
+import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 
 interface LocationPanelProps {
 	locations: Location[]
@@ -27,15 +28,12 @@ export const LocationPanel: React.FC<LocationPanelProps> = ({
 				return (
 					<div className='entity-card location-card'>
 						<div className='location-image'>
-							{displayImage ? (
-								<img
-									src={displayImage}
-									alt={`${location.name} background`}
-									className='location-image-preview'
-								/>
-							) : (
-								<div className='no-image'>No Image</div>
-							)}
+							<ImageDisplay
+								src={displayImage || ''}
+								alt={`${location.name} background`}
+								className='location-image-preview'
+								fallback={<div className='no-image'>No Image</div>}
+							/>
 						</div>
 						<div className='location-details'>
 							<h3>{location.name}</h3>

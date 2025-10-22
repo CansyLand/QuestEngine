@@ -7,45 +7,85 @@ export interface ApiResponse {
 	data?: any
 }
 
-// API fetch wrapper
+// API IPC wrapper
 export async function apiRequest(
 	endpoint: string,
-	options?: RequestInit
+	options?: { method?: string; body?: any }
 ): Promise<ApiResponse> {
 	try {
-		// Use fixed port 31234 for Electron environment (uncommon port to avoid conflicts)
-		const isElectron = !!(window as any).electronAPI
-		const baseUrl = isElectron ? 'http://localhost:31234' : ''
-		const url =
-			options?.method === 'GET' || !options?.method
-				? `${baseUrl}/api${endpoint}?t=${Date.now()}`
-				: `${baseUrl}/api${endpoint}`
-
-		console.log(
-			'Making API request (isElectron:',
-			isElectron,
-			'):',
-			url,
-			options
-		)
-		const response = await fetch(url, {
-			headers: {
-				'Content-Type': 'application/json',
-				...options?.headers,
-			},
-			...options,
-		})
-
-		console.log('API response status:', response.status)
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`)
+		const electronAPI = (window as any).electronAPI
+		if (!electronAPI) {
+			throw new Error('Electron API not available')
 		}
 
-		const data = await response.json()
-		console.log('API response data:', data)
-		return data
+		console.log('Making IPC request:', endpoint, options)
+
+		let result: any
+
+		// Map endpoints to IPC handlers
+		switch (endpoint) {
+			case '/load':
+				result = await electronAPI.loadGameData()
+				break
+			case '/save':
+				result = await electronAPI.saveGameData(
+					options?.body ? JSON.parse(options.body) : {}
+				)
+				break
+			case '/generate-id':
+				const idParams = options?.body ? JSON.parse(options.body) : {}
+				result = await electronAPI.generateId(
+					idParams.name,
+					idParams.entityType,
+					idParams.currentEntityId,
+					idParams.prefix
+				)
+				break
+			case '/start':
+				result = await electronAPI.startGame()
+				break
+			case '/reset':
+				result = await electronAPI.resetGame()
+				break
+			case '/interact':
+				const interactParams = options?.body ? JSON.parse(options.body) : {}
+				result = await electronAPI.processInteraction(
+					interactParams.type,
+					interactParams.params
+				)
+				break
+			case '/dialogue':
+				// Extract dialogueSequenceId from options if it's a POST request
+				const dialogueParams = options?.body ? JSON.parse(options.body) : {}
+				result = await electronAPI.getDialogue(
+					dialogueParams.dialogueSequenceId
+				)
+				break
+			case '/compile-data':
+				result = await electronAPI.compileData()
+				break
+			case '/entityLinks':
+				if (options?.method === 'PATCH') {
+					const linkParams = options?.body ? JSON.parse(options.body) : {}
+					result = await electronAPI.updateEntityLink(
+						linkParams.entityId,
+						linkParams.questEntityId
+					)
+				} else {
+					result = await electronAPI.getEntityLinks()
+				}
+				break
+			case '/thumbnails':
+				result = await electronAPI.getThumbnails()
+				break
+			default:
+				throw new Error(`Unknown endpoint: ${endpoint}`)
+		}
+
+		console.log('IPC response:', result)
+		return result
 	} catch (error) {
-		console.error('API request failed:', error)
+		console.error('IPC request failed:', error)
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : 'Unknown error',

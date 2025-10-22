@@ -164,23 +164,21 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 		dialogueSequenceId: string,
 		npcId?: string
 	) => {
-		// For now, we'll need to get the dialogue sequence from the game data
-		// In a more sophisticated system, this would come from the backend
-		const response = await fetch('/api/dialogue', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ dialogueSequenceId }),
-		})
+		// Get the dialogue sequence from the backend via IPC
+		const electronAPI = (window as any).electronAPI
+		if (!electronAPI) {
+			console.error('Electron API not available')
+			return
+		}
 
-		if (response.ok) {
-			const apiResponse = await response.json()
-			if (apiResponse.success && apiResponse.data) {
-				setActiveDialogue({
-					sequence: apiResponse.data,
-					currentDialogIndex: 0,
-					npcId: npcId,
-				})
-			}
+		const apiResponse = await electronAPI.getDialogue(dialogueSequenceId)
+
+		if (apiResponse.success && apiResponse.data) {
+			setActiveDialogue({
+				sequence: apiResponse.data,
+				currentDialogIndex: 0,
+				npcId: npcId,
+			})
 		}
 	}
 

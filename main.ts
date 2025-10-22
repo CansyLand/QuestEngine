@@ -2,10 +2,10 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import * as path from 'path'
 import { autoUpdater } from 'electron-updater'
 import * as fs from 'fs/promises' // For file I/O
-import { QuestEditorIntegration } from './electron-integration'
+import { QuestEngineService } from './src/infrastructure/integration/QuestEngineService'
 
 let mainWindow: BrowserWindow | null = null
-let questEditor: QuestEditorIntegration | null = null
+let questEngine: QuestEngineService | null = null
 
 // Project data structure
 interface Project {
@@ -90,10 +90,9 @@ autoUpdater.autoInstallOnAppQuit = true
 app.whenReady().then(async () => {
 	createWindow()
 
-	// Initialize QuestEditor backend
-	questEditor = new QuestEditorIntegration()
-	const backendPort = await questEditor.start() // Start on fixed port 31234
-	console.log(`QuestEngine backend running on port ${backendPort}`)
+	// Initialize QuestEngine service
+	questEngine = new QuestEngineService()
+	console.log('QuestEngine service initialized')
 
 	autoUpdater.checkForUpdatesAndNotify()
 })
@@ -123,11 +122,8 @@ autoUpdater.on('update-downloaded', () => {
 
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') {
-		// Clean up questEditor before quitting
-		if (questEditor) {
-			questEditor.stop()
-			questEditor = null
-		}
+		// Clean up questEngine before quitting
+		questEngine = null
 		app.quit()
 	}
 })
@@ -288,12 +284,12 @@ ipcMain.handle(
 	}
 )
 
-// QuestEditor IPC handlers
+// QuestEngine IPC handlers
 ipcMain.handle(
 	'set-quest-editor-project',
 	async (_event, projectPath: string): Promise<void> => {
-		if (questEditor) {
-			await questEditor.setProjectPath(projectPath, true) // true = manual switch
+		if (questEngine) {
+			await questEngine.setProjectPath(projectPath)
 		}
 	}
 )
@@ -301,8 +297,8 @@ ipcMain.handle(
 ipcMain.handle(
 	'get-quest-editor-project-path',
 	async (): Promise<string | null> => {
-		if (questEditor) {
-			return questEditor.getProjectPath()
+		if (questEngine) {
+			return questEngine.getProjectPath()
 		}
 		return null
 	}
@@ -311,64 +307,126 @@ ipcMain.handle(
 ipcMain.handle(
 	'get-quest-data',
 	async (_event, dataType: string): Promise<any> => {
-		if (!questEditor) return null
-
-		// Access persistence directly from the questEditor instance
-		const persistence = (questEditor as any).persistence
-		if (!persistence) return null
-
-		switch (dataType) {
-			case 'quests':
-				return await persistence.loadQuests()
-			case 'npcs':
-				return await persistence.loadNPCs()
-			case 'items':
-				return await persistence.loadItems()
-			case 'locations':
-				const items = await persistence.loadItems()
-				const npcs = await persistence.loadNPCs()
-				const portals = await persistence.loadPortals()
-				return await persistence.loadLocations(items, npcs, portals)
-			case 'portals':
-				return await persistence.loadPortals()
-			case 'dialogues':
-				return await persistence.loadDialogues()
-			case 'entityLinks':
-				return await persistence.loadEntityLinks()
-			case 'game':
-				return await persistence.loadGame()
-			default:
-				return null
-		}
+		if (!questEngine) return null
+		return await questEngine.getQuestData(dataType)
 	}
 )
 
 ipcMain.handle(
 	'save-quest-data',
 	async (_event, dataType: string, data: any): Promise<void> => {
-		if (!questEditor) return
+		if (!questEngine) return
+		return await questEngine.saveQuestData(dataType, data)
+	}
+)
 
-		// Access persistence directly from the questEditor instance
-		const persistence = (questEditor as any).persistence
-		if (!persistence) return
+// Additional API handlers
+ipcMain.handle('load-game-data', async (): Promise<any> => {
+	if (!questEngine) return { success: false, error: 'Engine not initialized' }
+	return await questEngine.loadGameData()
+})
 
-		switch (dataType) {
-			case 'quests':
-				return await persistence.saveQuests(data)
-			case 'npcs':
-				return await persistence.saveNPCs(data)
-			case 'items':
-				return await persistence.saveItems(data)
-			case 'locations':
-				return await persistence.saveLocations(data)
-			case 'portals':
-				return await persistence.savePortals(data)
-			case 'dialogues':
-				return await persistence.saveDialogues(data)
-			case 'entityLinks':
-				return await persistence.saveEntityLinks(data)
-			case 'game':
-				return await persistence.saveGame(data)
+ipcMain.handle('save-game-data', async (_event, data: any): Promise<any> => {
+	if (!questEngine) return { success: false, error: 'Engine not initialized' }
+	return await questEngine.saveGameData(data)
+})
+
+ipcMain.handle(
+	'generate-id',
+	async (
+		_event,
+		{
+			name,
+			entityType,
+			currentEntityId,
+			prefix,
+		}: {
+			name: string
+			entityType: string
+			currentEntityId?: string
+			prefix?: string
 		}
+	): Promise<any> => {
+		if (!questEngine) return { success: false, error: 'Engine not initialized' }
+
+		// Get existing IDs based on entity type
+		let existingIds: string[] = []
+		if (questEngine.getQuestData) {
+			const data = await questEngine.getQuestData(entityType + 's') // quests, npcs, items, etc.
+			if (Array.isArray(data)) {
+				existingIds = data.map((item: any) => item.id)
+			}
+		}
+
+		// Remove current entity ID if editing
+		if (currentEntityId) {
+			existingIds = existingIds.filter((id: string) => id !== currentEntityId)
+		}
+
+		const newId = questEngine.generateId(name, entityType, existingIds, prefix)
+		return { success: true, data: { id: newId } }
+	}
+)
+
+ipcMain.handle('get-thumbnails', async (): Promise<any> => {
+	if (!questEngine) return { success: false, error: 'Engine not initialized' }
+	return await questEngine.getThumbnails()
+})
+
+ipcMain.handle(
+	'read-thumbnail',
+	async (_event, filePath: string): Promise<string | null> => {
+		if (!questEngine) return null
+		return await questEngine.readThumbnail(filePath)
+	}
+)
+
+ipcMain.handle('start-game', async (): Promise<any> => {
+	if (!questEngine) return { success: false, error: 'Engine not initialized' }
+	return questEngine.startGame()
+})
+
+ipcMain.handle(
+	'process-interaction',
+	async (
+		_event,
+		{ type, params }: { type: string; params: any }
+	): Promise<any> => {
+		if (!questEngine) return { success: false, error: 'Engine not initialized' }
+		return questEngine.processInteraction(type, params)
+	}
+)
+
+ipcMain.handle('reset-game', async (): Promise<any> => {
+	if (!questEngine) return { success: false, error: 'Engine not initialized' }
+	return questEngine.resetGame()
+})
+
+ipcMain.handle(
+	'get-dialogue',
+	async (_event, dialogueSequenceId: string): Promise<any> => {
+		if (!questEngine) return { success: false, error: 'Engine not initialized' }
+		return questEngine.getDialogue(dialogueSequenceId)
+	}
+)
+
+ipcMain.handle('compile-data', async (): Promise<any> => {
+	if (!questEngine) return { success: false, error: 'Engine not initialized' }
+	return await questEngine.compileData()
+})
+
+ipcMain.handle('get-entity-links', async (): Promise<any> => {
+	if (!questEngine) return { success: false, error: 'Engine not initialized' }
+	return await questEngine.getEntityLinks()
+})
+
+ipcMain.handle(
+	'update-entity-link',
+	async (
+		_event,
+		{ entityId, questEntityId }: { entityId: string; questEntityId: string }
+	): Promise<any> => {
+		if (!questEngine) return { success: false, error: 'Engine not initialized' }
+		return await questEngine.updateEntityLink(entityId, questEntityId)
 	}
 )

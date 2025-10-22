@@ -1,6 +1,7 @@
 import React from 'react'
 import { DialogueSequence, NPC, Quest, QuestStep } from '@/core/models/types'
 import { EntityPanel } from './EntityPanel'
+import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 
 interface DialoguePanelProps {
 	dialogues: DialogueSequence[]
@@ -46,15 +47,12 @@ export const DialoguePanel: React.FC<DialoguePanelProps> = ({
 				return (
 					<div className='entity-card dialogue-card'>
 						<div className='npc-portrait'>
-							{npc?.image ? (
-								<img
-									src={npc.image}
-									alt={`${npc.name} image`}
-									className='portrait-image'
-								/>
-							) : (
-								<div className='no-portrait'>No NPC</div>
-							)}
+							<ImageDisplay
+								src={npc?.image || ''}
+								alt={`${npc?.name || 'Unknown'} image`}
+								className='portrait-image'
+								fallback={<div className='no-portrait'>No NPC</div>}
+							/>
 						</div>
 						<div className='dialogue-details'>
 							<h3>{dialogue.name}</h3>

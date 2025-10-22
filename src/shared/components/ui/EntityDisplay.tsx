@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Item, NPC, Portal, Location } from '@/core/models/types'
 import { EntityTooltip, TooltipEntity } from './EntityTooltip'
+import { ImageDisplay } from './ImagePicker'
 
 export type EntityType = 'item' | 'npc' | 'portal' | 'location'
 
@@ -100,15 +101,12 @@ const EntityDisplay = <T extends BaseEntity>({
 					<div
 						className={`entity-image entity-${typeLabel.toLowerCase()}-image`}
 					>
-						{imageUrl ? (
-							<img
-								src={imageUrl}
-								alt={`${entity.name} image`}
-								className='entity-thumbnail'
-							/>
-						) : (
-							<div className='no-image'>?</div>
-						)}
+						<ImageDisplay
+							src={imageUrl || ''}
+							alt={`${entity.name} image`}
+							className='entity-thumbnail'
+							fallback={<div className='no-image'>?</div>}
+						/>
 					</div>
 				)}
 				<div className='entity-info'>

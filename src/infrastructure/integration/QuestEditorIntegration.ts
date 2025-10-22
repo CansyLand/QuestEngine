@@ -4,10 +4,6 @@ import * as path from 'path'
 import { BrowserWindow } from 'electron'
 import { PersistenceManager } from '../../core/services/persistence/PersistenceManager'
 import { GameEngine } from '../../core/engine/GameEngine'
-import { createApiRouter } from '../../core/services/api/ApiService'
-import { setupThumbnailRoutes } from '../api/thumbnails/handler'
-import { setupStaticRoutes } from '../server/StaticServer'
-import { SceneMonitor } from '../monitoring/SceneMonitor'
 
 export class QuestEditorIntegration {
 	private app: express.Application
@@ -15,7 +11,6 @@ export class QuestEditorIntegration {
 	private engine: GameEngine | null = null
 	private persistence: PersistenceManager
 	private projectPath: string | null = null
-	private sceneMonitor: SceneMonitor
 	private manualProjectSwitch: boolean = false
 
 	constructor() {
@@ -25,13 +20,8 @@ export class QuestEditorIntegration {
 
 		// Initialize backend components
 		this.persistence = new PersistenceManager('')
-		this.sceneMonitor = new SceneMonitor()
 
 		// Engine will be initialized when project path is set
-		// API routes will be mounted after engine initialization
-
-		// Setup static file serving for project assets
-		setupStaticRoutes(this.app, null)
 	}
 
 	/**
@@ -50,16 +40,6 @@ export class QuestEditorIntegration {
 		this.projectPath = projectPath
 		await this.updateDataDirectory(projectPath)
 		await this.initializeEngine()
-
-		// Only setup scene monitoring for automatic switches, not manual ones
-		if (!isManualSwitch) {
-			this.sceneMonitor.setupSceneMonitoring(projectPath, this.persistence)
-		} else {
-			// Stop any existing monitoring for manual switches
-			this.sceneMonitor.stopSceneMonitoring()
-		}
-
-		setupStaticRoutes(this.app, projectPath) // Update static routes for new project
 		console.log('QuestEditorIntegration: Project path set successfully')
 	}
 
@@ -78,37 +58,6 @@ export class QuestEditorIntegration {
 			// Initialize the real game engine
 			this.engine = new GameEngine(this.persistence)
 			await this.engine.initializeGame()
-
-			// Remove old API routes if they exist
-			// Express doesn't have a built-in way to remove routes, so we need to be careful
-			// The routes will be replaced when we call use() again with the same path
-
-			// Setup comprehensive API routes
-			const router = createApiRouter(
-				this.engine,
-				this.persistence,
-				this.projectPath
-			)
-
-			// Safely remove existing routes if router exists
-			if (this.app._router && this.app._router.stack) {
-				// Remove existing /api route stack and replace with new one
-				this.app._router.stack = this.app._router.stack.filter((layer: any) => {
-					return !layer.route || layer.route.path !== '/api'
-				})
-
-				// Remove old thumbnail routes
-				this.app._router.stack = this.app._router.stack.filter((layer: any) => {
-					return (
-						!layer.route ||
-						!layer.route.path ||
-						!layer.route.path.startsWith('/api/thumbnails')
-					)
-				})
-			}
-
-			this.app.use('/api', router)
-			setupThumbnailRoutes(this.app, this.projectPath)
 
 			console.log(
 				'QuestEditorIntegration: Engine initialized with new data directory'
@@ -160,7 +109,6 @@ export class QuestEditorIntegration {
 			this.server.close()
 			this.server = null
 		}
-		this.sceneMonitor.stopSceneMonitoring()
 	}
 
 	/**
