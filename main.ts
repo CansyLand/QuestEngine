@@ -66,7 +66,7 @@ function createWindow(): void {
 	const isDev = process.env.NODE_ENV === 'development'
 	const htmlPath = isDev
 		? 'http://localhost:3000'
-		: `file://${path.join(__dirname, '../app.asar.unpacked/build/index.html')}`
+		: `file://${path.join(__dirname, 'index.html')}`
 
 	console.log('Loading URL:', htmlPath)
 	console.log('__dirname:', __dirname)

@@ -1,7 +1,5 @@
 - initialize the dcl scene on project creation if questEngine folder does not exist
 
-- in app the id is not updated
-
 - if thre is no npc in location then i get this error in DCL:
   (they disappear when i attacha n npc to location)
 
