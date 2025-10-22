@@ -1,13 +1,12 @@
 {
 	"name": "questengine",
-	"version": "3.0.0",
+	"version": "4.0.0",
 	"main": "build/main.js",
 	"scripts": {
 		"start": "cross-env NODE_ENV=development concurrently \"npm run start:react\" \"wait-on http://localhost:3000 && electron .\"",
-		"start:react": "cross-env BROWSER=none react-scripts start",
-		"build": "react-scripts build && npm run fix-html-paths && npm run build:quest-editor && npm run build:electron",
-		"build:quest-editor": "cd src/questEditor && tsc --outDir dist",
-		"build:electron": "tsc main.ts preload.ts src/questEditor/integration/quest-editor-integration.ts --outDir build --target es2020 --module commonjs --esModuleInterop",
+		"start:react": "cross-env BROWSER=none react-app-rewired start",
+		"build": "react-app-rewired build; npm run fix-html-paths; npm run build:electron",
+		"build:electron": "tsc main.ts preload.ts src/infrastructure/integration/QuestEditorIntegration.ts --outDir build --target es2020 --module commonjs --esModuleInterop",
 		"fix-html-paths": "node -e \"const fs=require('fs'); const html=fs.readFileSync('build/index.html','utf8').replace(/\\/static\\//g,'./static/'); fs.writeFileSync('build/index.html',html); console.log('Fixed HTML paths for Electron');\"",
 		"package": "npm run build && electron-builder",
 		"publish": "npm run build && electron-builder --publish always",
@@ -57,6 +56,7 @@
 		"cross-env": "^10.1.0",
 		"electron": "^38.3.0",
 		"electron-builder": "^26.0.12",
+		"react-app-rewired": "^2.2.1",
 		"react-scripts": "^5.0.0",
 		"typescript": "^5.9.3",
 		"wait-on": "^9.0.1"
