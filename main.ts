@@ -196,74 +196,68 @@ ipcMain.handle(
 
 		// Create questEngine folder and copy game engine files to the project's src directory
 		try {
-			const questEnginePath = path.join(projectPath, 'src', 'questEngine')
-			// Use __dirname (compiled main.js location) to find questEngine folder in src/
-			const sourceQuestEnginePath = path.join(__dirname, 'src', 'questEngine')
+			const projectSrcPath = path.join(projectPath, 'src')
+			const tempTemplatePath = path.join(
+				projectSrcPath,
+				'dclQuestEngineTemplate'
+			)
+			const finalQuestEnginePath = path.join(projectSrcPath, 'questEngine')
+			// Handle different paths for development vs packaged app
+			let sourceQuestEnginePath: string
+			if (app.isPackaged) {
+				// In packaged app, template files are in app.asar.unpacked
+				sourceQuestEnginePath = path.join(
+					process.resourcesPath,
+					'app.asar.unpacked',
+					'dclQuestEngineTemplate'
+				)
+			} else {
+				// In development, template files are in the source directory
+				sourceQuestEnginePath = path.join(
+					app.getAppPath(),
+					'dclQuestEngineTemplate'
+				)
+			}
 
 			console.log('=== PROJECT CREATION DEBUG ===')
 			console.log('Project path:', projectPath)
+			console.log('Project src path:', projectSrcPath)
 			console.log('Source questEngine path:', sourceQuestEnginePath)
-			console.log('Target questEngine path:', questEnginePath)
+			console.log('Temp template path:', tempTemplatePath)
+			console.log('Final questEngine path:', finalQuestEnginePath)
 			console.log('__dirname:', __dirname)
 			console.log('App path:', app.getAppPath())
 
-			// Check if questEngine folder exists in the app root
+			// Check if source template folder exists
 			try {
 				await fs.access(sourceQuestEnginePath)
 				console.log(
-					'✓ Source questEngine folder exists at:',
+					'✓ Source dclQuestEngineTemplate folder exists at:',
 					sourceQuestEnginePath
 				)
 
-				// Create target directory first
-				await fs.mkdir(questEnginePath, { recursive: true })
-				console.log('✓ Created target directory')
-
-				// Copy the entire questEngine folder to the project's src directory
-				await fs.cp(sourceQuestEnginePath, questEnginePath, {
+				// Copy the entire template folder to project src directory
+				await fs.cp(sourceQuestEnginePath, tempTemplatePath, {
 					recursive: true,
 					force: true,
 				})
+				console.log('✓ Copied template folder to:', tempTemplatePath)
+
+				// Rename the template folder to questEngine
+				await fs.rename(tempTemplatePath, finalQuestEnginePath)
 				console.log(
-					`✓ Successfully copied questEngine folder to: ${questEnginePath}`
+					'✓ Renamed to final questEngine path:',
+					finalQuestEnginePath
 				)
 
 				// Verify copy by checking if a key file exists
-				const testFile = path.join(questEnginePath, 'index.ts')
+				const testFile = path.join(finalQuestEnginePath, 'index.ts')
 				await fs.access(testFile)
 				console.log('✓ Verified copy - index.ts exists in target')
 			} catch (copyError) {
 				console.error('✗ Failed to copy questEngine folder:', copyError)
 				console.error('Error details:', (copyError as Error).message)
-				// Fallback: Create empty data files if questEngine folder doesn't exist
-				const dataPath = path.join(questEnginePath, 'data')
-				await fs.mkdir(dataPath, { recursive: true })
-				console.log(`✓ Created questEngine folder: ${questEnginePath}`)
-
-				// Create empty JSON files
-				const jsonFiles = [
-					'quests.json',
-					'locations.json',
-					'npcs.json',
-					'portals.json',
-					'dialogues.json',
-					'entityLinks.json',
-					'items.json',
-				]
-
-				for (const file of jsonFiles) {
-					const filePath = path.join(dataPath, file)
-					let emptyData = '[]' // Default empty array for most files
-
-					if (file === 'entityLinks.json') {
-						emptyData = '{}' // Object for entity links
-					}
-
-					await fs.writeFile(filePath, emptyData, 'utf8')
-					console.log(`✓ Created ${file} in ${dataPath}`)
-				}
-
-				console.log('✓ All data files created successfully')
+				throw copyError
 			}
 		} catch (error) {
 			console.error('✗ Failed to create questEngine folder and files:', error)
@@ -299,8 +293,18 @@ ipcMain.handle(
 	'set-quest-editor-project',
 	async (_event, projectPath: string): Promise<void> => {
 		if (questEditor) {
-			await questEditor.setProjectPath(projectPath)
+			await questEditor.setProjectPath(projectPath, true) // true = manual switch
 		}
+	}
+)
+
+ipcMain.handle(
+	'get-quest-editor-project-path',
+	async (): Promise<string | null> => {
+		if (questEditor) {
+			return questEditor.getProjectPath()
+		}
+		return null
 	}
 )
 

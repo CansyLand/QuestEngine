@@ -29,6 +29,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	// QuestEditor API methods
 	setQuestEditorProject: (projectPath: string): Promise<void> =>
 		ipcRenderer.invoke('set-quest-editor-project', projectPath),
+	getQuestEditorProjectPath: (): Promise<string | null> =>
+		ipcRenderer.invoke('get-quest-editor-project-path'),
 	getQuestData: (dataType: string): Promise<any> =>
 		ipcRenderer.invoke('get-quest-data', dataType),
 	saveQuestData: (dataType: string, data: any): Promise<void> =>

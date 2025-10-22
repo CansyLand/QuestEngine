@@ -8,7 +8,6 @@ import { createApiRouter } from '../../core/services/api/ApiService'
 import { setupThumbnailRoutes } from '../api/thumbnails/handler'
 import { setupStaticRoutes } from '../server/StaticServer'
 import { SceneMonitor } from '../monitoring/SceneMonitor'
-import { initializeDefaultData } from '../utils/data-utils'
 
 export class QuestEditorIntegration {
 	private app: express.Application
@@ -17,6 +16,7 @@ export class QuestEditorIntegration {
 	private persistence: PersistenceManager
 	private projectPath: string | null = null
 	private sceneMonitor: SceneMonitor
+	private manualProjectSwitch: boolean = false
 
 	constructor() {
 		this.app = express()
@@ -37,12 +37,28 @@ export class QuestEditorIntegration {
 	/**
 	 * Set the active project path and update data directory
 	 */
-	async setProjectPath(projectPath: string): Promise<void> {
-		console.log('QuestEditorIntegration: Setting project path to:', projectPath)
+	async setProjectPath(
+		projectPath: string,
+		isManualSwitch: boolean = false
+	): Promise<void> {
+		console.log(
+			'QuestEditorIntegration: Setting project path to:',
+			projectPath,
+			isManualSwitch ? '(manual switch)' : '(automatic)'
+		)
+		this.manualProjectSwitch = isManualSwitch
 		this.projectPath = projectPath
 		await this.updateDataDirectory(projectPath)
 		await this.initializeEngine()
-		this.sceneMonitor.setupSceneMonitoring(projectPath, this.persistence)
+
+		// Only setup scene monitoring for automatic switches, not manual ones
+		if (!isManualSwitch) {
+			this.sceneMonitor.setupSceneMonitoring(projectPath, this.persistence)
+		} else {
+			// Stop any existing monitoring for manual switches
+			this.sceneMonitor.stopSceneMonitoring()
+		}
+
 		setupStaticRoutes(this.app, projectPath) // Update static routes for new project
 		console.log('QuestEditorIntegration: Project path set successfully')
 	}
@@ -58,20 +74,52 @@ export class QuestEditorIntegration {
 	 * Initialize the game engine after setting the project path
 	 */
 	private async initializeEngine(): Promise<void> {
-		// Initialize the real game engine
-		this.engine = new GameEngine(this.persistence)
-		await this.engine.initializeGame()
+		try {
+			// Initialize the real game engine
+			this.engine = new GameEngine(this.persistence)
+			await this.engine.initializeGame()
 
-		// Setup comprehensive API routes
-		const router = createApiRouter(
-			this.engine,
-			this.persistence,
-			this.projectPath
-		)
-		this.app.use('/api', router)
+			// Remove old API routes if they exist
+			// Express doesn't have a built-in way to remove routes, so we need to be careful
+			// The routes will be replaced when we call use() again with the same path
 
-		// Setup thumbnail routes
-		setupThumbnailRoutes(this.app, this.projectPath)
+			// Setup comprehensive API routes
+			const router = createApiRouter(
+				this.engine,
+				this.persistence,
+				this.projectPath
+			)
+
+			// Safely remove existing routes if router exists
+			if (this.app._router && this.app._router.stack) {
+				// Remove existing /api route stack and replace with new one
+				this.app._router.stack = this.app._router.stack.filter((layer: any) => {
+					return !layer.route || layer.route.path !== '/api'
+				})
+
+				// Remove old thumbnail routes
+				this.app._router.stack = this.app._router.stack.filter((layer: any) => {
+					return (
+						!layer.route ||
+						!layer.route.path ||
+						!layer.route.path.startsWith('/api/thumbnails')
+					)
+				})
+			}
+
+			this.app.use('/api', router)
+			setupThumbnailRoutes(this.app, this.projectPath)
+
+			console.log(
+				'QuestEditorIntegration: Engine initialized with new data directory'
+			)
+		} catch (error) {
+			console.error(
+				'QuestEditorIntegration: Failed to initialize engine:',
+				error
+			)
+			throw error
+		}
 	}
 
 	/**
@@ -82,9 +130,6 @@ export class QuestEditorIntegration {
 
 		// Create new persistence instance with the project-specific data directory
 		this.persistence = new PersistenceManager(dataDir)
-
-		// Initialize default data if needed
-		await initializeDefaultData(dataDir)
 	}
 
 	/**

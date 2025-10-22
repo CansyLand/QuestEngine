@@ -19,6 +19,7 @@ declare global {
 			deleteProject: (projectId: string) => Promise<void>
 			// QuestEditor API methods
 			setQuestEditorProject: (projectPath: string) => Promise<void>
+			getQuestEditorProjectPath: () => Promise<string | null>
 			getQuestData: (dataType: string) => Promise<any>
 			saveQuestData: (dataType: string, data: any) => Promise<void>
 		}
@@ -88,14 +89,17 @@ function App() {
 
 	const handleOpenProject = async (project: Project) => {
 		try {
+			console.log('Opening project:', project.name, project.path)
 			setOpeningProject(true)
 			await window.electronAPI.updateProjectLastOpened(project.id)
 			setCurrentProject(project)
 
 			// Initialize questEditor with the project path BEFORE showing the builder
+			console.log('Setting quest editor project path:', project.path)
 			await window.electronAPI.setQuestEditorProject(project.path)
 
 			setShowQuestEditor(true)
+			console.log('Project opened successfully')
 		} catch (error) {
 			console.error('Failed to open project:', error)
 			alert('Failed to open project. Please try again.')
@@ -125,6 +129,15 @@ function App() {
 		setShowQuestEditor(false)
 	}
 
+	const handleProjectPathChange = async (projectPath: string) => {
+		// Find the project that matches the new path
+		const projects = await window.electronAPI.getProjects()
+		const newProject = projects.find((p) => p.path === projectPath)
+		if (newProject) {
+			setCurrentProject(newProject)
+		}
+	}
+
 	// Render Player interface if accessed via /player route
 	if (isPlayerMode) {
 		return (
@@ -138,7 +151,12 @@ function App() {
 	if (showQuestEditor && currentProject) {
 		return (
 			<div style={{ height: '100vh', width: '100vw' }}>
-				<QuestBuilder onBack={handleBackToProjects} />
+				<QuestBuilder
+					onBack={handleBackToProjects}
+					project={currentProject}
+					onProjectPathChange={handleProjectPathChange}
+					enableAutoProjectSwitch={false}
+				/>
 			</div>
 		)
 	}

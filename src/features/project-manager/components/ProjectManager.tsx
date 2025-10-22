@@ -18,6 +18,7 @@ declare global {
 			deleteProject: (projectId: string) => Promise<void>
 			// QuestEditor API methods
 			setQuestEditorProject: (projectPath: string) => Promise<void>
+			getQuestEditorProjectPath: () => Promise<string | null>
 			getQuestData: (dataType: string) => Promise<any>
 			saveQuestData: (dataType: string, data: any) => Promise<void>
 		}
@@ -33,6 +34,7 @@ function App() {
 	const [currentProject, setCurrentProject] = useState<Project | null>(null)
 	const [showQuestEditor, setShowQuestEditor] = useState<boolean>(false)
 	const [openingProject, setOpeningProject] = useState<boolean>(false)
+	const [remountKey, setRemountKey] = useState<number>(0)
 
 	useEffect(() => {
 		loadProjects()
@@ -91,6 +93,9 @@ function App() {
 			// Initialize questEditor with the project path BEFORE showing the builder
 			await window.electronAPI.setQuestEditorProject(project.path)
 
+			// Force component remount by changing the key
+			setRemountKey((prev) => prev + 1)
+
 			setShowQuestEditor(true)
 		} catch (error) {
 			console.error('Failed to open project:', error)
@@ -125,7 +130,11 @@ function App() {
 	if (showQuestEditor && currentProject) {
 		return (
 			<div style={{ height: '100vh', width: '100vw' }}>
-				<QuestBuilder onBack={handleBackToProjects} />
+				<QuestBuilder
+					key={remountKey}
+					onBack={handleBackToProjects}
+					project={currentProject}
+				/>
 			</div>
 		)
 	}

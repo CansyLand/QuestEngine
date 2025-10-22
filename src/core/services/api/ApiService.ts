@@ -161,6 +161,17 @@ export function createApiRouter(
 				})
 			}
 
+			console.log(`API LOAD: Loading data from project: ${projectPath}`)
+			console.log(
+				`API LOAD: Game data contains ${
+					gameData.locations?.length || 0
+				} locations, ${gameData.quests?.length || 0} quests, ${
+					gameData.npcs?.length || 0
+				} npcs, ${gameData.items?.length || 0} items, ${
+					gameData.portals?.length || 0
+				} portals, ${gameData.dialogues?.length || 0} dialogues`
+			)
+
 			const response: ApiResponse = {
 				success: true,
 				data: gameData,

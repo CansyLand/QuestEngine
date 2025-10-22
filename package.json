@@ -21,10 +21,12 @@
 		"productName": "QuestEngine",
 		"files": [
 			"build/**/*",
+			"dclQuestEngineTemplate/**/*",
 			"node_modules/**/*"
 		],
 		"asarUnpack": [
-			"build/**/*"
+			"build/**/*",
+			"dclQuestEngineTemplate/**/*"
 		],
 		"mac": {
 			"target": "dmg"

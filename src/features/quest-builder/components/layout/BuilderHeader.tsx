@@ -4,16 +4,21 @@ interface BuilderHeaderProps {
 	loading: boolean
 	onReload: () => void
 	onBack?: () => void
+	projectName?: string
 }
 
 export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
 	loading,
 	onReload,
 	onBack,
+	projectName,
 }) => {
 	return (
 		<header className='builder-header'>
-			<h1>Game Builder</h1>
+			<h1>
+				QuestEngine
+				{projectName && <span className='project-name'> - {projectName}</span>}
+			</h1>
 			<div className='builder-actions'>
 				{onBack && <button onClick={onBack}>← Back to Projects</button>}
 				<button onClick={onReload} disabled={loading}>

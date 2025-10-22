@@ -21,6 +21,7 @@ import { BuilderTabs } from './layout/BuilderTabs'
 import { BuilderHeader } from './layout/BuilderHeader'
 import { LinksPanel } from './entities/LinksPanel'
 import { DialoguePanel } from './entities/DialoguePanel'
+import { Project } from '@/shared/types'
 
 // Import all CSS files
 import '@/shared/styles/base.css'
@@ -34,9 +35,17 @@ import '@/shared/styles/utilities.css'
 
 interface BuilderProps {
 	onBack?: () => void
+	project?: Project | null
+	onProjectPathChange?: (projectPath: string) => void
+	enableAutoProjectSwitch?: boolean
 }
 
-export const QuestBuilder: React.FC<BuilderProps> = ({ onBack }) => {
+export const QuestBuilder: React.FC<BuilderProps> = ({
+	onBack,
+	project,
+	onProjectPathChange,
+	enableAutoProjectSwitch = true,
+}) => {
 	const [gameData, setGameData] = useState<Game>({
 		locations: [],
 		quests: [],
@@ -101,9 +110,47 @@ export const QuestBuilder: React.FC<BuilderProps> = ({ onBack }) => {
 		onCancel: () => {},
 	})
 
+	// Load data when component mounts or project changes
 	useEffect(() => {
+		console.log(
+			'Project changed, reloading data. Project:',
+			project?.name,
+			project?.id
+		)
 		loadData()
-	}, [])
+	}, [project?.id])
+
+	// Check if the backend project path matches the current project
+	useEffect(() => {
+		if (!enableAutoProjectSwitch) return
+
+		const checkProjectPath = async () => {
+			if (!onProjectPathChange || !project) return
+
+			try {
+				const currentBackendPath = await (
+					window as any
+				).electronAPI.getQuestEditorProjectPath()
+				if (currentBackendPath && currentBackendPath !== project.path) {
+					// Find the project that matches the backend path
+					const projects = await (window as any).electronAPI.getProjects()
+					const matchingProject = projects.find(
+						(p: Project) => p.path === currentBackendPath
+					)
+					if (matchingProject) {
+						onProjectPathChange(currentBackendPath)
+					}
+				}
+			} catch (error) {
+				console.error('Failed to check project path:', error)
+			}
+		}
+
+		// Check immediately and then every 5 seconds
+		checkProjectPath()
+		const interval = setInterval(checkProjectPath, 5000)
+		return () => clearInterval(interval)
+	}, [project, onProjectPathChange, enableAutoProjectSwitch])
 
 	// Set up window function for unlinked count updates
 	useEffect(() => {
@@ -117,11 +164,22 @@ export const QuestBuilder: React.FC<BuilderProps> = ({ onBack }) => {
 
 	const loadData = async () => {
 		setLoading(true)
-		console.log('Loading data...')
+		console.log('Loading data for project:', project?.name, project?.path)
+
+		// Small delay to ensure backend has finished switching projects
+		await new Promise((resolve) => setTimeout(resolve, 500))
+
 		const response = await loadGameData()
 		console.log('Load response:', response)
 		if (response.success && response.data) {
-			console.log('Setting game data:', response.data)
+			console.log('Setting game data:', {
+				locations: response.data.locations?.length || 0,
+				quests: response.data.quests?.length || 0,
+				npcs: response.data.npcs?.length || 0,
+				items: response.data.items?.length || 0,
+				portals: response.data.portals?.length || 0,
+				dialogues: response.data.dialogues?.length || 0,
+			})
 			setGameData(response.data)
 		} else {
 			console.log('Load failed:', response.error)
@@ -919,7 +977,12 @@ export const QuestBuilder: React.FC<BuilderProps> = ({ onBack }) => {
 
 	return (
 		<div className='builder'>
-			<BuilderHeader loading={loading} onReload={loadData} onBack={onBack} />
+			<BuilderHeader
+				loading={loading}
+				onReload={loadData}
+				onBack={onBack}
+				projectName={project?.name}
+			/>
 
 			<BuilderTabs
 				activeTab={activeTab}
