@@ -32,7 +32,7 @@ app.use(
 )
 
 // API routes
-app.use('/api', createApiRouter(engine, persistence))
+app.use('/api', createApiRouter(engine, persistence, null))
 
 // Serve builder at /builder
 app.get('/builder', (req, res) => {

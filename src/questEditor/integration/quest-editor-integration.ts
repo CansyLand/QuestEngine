@@ -63,7 +63,11 @@ export class QuestEditorIntegration {
 		await this.engine.initializeGame()
 
 		// Setup comprehensive API routes
-		const router = createApiRouter(this.engine, this.persistence)
+		const router = createApiRouter(
+			this.engine,
+			this.persistence,
+			this.projectPath
+		)
 		this.app.use('/api', router)
 
 		// Setup thumbnail routes

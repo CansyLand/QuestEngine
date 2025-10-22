@@ -6,6 +6,16 @@ export function setupThumbnailRoutes(
 	app: express.Application,
 	projectPath: string | null
 ): void {
+	// Test endpoint to check if thumbnails routes are working
+	app.get('/api/thumbnails-test', (req, res) => {
+		res.json({
+			message: 'Thumbnails routes are set up',
+			projectPath: projectPath,
+			projectBasename: projectPath
+				? require('path').basename(projectPath)
+				: null,
+		})
+	})
 	// Serve thumbnail images from the current DCL project
 	app.get('/api/thumbnails/:project/:filename', async (req, res) => {
 		try {
@@ -15,12 +25,14 @@ export function setupThumbnailRoutes(
 				return res.status(404).json({ error: 'No project loaded' })
 			}
 
+			const projectBasename = path.basename(projectPath)
+
 			// Verify the project matches the current project
-			if (project !== path.basename(projectPath)) {
+			if (project !== projectBasename) {
 				return res.status(403).json({ error: 'Access denied' })
 			}
 
-			// Try both locations: root thumbnails folder and scene/thumbnails folder
+			// Try three locations: root thumbnails folder, scene/thumbnails folder, and assets/images folder
 			let filePath = path.join(projectPath, 'thumbnails', filename)
 			let foundFilePath = null
 
@@ -35,7 +47,14 @@ export function setupThumbnailRoutes(
 					await fs.access(filePath)
 					foundFilePath = filePath
 				} catch {
-					// File not found in either location
+					// If not found, check assets/images (supports subfolders)
+					filePath = path.join(projectPath, 'assets', 'images', filename)
+					try {
+						await fs.access(filePath)
+						foundFilePath = filePath
+					} catch {
+						// File not found in any location
+					}
 				}
 			}
 
@@ -45,12 +64,15 @@ export function setupThumbnailRoutes(
 
 			filePath = foundFilePath
 
-			// Security check: ensure the file is within a thumbnails directory
+			// Security check: ensure the file is within allowed directories
 			const rootThumbnailsDir = path.join(projectPath, 'thumbnails')
 			const sceneThumbnailsDir = path.join(projectPath, 'scene', 'thumbnails')
+			const assetsImagesDir = path.join(projectPath, 'assets', 'images')
+
 			if (
 				!filePath.startsWith(rootThumbnailsDir) &&
-				!filePath.startsWith(sceneThumbnailsDir)
+				!filePath.startsWith(sceneThumbnailsDir) &&
+				!filePath.startsWith(assetsImagesDir)
 			) {
 				return res.status(403).json({ error: 'Access denied' })
 			}
@@ -76,6 +98,10 @@ export function setupThumbnailRoutes(
 
 			// Stream the file
 			const fileStream = require('fs').createReadStream(filePath)
+			fileStream.on('error', (error: any) => {
+				console.error('File stream error:', error)
+				res.status(500).json({ error: 'File streaming error' })
+			})
 			fileStream.pipe(res)
 		} catch (error) {
 			console.error('Error serving thumbnail:', error)

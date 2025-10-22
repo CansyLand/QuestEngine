@@ -72,7 +72,8 @@ function generateUniqueId(
 
 export function createApiRouter(
 	engine: GameEngine,
-	persistence: PersistenceManager
+	persistence: PersistenceManager,
+	projectPath: string | null = null
 ) {
 	const router = express.Router()
 
@@ -805,10 +806,9 @@ export function createApiRouter(
 		}
 	})
 
-	// Get thumbnail images from DCL projects and assets/images
+	// Get thumbnail images from the current project and assets/images
 	router.get('/thumbnails', (req, res) => {
 		try {
-			const dclProjectsPath = path.join(process.cwd(), '..')
 			const images: Array<{ name: string; url: string; project: string }> = []
 
 			// First, load images from assets/images directory
@@ -825,7 +825,7 @@ export function createApiRouter(
 
 					// Add each image to the images array
 					for (const fileName of imageFiles) {
-						const url = `/assets/images/${fileName}`
+						const url = `http://localhost:31234/assets/images/${fileName}`
 						images.push({
 							name: fileName,
 							url: url,
@@ -837,8 +837,8 @@ export function createApiRouter(
 				}
 			}
 
-			// Check if the DCL projects directory exists
-			if (!fs.existsSync(dclProjectsPath)) {
+			// If no project path is set, return only assets images
+			if (!projectPath) {
 				const response: ApiResponse = {
 					success: true,
 					data: images,
@@ -846,19 +846,55 @@ export function createApiRouter(
 				return res.json(response)
 			}
 
-			// Get all directories in the DCL projects folder
-			const projectDirs = fs
-				.readdirSync(dclProjectsPath, { withFileTypes: true })
-				.filter((dirent) => dirent.isDirectory())
-				.map((dirent) => dirent.name)
+			const projectName = path.basename(projectPath)
 
-			// For each project directory, look for thumbnails folder
-			for (const projectName of projectDirs) {
-				const projectPath = path.join(dclProjectsPath, projectName)
-				const scenePath = path.join(projectPath, 'scene')
-				const thumbnailsPath = path.join(scenePath, 'thumbnails')
+			// Helper function to recursively find image files in a directory
+			function findImageFiles(
+				dirPath: string,
+				relativePath: string = ''
+			): void {
+				if (!fs.existsSync(dirPath)) return
 
-				// Check if thumbnails folder exists
+				try {
+					const items = fs.readdirSync(dirPath, { withFileTypes: true })
+
+					for (const item of items) {
+						const itemPath = path.join(dirPath, item.name)
+						const itemRelativePath = relativePath
+							? `${relativePath}/${item.name}`
+							: item.name
+
+						if (item.isDirectory()) {
+							// Recursively search subdirectories
+							findImageFiles(itemPath, itemRelativePath)
+						} else if (item.isFile()) {
+							// Check if it's an image file
+							const ext = path.extname(item.name).toLowerCase()
+							if (['.png', '.jpg', '.jpeg', '.gif', '.webp'].includes(ext)) {
+								// Use full URL with backend host for Electron environment
+								const url = `http://localhost:31234/api/thumbnails/${projectName}/${itemRelativePath}`
+								images.push({
+									name: itemRelativePath,
+									url: url,
+									project: projectName,
+								})
+							}
+						}
+					}
+				} catch (error) {
+					console.warn(`Failed to read directory ${dirPath}:`, error)
+				}
+			}
+
+			// Look for thumbnails in the current project
+			// Try three locations: root thumbnails folder, scene/thumbnails folder, and assets/images folder
+			const thumbnailLocations = [
+				path.join(projectPath, 'thumbnails'),
+				path.join(projectPath, 'scene', 'thumbnails'),
+			]
+
+			// First handle the simple thumbnail locations (no subfolders)
+			for (const thumbnailsPath of thumbnailLocations) {
 				if (fs.existsSync(thumbnailsPath)) {
 					try {
 						const thumbnailFiles = fs
@@ -870,9 +906,8 @@ export function createApiRouter(
 
 						// Add each thumbnail to the images array
 						for (const fileName of thumbnailFiles) {
-							const filePath = path.join(thumbnailsPath, fileName)
-							// Create a URL that serves the file - we'll need to add a static route for this
-							const url = `/api/thumbnails/${projectName}/${fileName}`
+							// Use full URL with backend host for Electron environment
+							const url = `http://localhost:31234/api/thumbnails/${projectName}/${fileName}`
 							images.push({
 								name: fileName,
 								url: url,
@@ -881,12 +916,16 @@ export function createApiRouter(
 						}
 					} catch (error) {
 						console.warn(
-							`Failed to read thumbnails from ${projectName}:`,
+							`Failed to read thumbnails from ${thumbnailsPath}:`,
 							error
 						)
 					}
 				}
 			}
+
+			// Then handle assets/images with recursive search for subfolders
+			const projectAssetsImagesPath = path.join(projectPath, 'assets', 'images')
+			findImageFiles(projectAssetsImagesPath)
 
 			const response: ApiResponse = {
 				success: true,
@@ -894,6 +933,7 @@ export function createApiRouter(
 			}
 			res.json(response)
 		} catch (error) {
+			console.error('Error in /thumbnails endpoint:', error)
 			const response: ApiResponse = {
 				success: false,
 				error: error instanceof Error ? error.message : 'Unknown error',
