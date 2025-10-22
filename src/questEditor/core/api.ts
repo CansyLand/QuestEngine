@@ -185,7 +185,28 @@ export function createApiRouter(
 
 		// Update references in locations
 		updatedData.locations.forEach((location: any) => {
-			// Update item references
+			// Update item references in location arrays
+			if (entityType === 'item') {
+				location.items = location.items.map((item: any) =>
+					item.id === oldId ? { ...item, id: newId } : item
+				)
+			}
+
+			// Update NPC references in location arrays
+			if (entityType === 'npc') {
+				location.npcs = location.npcs.map((npc: any) =>
+					npc.id === oldId ? { ...npc, id: newId } : npc
+				)
+			}
+
+			// Update portal references in location arrays
+			if (entityType === 'portal') {
+				location.portals = location.portals.map((portal: any) =>
+					portal.id === oldId ? { ...portal, id: newId } : portal
+				)
+			}
+
+			// Update item references in onInteract actions
 			location.items.forEach((item: any) => {
 				if (item.onInteract) {
 					item.onInteract.forEach((action: any) => {
@@ -199,7 +220,7 @@ export function createApiRouter(
 				}
 			})
 
-			// Update NPC references
+			// Update NPC references in onInteract actions
 			location.npcs.forEach((npc: any) => {
 				if (npc.onInteract) {
 					npc.onInteract.forEach((action: any) => {
@@ -213,7 +234,7 @@ export function createApiRouter(
 				}
 			})
 
-			// Update portal references
+			// Update portal references in onInteract actions
 			location.portals.forEach((portal: any) => {
 				if (portal.onInteract) {
 					portal.onInteract.forEach((action: any) => {
@@ -277,6 +298,15 @@ export function createApiRouter(
 			})
 		})
 
+		// Update dialogue npcId references
+		if (entityType === 'npc') {
+			updatedData.dialogues.forEach((dialogue: any) => {
+				if (dialogue.npcId === oldId) {
+					dialogue.npcId = newId
+				}
+			})
+		}
+
 		// Update dialogue sequence references in NPCs
 		if (entityType === 'dialogue') {
 			updatedData.npcs.forEach((npc: any) => {
@@ -303,6 +333,25 @@ export function createApiRouter(
 					dialogue.questStepId = newId
 				}
 			})
+		}
+
+		// Update entityLinks.json
+		const linksPath = path.join(
+			process.cwd(),
+			'questEditor/data/entityLinks.json'
+		)
+		try {
+			if (fs.existsSync(linksPath)) {
+				const linksData = JSON.parse(fs.readFileSync(linksPath, 'utf8'))
+				Object.keys(linksData).forEach((entityId) => {
+					if (linksData[entityId].questEntityId === oldId) {
+						linksData[entityId].questEntityId = newId
+					}
+				})
+				fs.writeFileSync(linksPath, JSON.stringify(linksData, null, 2))
+			}
+		} catch (error) {
+			console.warn('Failed to update entityLinks.json:', error)
 		}
 
 		return updatedData
@@ -442,42 +491,50 @@ export function createApiRouter(
 			let hasIdChanges = false
 			for (const { type, current, updated } of entityTypes) {
 				for (const updatedEntity of updated) {
-					const currentEntity = current.find(
-						(e: any) => e.id === updatedEntity.id
-					)
-					if (currentEntity) {
-						// Check if name changed for existing entity
-						let nameChanged = false
-						let oldName = ''
-						let newName = ''
+					// Find current entity by name instead of ID (since ID might have changed)
+					let currentEntity = null
+					let nameChanged = false
+					let oldName = ''
+					let newName = ''
 
-						if (type === 'quest') {
+					if (type === 'quest') {
+						const questUpdated = updatedEntity as Quest
+						newName = questUpdated.title
+						currentEntity = current.find((e: any) => {
+							const questCurrent = e as Quest
+							return questCurrent.title === newName && e.id !== updatedEntity.id
+						})
+						if (currentEntity) {
 							const questCurrent = currentEntity as Quest
-							const questUpdated = updatedEntity as Quest
-							nameChanged = questCurrent.title !== questUpdated.title
+							nameChanged = false // Quest titles don't change IDs in the same way
 							oldName = questCurrent.title
-							newName = questUpdated.title
-						} else {
-							const nameCurrent = currentEntity as { name: string }
-							const nameUpdated = updatedEntity as { name: string }
-							nameChanged = nameCurrent.name !== nameUpdated.name
-							oldName = nameCurrent.name
-							newName = nameUpdated.name
 						}
+					} else {
+						const nameUpdated = (updatedEntity as { name: string }).name
+						newName = nameUpdated
+						currentEntity = current.find((e: any) => {
+							const nameCurrent = (e as { name: string }).name
+							return nameCurrent === newName && e.id !== updatedEntity.id
+						})
+						if (currentEntity) {
+							const nameCurrent = (currentEntity as { name: string }).name
+							nameChanged = false // We're looking for entities with same name but different ID
+							oldName = nameCurrent
+						}
+					}
 
-						if (nameChanged && updatedEntity.id !== currentEntity.id) {
-							console.log(
-								`ID change detected for ${type} ${currentEntity.id}: name changed from "${oldName}" to "${newName}", ID changed from "${currentEntity.id}" to "${updatedEntity.id}"`
-							)
-							hasIdChanges = true
-							// Update references throughout the data
-							gameData = updateEntityReferences(
-								gameData,
-								type,
-								currentEntity.id,
-								updatedEntity.id
-							)
-						}
+					if (currentEntity && updatedEntity.id !== currentEntity.id) {
+						console.log(
+							`ID change detected for ${type}: name "${oldName}", ID changed from "${currentEntity.id}" to "${updatedEntity.id}"`
+						)
+						hasIdChanges = true
+						// Update references throughout the data
+						gameData = updateEntityReferences(
+							gameData,
+							type,
+							currentEntity.id,
+							updatedEntity.id
+						)
 					}
 				}
 			}

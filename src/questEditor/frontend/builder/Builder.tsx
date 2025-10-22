@@ -457,10 +457,188 @@ export const Builder: React.FC<BuilderProps> = ({ onBack }) => {
 				break
 		}
 
+		// If the entity ID changed, update all references to it
+		const entityIdChanged = updatedEntity.id !== originalEntity.id
+		if (entityIdChanged) {
+			console.log(
+				`Entity ID changed from ${originalEntity.id} to ${updatedEntity.id} for ${editModal.entityType}`
+			)
+			updatedGameData = updateEntityReferences(
+				updatedGameData,
+				editModal.entityType,
+				originalEntity.id,
+				updatedEntity.id
+			)
+		}
+
 		// Update local state and save
 		setGameData(updatedGameData)
 		await saveData(updatedGameData)
 		closeEditModal()
+	}
+
+	// Update all references to an entity when its ID changes
+	const updateEntityReferences = (
+		gameData: Game,
+		entityType: string,
+		oldId: string,
+		newId: string
+	): Game => {
+		const updatedData = JSON.parse(JSON.stringify(gameData)) // Deep clone
+
+		// Update references in locations
+		updatedData.locations.forEach((location: any) => {
+			// Update item references in location arrays
+			if (entityType === 'item') {
+				location.items = location.items.map((item: any) =>
+					item.id === oldId ? { ...item, id: newId } : item
+				)
+			}
+
+			// Update NPC references in location arrays
+			if (entityType === 'npc') {
+				location.npcs = location.npcs.map((npc: any) =>
+					npc.id === oldId ? { ...npc, id: newId } : npc
+				)
+			}
+
+			// Update portal references in location arrays
+			if (entityType === 'portal') {
+				location.portals = location.portals.map((portal: any) =>
+					portal.id === oldId ? { ...portal, id: newId } : portal
+				)
+			}
+
+			// Update item references in onInteract actions
+			location.items.forEach((item: any) => {
+				if (item.onInteract) {
+					item.onInteract.forEach((action: any) => {
+						if (action.params && action.params.entityId === oldId) {
+							action.params.entityId = newId
+						}
+						if (action.params && action.params.itemName === oldId) {
+							action.params.itemName = newId
+						}
+					})
+				}
+			})
+
+			// Update NPC references in onInteract actions
+			location.npcs.forEach((npc: any) => {
+				if (npc.onInteract) {
+					npc.onInteract.forEach((action: any) => {
+						if (action.params && action.params.entityId === oldId) {
+							action.params.entityId = newId
+						}
+						if (action.params && action.params.npcId === oldId) {
+							action.params.npcId = newId
+						}
+					})
+				}
+			})
+
+			// Update portal references in onInteract actions
+			location.portals.forEach((portal: any) => {
+				if (portal.onInteract) {
+					portal.onInteract.forEach((action: any) => {
+						if (action.params && action.params.portalId === oldId) {
+							action.params.portalId = newId
+						}
+						if (action.params && action.params.locationId === oldId) {
+							action.params.locationId = newId
+						}
+					})
+				}
+				if (portal.destinationLocationId === oldId) {
+					portal.destinationLocationId = newId
+				}
+			})
+		})
+
+		// Update quest references
+		updatedData.quests.forEach((quest: any) => {
+			quest.steps.forEach((step: any) => {
+				if (step.onStart) {
+					step.onStart.forEach((action: any) => {
+						if (action.params) {
+							if (action.params.entityId === oldId)
+								action.params.entityId = newId
+							if (action.params.itemName === oldId)
+								action.params.itemName = newId
+							if (action.params.npcId === oldId) action.params.npcId = newId
+							if (action.params.portalId === oldId)
+								action.params.portalId = newId
+							if (action.params.locationId === oldId)
+								action.params.locationId = newId
+							if (action.params.questId === oldId) action.params.questId = newId
+						}
+					})
+				}
+				if (step.onComplete) {
+					step.onComplete.forEach((action: any) => {
+						if (action.params) {
+							if (action.params.entityId === oldId)
+								action.params.entityId = newId
+							if (action.params.itemName === oldId)
+								action.params.itemName = newId
+							if (action.params.npcId === oldId) action.params.npcId = newId
+							if (action.params.portalId === oldId)
+								action.params.portalId = newId
+							if (action.params.locationId === oldId)
+								action.params.locationId = newId
+							if (action.params.questId === oldId) action.params.questId = newId
+						}
+					})
+				}
+				if (step.objectiveParams) {
+					if (step.objectiveParams.npcId === oldId)
+						step.objectiveParams.npcId = newId
+					if (step.objectiveParams.itemName === oldId)
+						step.objectiveParams.itemName = newId
+					if (step.objectiveParams.portalId === oldId)
+						step.objectiveParams.portalId = newId
+				}
+			})
+		})
+
+		// Update dialogue npcId references
+		if (entityType === 'npc') {
+			updatedData.dialogues.forEach((dialogue: any) => {
+				if (dialogue.npcId === oldId) {
+					dialogue.npcId = newId
+				}
+			})
+		}
+
+		// Update dialogue sequence references in NPCs
+		if (entityType === 'dialogue') {
+			updatedData.npcs.forEach((npc: any) => {
+				if (npc.dialogueSequences) {
+					npc.dialogueSequences = npc.dialogueSequences.map(
+						(dialogueId: string) => (dialogueId === oldId ? newId : dialogueId)
+					)
+				}
+			})
+		}
+
+		// Update quest step references
+		if (entityType === 'quest-step') {
+			// Update activeStepId in quests
+			updatedData.quests.forEach((quest: any) => {
+				if (quest.activeStepId === oldId) {
+					quest.activeStepId = newId
+				}
+			})
+
+			// Update questStepId in dialogue sequences
+			updatedData.dialogues.forEach((dialogue: any) => {
+				if (dialogue.questStepId === oldId) {
+					dialogue.questStepId = newId
+				}
+			})
+		}
+
+		return updatedData
 	}
 
 	const addLocation = () => {
