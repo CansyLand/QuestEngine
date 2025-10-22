@@ -537,7 +537,7 @@ export function createApiRouter(
 			console.log('API SAVE: saveGame completed')
 
 			// Reload the engine state from the updated files
-			engine.loadGame()
+			await engine.initializeGame()
 
 			// Get the updated state to verify it worked
 			const updatedState = engine.getGameState()
