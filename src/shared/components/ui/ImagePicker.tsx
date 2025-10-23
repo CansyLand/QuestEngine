@@ -43,15 +43,11 @@ export const ImageDisplay: React.FC<{
 			try {
 				const electronAPI = (window as any).electronAPI
 				if (electronAPI) {
-					// Check if this is already a full file path
-					const isFullPath =
-						src.startsWith('/') &&
-						(src.includes(':\\') || // Windows drive letter
-							src.includes(':/') || // Unix absolute path with protocol
-							src.split('/').length > 4) // Absolute paths have many segments
+					// Check if this is already a full file path (absolute path from getThumbnails)
+					const isFullPath = src.startsWith('/') && src.split('/').length > 4
 
 					if (isFullPath) {
-						// This is already a full file path, use it directly
+						// This is already a full file path from getThumbnails, use it directly
 						const dataUrl = await electronAPI.readThumbnail(src)
 						setImageDataUrl(dataUrl)
 					} else if (src.startsWith('/')) {
@@ -61,7 +57,7 @@ export const ImageDisplay: React.FC<{
 							: null
 
 						if (projectPath) {
-							const filePath = projectPath + src.substring(1)
+							const filePath = projectPath + '/' + src.substring(1)
 							try {
 								const dataUrl = await electronAPI.readThumbnail(filePath)
 								setImageDataUrl(dataUrl)

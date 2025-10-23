@@ -1,6 +1,4 @@
-- initialize the dcl scene on project creation if questEngine folder does not exist
-
-- Player still sthinks irts electron time
+- Player still sthinks irts express -> electron time
 
 - add logo
 

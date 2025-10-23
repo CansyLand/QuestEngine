@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
+import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 import '@/shared/styles/Grid.css'
 
 interface GridProps {
@@ -26,6 +27,23 @@ export const Grid: React.FC<GridProps> = ({
 }) => {
 	const [hoveredEntity, setHoveredEntity] = useState<any>(null)
 	const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
+
+	const getEntityImageUrl = (imagePath: string) => {
+		return imagePath && projectPath ? projectPath + imagePath : imagePath
+	}
+
 	// Use the provided entities from the game state
 	const gameEntities = useMemo(() => {
 		// Create a stable grid representation
@@ -156,11 +174,11 @@ export const Grid: React.FC<GridProps> = ({
 					>
 						{entity && (
 							<div className='entity'>
-								<img
-									src={entity.image}
+								<ImageDisplay
+									src={getEntityImageUrl(entity.image)}
 									alt={entity.name}
-									title={entity.name}
 									className='entity-image'
+									fallback={<div className='no-image'>?</div>}
 								/>
 								<div className='entity-name'>{entity.name}</div>
 							</div>
@@ -184,10 +202,11 @@ export const Grid: React.FC<GridProps> = ({
 					<div className='tooltip-content'>
 						<strong>{hoveredEntity.name}</strong>
 						<div className='tooltip-image'>
-							<img
-								src={hoveredEntity.image}
+							<ImageDisplay
+								src={getEntityImageUrl(hoveredEntity.image)}
 								alt={hoveredEntity.name}
 								style={{ width: '50px', height: '50px' }}
+								fallback={<div className='no-image'>?</div>}
 							/>
 						</div>
 					</div>

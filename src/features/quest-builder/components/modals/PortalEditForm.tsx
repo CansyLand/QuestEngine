@@ -1,11 +1,14 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
 	Portal,
 	InteractiveMode,
 	EntityState,
 	Location,
 } from '@/core/models/types'
-import { ImagePicker } from '../../../../shared/components/ui/ImagePicker'
+import {
+	ImagePicker,
+	ImageDisplay,
+} from '../../../../shared/components/ui/ImagePicker'
 
 interface PortalEditFormProps {
 	portal: Portal
@@ -20,6 +23,19 @@ export const PortalEditForm: React.FC<PortalEditFormProps> = ({
 	onOpenLocationSelector,
 	availableLocations,
 }) => {
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
+
 	// Find the selected location to display its image
 	const selectedLocation = portal.destinationLocationId
 		? availableLocations.find((loc) => loc.id === portal.destinationLocationId)
@@ -51,26 +67,25 @@ export const PortalEditForm: React.FC<PortalEditFormProps> = ({
 							onClick={onOpenLocationSelector}
 						>
 							{selectedLocation?.image ? (
-								<img
-									src={selectedLocation.image}
+								<ImageDisplay
+									src={
+										projectPath
+											? projectPath + selectedLocation.image
+											: selectedLocation.image
+									}
 									alt={`Selected location: ${selectedLocation.name}`}
-									onError={(e) => {
-										// Hide broken images and show text fallback
-										e.currentTarget.style.display = 'none'
-										const fallback =
-											e.currentTarget.parentElement?.querySelector(
-												'.location-text'
-											) as HTMLElement
-										if (fallback) fallback.style.display = 'flex'
-									}}
+									fallback={
+										<div className='location-text' style={{ display: 'flex' }}>
+											Select Location
+										</div>
+									}
 								/>
 							) : null}
-							<div
-								className='location-text'
-								style={{ display: selectedLocation?.image ? 'none' : 'flex' }}
-							>
-								Select Location
-							</div>
+							{!selectedLocation?.image && (
+								<div className='location-text' style={{ display: 'flex' }}>
+									Select Location
+								</div>
+							)}
 						</div>
 					</div>
 				</div>

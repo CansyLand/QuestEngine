@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Portal } from '@/core/models/types'
 import { PortalSelectorState } from '@/features/quest-builder/types'
+import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 
 interface PortalSelectorProps {
 	portalSelector: PortalSelectorState
@@ -17,6 +18,19 @@ export const PortalSelector: React.FC<PortalSelectorProps> = ({
 	onMouseEnter,
 	onMouseLeave,
 }) => {
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
+
 	if (!portalSelector.isOpen) return null
 
 	return (
@@ -54,38 +68,50 @@ export const PortalSelector: React.FC<PortalSelectorProps> = ({
 						</div>
 					) : (
 						<div className='portal-grid'>
-							{portalSelector.availablePortals.map((portal) => (
-								<div
-									key={portal.id}
-									className={`portal-slot ${
-										portalSelector.selectedPortals.some(
-											(selected) => selected.id === portal.id
-										)
-											? 'selected'
-											: ''
-									}`}
-									onClick={(e) => {
-										if (portalSelector.isShiftPressed) {
-											// Multi-selection mode - handled in EditModal
-											return
-										} else {
-											// Single selection mode
-											onSelectPortal(portal)
-										}
-									}}
-									onMouseEnter={(e) => onMouseEnter(portal, e)}
-									onMouseLeave={onMouseLeave}
-								>
-									<div className='portal-image'>
-										{portal.image ? (
-											<img src={portal.image} alt={portal.name} />
-										) : (
-											<div className='no-image'>?</div>
-										)}
+							{portalSelector.availablePortals.map((portal) => {
+								// Construct portal image URL with project path
+								const portalImageUrl =
+									portal.image && projectPath
+										? projectPath + portal.image
+										: portal.image
+
+								return (
+									<div
+										key={portal.id}
+										className={`portal-slot ${
+											portalSelector.selectedPortals.some(
+												(selected) => selected.id === portal.id
+											)
+												? 'selected'
+												: ''
+										}`}
+										onClick={(e) => {
+											if (portalSelector.isShiftPressed) {
+												// Multi-selection mode - handled in EditModal
+												return
+											} else {
+												// Single selection mode
+												onSelectPortal(portal)
+											}
+										}}
+										onMouseEnter={(e) => onMouseEnter(portal, e)}
+										onMouseLeave={onMouseLeave}
+									>
+										<div className='portal-image'>
+											{portal.image ? (
+												<ImageDisplay
+													src={portalImageUrl || ''}
+													alt={portal.name}
+													fallback={<div className='no-image'>?</div>}
+												/>
+											) : (
+												<div className='no-image'>?</div>
+											)}
+										</div>
+										<div className='portal-name'>{portal.name}</div>
 									</div>
-									<div className='portal-name'>{portal.name}</div>
-								</div>
-							))}
+								)
+							})}
 						</div>
 					)}
 				</div>

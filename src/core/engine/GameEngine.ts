@@ -605,6 +605,13 @@ export class GameEngine {
 			quest.steps[0].onStart.forEach((action) => {
 				commands.push(...this.executeAction(action))
 			})
+
+			commands.push({
+				type: 'log',
+				params: {
+					message: `Quest started: ${quest.title}. Now starting: ${quest.steps[0].name}`,
+				},
+			})
 		}
 
 		commands.push({
@@ -651,7 +658,7 @@ export class GameEngine {
 				commands.push({
 					type: 'log',
 					params: {
-						message: `Quest step completed: ${currentStep.name}. Next: ${nextStep.name}`,
+						message: `Quest step completed: ${currentStep.name}. Now starting: ${nextStep.name}`,
 					},
 				})
 			} else {
@@ -764,6 +771,11 @@ export class GameEngine {
 	private checkObjectives(interactedNpcId?: string): Command[] {
 		const commands: Command[] = []
 
+		console.log(
+			`[QuestEngine] Checking objectives for ${this.game.activeQuests.length} active quests:`,
+			this.game.activeQuests
+		)
+
 		for (const questId of this.game.activeQuests) {
 			const quest = this.game.quests.find((q) => q.id === questId)
 			if (!quest || quest.completed) continue
@@ -785,16 +797,36 @@ export class GameEngine {
 					break
 
 				case 'collectByName':
-					const { itemName, count } = currentStep.objectiveParams
-					if (itemName && count) {
+					const { itemName, count = 1 } = currentStep.objectiveParams
+					console.log(
+						`[QuestEngine] Checking collectByName objective: looking for "${itemName}" (count: ${count})`
+					)
+					console.log(`[QuestEngine] Current inventory:`, this.game.inventory)
+					if (itemName) {
 						// Count how many items with this name are in inventory
 						const matchingItems = this.game.inventory.filter((entityId) => {
 							// Find the entity and check if its name matches
 							const entity = this.findEntityById(entityId)
+							console.log(
+								`[QuestEngine] Checking item ${entityId}: name="${
+									entity?.name
+								}", matches="${entity?.name === itemName}"`
+							)
 							return entity && entity.name === itemName
 						})
+						console.log(
+							`[QuestEngine] Found ${matchingItems.length} matching items:`,
+							matchingItems
+						)
 						if (matchingItems.length >= count) {
+							console.log(
+								`[QuestEngine] Objective completed! ${matchingItems.length} >= ${count}`
+							)
 							objectiveCompleted = true
+						} else {
+							console.log(
+								`[QuestEngine] Objective not completed. ${matchingItems.length} < ${count}`
+							)
 						}
 					}
 					break

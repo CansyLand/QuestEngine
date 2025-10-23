@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Quest, QuestStep, NPC } from '@/core/models/types'
+import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 
 interface QuestStepSelectorProps {
 	availableQuests: Quest[]
@@ -29,6 +30,18 @@ export const QuestStepSelector: React.FC<QuestStepSelectorProps> = ({
 	dialogueId,
 }) => {
 	const [selectedQuestId, setSelectedQuestId] = useState<string>('')
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
 
 	const selectedQuest = availableQuests.find((q) => q.id === selectedQuestId)
 	const questStepsForSelectedQuest = selectedQuest
@@ -78,10 +91,15 @@ export const QuestStepSelector: React.FC<QuestStepSelectorProps> = ({
 						<div className='npc-info'>
 							<div className='npc-portrait'>
 								{dialogueNpc.image ? (
-									<img
-										src={dialogueNpc.image}
+									<ImageDisplay
+										src={
+											projectPath
+												? projectPath + dialogueNpc.image
+												: dialogueNpc.image
+										}
 										alt={`${dialogueNpc.name} portrait`}
 										className='portrait-image'
+										fallback={<div className='no-image'>No Image</div>}
 									/>
 								) : (
 									<div className='no-portrait'>No Image</div>
@@ -150,10 +168,17 @@ export const QuestStepSelector: React.FC<QuestStepSelectorProps> = ({
 																		className='assigned-dialogue-item'
 																	>
 																		{info.npc && info.npc.image && (
-																			<img
-																				src={info.npc.image}
+																			<ImageDisplay
+																				src={
+																					projectPath
+																						? projectPath + info.npc.image
+																						: info.npc.image
+																				}
 																				alt={`${info.npc.name} portrait`}
 																				className='assigned-npc-portrait'
+																				fallback={
+																					<div className='no-image'>🖼️</div>
+																				}
 																			/>
 																		)}
 																		{info.npc && !info.npc.image && (

@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { startGame, sendInteraction, resetGame } from '@/shared/utils/api'
+import { startGame, sendInteraction, getDialogue } from '@/shared/utils/api'
 import { Grid } from './Grid'
 import { DialoguePanel } from './DialoguePanel'
+import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 import '@/shared/styles/base.css'
 import '@/shared/styles/Player.css'
 
 interface PlayerProps {}
 
 export const GamePlayer: React.FC<PlayerProps> = () => {
+	console.log('[GamePlayer] Component function called')
+
 	const [gameStarted, setGameStarted] = useState(false)
 	const [currentLocation, setCurrentLocation] = useState<any>(null)
 	const [currentEntities, setCurrentEntities] = useState<any[]>([])
@@ -20,7 +23,64 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 	const [questLog, setQuestLog] = useState<string[]>([])
 	const [backgroundMusic, setBackgroundMusic] = useState<string>('')
 	const [backgroundImage, setBackgroundImage] = useState<string>('')
+	const [projectPath, setProjectPath] = useState<string | null>(null)
 	const audioRef = useRef<HTMLAudioElement>(null)
+
+	useEffect(() => {
+		console.log('[GamePlayer] Component mounted, initializing project path')
+
+		const getProjectPath = async () => {
+			console.log('[GamePlayer] getProjectPath called')
+
+			// Check if window is available
+			if (typeof window === 'undefined') {
+				console.error('[GamePlayer] Window object is not available')
+				setProjectPath(null)
+				return
+			}
+
+			console.log(
+				'[GamePlayer] Window object available, checking for electronAPI'
+			)
+			const electronAPI = (window as any).electronAPI
+
+			if (!electronAPI) {
+				console.error('[GamePlayer] electronAPI not found on window object')
+				console.log(
+					'[GamePlayer] Available properties on window:',
+					Object.keys(window)
+				)
+				setProjectPath(null)
+				return
+			}
+
+			console.log(
+				'[GamePlayer] electronAPI found, calling getQuestEditorProjectPath'
+			)
+			try {
+				const path = await electronAPI.getQuestEditorProjectPath()
+				console.log('[GamePlayer] Project path retrieved:', path)
+				setProjectPath(path)
+			} catch (error) {
+				console.error('[GamePlayer] Failed to get project path:', error)
+				setProjectPath(null)
+			}
+		}
+		getProjectPath()
+	}, [])
+
+	const getImageUrl = (imagePath: string) => {
+		return imagePath && projectPath ? projectPath + imagePath : imagePath
+	}
+
+	const getProjectName = () => {
+		if (!projectPath) return 'Unknown Project'
+		// Extract project name from path (last segment before any file extension)
+		const segments = projectPath.split('/')
+		const lastSegment = segments[segments.length - 1]
+		// Remove any file extension if present
+		return lastSegment.replace(/\.[^/.]+$/, '')
+	}
 
 	// Execute commands locally for this component
 	const executeCommandsLocally = (commands: any[]) => {
@@ -122,8 +182,108 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 		})
 	}
 
+	// Initialize player with most recently opened project
 	useEffect(() => {
-		startGameSession()
+		console.log('[GamePlayer] Initializing player effect triggered')
+
+		const initializePlayer = async () => {
+			console.log('[GamePlayer] initializePlayer function called')
+
+			try {
+				console.log(
+					'[GamePlayer] Checking for window object in initializePlayer'
+				)
+				// Check if window is available
+				if (typeof window === 'undefined') {
+					console.error(
+						'[GamePlayer] Window object is not available in initializePlayer'
+					)
+					addToQuestLog(
+						'Failed to initialize player: Window object not available'
+					)
+					return
+				}
+
+				console.log('[GamePlayer] Window available, checking for electronAPI')
+				// Get the most recently opened project
+				let electronAPI = (window as any).electronAPI
+
+				// If electronAPI is not available immediately, wait a bit and try again
+				if (!electronAPI) {
+					console.log(
+						'[GamePlayer] electronAPI not immediately available, waiting 100ms...'
+					)
+					await new Promise((resolve) => setTimeout(resolve, 100))
+					electronAPI = (window as any).electronAPI
+
+					if (!electronAPI) {
+						console.error(
+							'[GamePlayer] electronAPI still not found after delay'
+						)
+						console.log(
+							'[GamePlayer] Available properties on window in initializePlayer:',
+							Object.keys(window)
+						)
+						console.log('[GamePlayer] Window object details:', window)
+						console.log(
+							'[GamePlayer] Checking if preload script loaded:',
+							typeof (window as any).electronAPI !== 'undefined'
+						)
+						addToQuestLog(
+							'Failed to initialize player: Electron API not available'
+						)
+						return
+					}
+					console.log('[GamePlayer] electronAPI became available after delay')
+				}
+
+				console.log('[GamePlayer] electronAPI found, calling getProjects')
+				const projects = await electronAPI.getProjects()
+				console.log(
+					'[GamePlayer] Projects retrieved:',
+					projects?.length || 0,
+					'projects'
+				)
+
+				const mostRecentProject = projects
+					.filter((p: any) => p.lastOpenedAt)
+					.sort(
+						(a: any, b: any) =>
+							new Date(b.lastOpenedAt).getTime() -
+							new Date(a.lastOpenedAt).getTime()
+					)[0]
+
+				console.log('[GamePlayer] Most recent project:', mostRecentProject)
+
+				if (!mostRecentProject) {
+					console.log('[GamePlayer] No recent project found')
+					addToQuestLog(
+						'No projects found. Please create and open a project first.'
+					)
+					return
+				}
+
+				console.log(
+					'[GamePlayer] Setting quest editor project path:',
+					mostRecentProject.path
+				)
+				// Set the project path in the main process
+				await electronAPI.setQuestEditorProject(mostRecentProject.path)
+
+				console.log('[GamePlayer] Starting game session')
+				// Start the game
+				startGameSession()
+			} catch (error) {
+				console.error('[GamePlayer] Failed to initialize player:', error)
+				addToQuestLog(
+					`Failed to initialize player: ${
+						error instanceof Error ? error.message : 'Unknown error'
+					}`
+				)
+			}
+		}
+
+		initializePlayer()
 	}, [])
 
 	useEffect(() => {
@@ -134,13 +294,21 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 	}, [backgroundMusic])
 
 	const startGameSession = async () => {
-		const response = await startGame()
-		if (response.success && response.commands) {
-			executeCommandsLocally(response.commands)
-			setGameStarted(true)
-			addToQuestLog('Game started!')
-		} else {
-			addToQuestLog(`Failed to start game: ${response.error}`)
+		try {
+			const response = await startGame()
+			if (response.success && response.commands) {
+				executeCommandsLocally(response.commands)
+				setGameStarted(true)
+				addToQuestLog('Game started!')
+			} else {
+				addToQuestLog(`Failed to start game: ${response.error}`)
+			}
+		} catch (error) {
+			addToQuestLog(
+				`Failed to start game: ${
+					error instanceof Error ? error.message : 'Unknown error'
+				}`
+			)
 		}
 	}
 
@@ -164,21 +332,18 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 		dialogueSequenceId: string,
 		npcId?: string
 	) => {
-		// Get the dialogue sequence from the backend via IPC
-		const electronAPI = (window as any).electronAPI
-		if (!electronAPI) {
-			console.error('Electron API not available')
-			return
-		}
+		try {
+			const apiResponse = await getDialogue(dialogueSequenceId)
 
-		const apiResponse = await electronAPI.getDialogue(dialogueSequenceId)
-
-		if (apiResponse.success && apiResponse.data) {
-			setActiveDialogue({
-				sequence: apiResponse.data,
-				currentDialogIndex: 0,
-				npcId: npcId,
-			})
+			if (apiResponse.success && apiResponse.data) {
+				setActiveDialogue({
+					sequence: apiResponse.data,
+					currentDialogIndex: 0,
+					npcId: npcId,
+				})
+			}
+		} catch (error) {
+			console.error('Failed to get dialogue:', error)
 		}
 	}
 
@@ -187,25 +352,6 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 			...prev,
 			`${new Date().toLocaleTimeString()}: ${message}`,
 		])
-	}
-
-	const handleResetGame = async () => {
-		const response = await resetGame()
-		if (response.success && response.commands) {
-			// Clear all current state
-			setCurrentLocation(null)
-			setCurrentEntities([])
-			setInventory([])
-			setActiveDialogue(null)
-			setQuestLog([])
-			setBackgroundMusic('')
-			setBackgroundImage('')
-			// Execute reset commands
-			executeCommandsLocally(response.commands)
-			addToQuestLog('Game reset!')
-		} else {
-			addToQuestLog(`Failed to reset game: ${response.error}`)
-		}
 	}
 
 	if (!gameStarted) {
@@ -231,7 +377,9 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 			<div
 				className='game-background'
 				style={{
-					backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+					backgroundImage: backgroundImage
+						? `url(${getImageUrl(backgroundImage)})`
+						: 'none',
 				}}
 			/>
 
@@ -240,10 +388,11 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 				<div className='location-display-above-inventory'>
 					<h3>{currentLocation.name}</h3>
 					{backgroundImage && (
-						<img
-							src={backgroundImage}
+						<ImageDisplay
+							src={getImageUrl(backgroundImage)}
 							alt={currentLocation.name}
 							className='location-image'
+							fallback={<div className='no-image'>?</div>}
 						/>
 					)}
 				</div>
@@ -272,10 +421,10 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 				</div>
 			</div>
 
-			{/* Reset Button */}
-			<button className='reset-button' onClick={handleResetGame}>
-				Reset Game
-			</button>
+			{/* Project Name */}
+			<div className='project-name-display'>
+				<h3>{getProjectName()}</h3>
+			</div>
 
 			{/* Dialogue Panel */}
 			{activeDialogue && (

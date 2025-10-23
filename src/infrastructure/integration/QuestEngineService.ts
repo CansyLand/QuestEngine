@@ -392,18 +392,6 @@ export class QuestEngineService {
 	 */
 	async readThumbnail(filePath: string): Promise<string | null> {
 		try {
-			// Security check: ensure the file is within allowed directories
-			// const allowedDirs = [
-			// 	path.join(this.projectPath!, 'thumbnails'),
-			// 	path.join(this.projectPath!, 'scene', 'thumbnails'),
-			// 	path.join(this.projectPath!, 'assets', 'images'),
-			// ]
-
-			// const isAllowed = allowedDirs.some((dir) => filePath.startsWith(dir))
-			// if (!isAllowed) {
-			// 	throw new Error('Access denied')
-			// }
-
 			const buffer = await fsPromises.readFile(filePath)
 			const ext = path.extname(filePath).toLowerCase()
 			const mimeType =

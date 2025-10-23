@@ -22,6 +22,7 @@ declare global {
 			getQuestEditorProjectPath: () => Promise<string | null>
 			getQuestData: (dataType: string) => Promise<any>
 			saveQuestData: (dataType: string, data: any) => Promise<void>
+			openPlayerWindow: () => Promise<void>
 		}
 	}
 }

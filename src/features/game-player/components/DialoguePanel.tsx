@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 import '@/shared/styles/DialoguePanel.css'
 
 interface Dialog {
@@ -29,6 +30,19 @@ export const DialoguePanel: React.FC<DialoguePanelProps> = ({
 	onClose,
 	onDialogChange,
 }) => {
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
+
 	const currentDialog = dialogueSequence.dialogs[currentDialogIndex]
 
 	if (!currentDialog) {
@@ -69,10 +83,15 @@ export const DialoguePanel: React.FC<DialoguePanelProps> = ({
 				<div className='dialogue-content'>
 					{dialogueSequence.npcImage && (
 						<div className='dialogue-portrait'>
-							<img
-								src={dialogueSequence.npcImage}
+							<ImageDisplay
+								src={
+									projectPath
+										? projectPath + dialogueSequence.npcImage
+										: dialogueSequence.npcImage
+								}
 								alt='NPC Portrait'
 								className='npc-portrait-image'
+								fallback={<div className='no-image'>No Image</div>}
 							/>
 						</div>
 					)}

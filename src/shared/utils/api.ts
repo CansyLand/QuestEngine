@@ -15,7 +15,14 @@ export async function apiRequest(
 	try {
 		const electronAPI = (window as any).electronAPI
 		if (!electronAPI) {
-			throw new Error('Electron API not available')
+			console.warn(
+				'Electron API not available - this may indicate the app is running outside of Electron or the preload script failed to load'
+			)
+			return {
+				success: false,
+				error:
+					'Electron API not available. This feature requires running in the Electron app.',
+			}
 		}
 
 		console.log('Making IPC request:', endpoint, options)
@@ -86,9 +93,11 @@ export async function apiRequest(
 		return result
 	} catch (error) {
 		console.error('IPC request failed:', error)
+		const errorMessage =
+			error instanceof Error ? error.message : 'Unknown error'
 		return {
 			success: false,
-			error: error instanceof Error ? error.message : 'Unknown error',
+			error: `IPC request failed: ${errorMessage}`,
 		}
 	}
 }
@@ -145,6 +154,14 @@ export async function sendInteraction(type: string, params: any) {
 	return apiRequest('/interact', {
 		method: 'POST',
 		body: JSON.stringify({ type, params }),
+	})
+}
+
+// Get dialogue sequence
+export async function getDialogue(dialogueSequenceId: string) {
+	return apiRequest('/dialogue', {
+		method: 'POST',
+		body: JSON.stringify({ dialogueSequenceId }),
 	})
 }
 

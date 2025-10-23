@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { DialogueSequence, NPC, Quest, QuestStep } from '@/core/models/types'
 import { QuestStepSelector } from './QuestStepSelector'
 import { generateIdFromApi } from '@/shared/utils/api'
+import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 
 interface DialogueEditFormProps {
 	dialogue: DialogueSequence
@@ -27,6 +28,19 @@ export const DialogueEditForm: React.FC<DialogueEditFormProps> = ({
 	availableQuestSteps = [],
 }) => {
 	const [showQuestStepSelector, setShowQuestStepSelector] = useState(false)
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
+
 	const npc = dialogue.npcId
 		? availableNpcs.find((n) => n.id === dialogue.npcId)
 		: null
@@ -57,6 +71,10 @@ export const DialogueEditForm: React.FC<DialogueEditFormProps> = ({
 	const assignedQuestStep = dialogue.questStepId
 		? availableQuestSteps.find((step) => step.id === dialogue.questStepId)
 		: null
+
+	// Construct NPC image URL with project path
+	const npcImageUrl =
+		npc?.image && projectPath ? projectPath + npc.image : npc?.image
 
 	const handleSelectQuestStep = (questStepId: string) => {
 		// Update the dialogue to reference this quest step
@@ -92,10 +110,11 @@ export const DialogueEditForm: React.FC<DialogueEditFormProps> = ({
 					<div className='npc-info'>
 						<div className='npc-portrait'>
 							{npc.image ? (
-								<img
-									src={npc.image}
+								<ImageDisplay
+									src={npcImageUrl || ''}
 									alt={`${npc.name} portrait`}
 									className='portrait-image'
+									fallback={<div className='no-image'>No Image</div>}
 								/>
 							) : (
 								<div className='no-portrait'>No Image</div>

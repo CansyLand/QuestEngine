@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { NPC } from '@/core/models/types'
 import { NPCSelectorState } from '@/features/quest-builder/types'
+import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 
 interface NPCSelectorProps {
 	npcSelector: NPCSelectorState
@@ -17,6 +18,19 @@ export const NPCSelector: React.FC<NPCSelectorProps> = ({
 	onMouseEnter,
 	onMouseLeave,
 }) => {
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
+
 	if (!npcSelector.isOpen) return null
 
 	return (
@@ -53,42 +67,49 @@ export const NPCSelector: React.FC<NPCSelectorProps> = ({
 						</div>
 					) : (
 						<div className='npc-grid'>
-							{npcSelector.availableNpcs.map((npc) => (
-								<div
-									key={npc.id}
-									className={`npc-slot ${
-										npcSelector.selectedNpcs.some(
-											(selected) => selected.id === npc.id
-										)
-											? 'selected'
-											: ''
-									}`}
-									onClick={(e) => {
-										if (npcSelector.isShiftPressed) {
-											// Multi-selection mode - handled in EditModal
-											return
-										} else {
-											// Single selection mode
-											onSelectNpc(npc)
-										}
-									}}
-									onMouseEnter={(e) => onMouseEnter(npc, e)}
-									onMouseLeave={onMouseLeave}
-								>
-									<div className='npc-image-container'>
-										{npc.image ? (
-											<img
-												src={npc.image}
-												alt={npc.name}
-												className='npc-image'
-											/>
-										) : (
-											<div className='no-image'>No Image</div>
-										)}
+							{npcSelector.availableNpcs.map((npc) => {
+								// Construct NPC image URL with project path
+								const npcImageUrl =
+									npc.image && projectPath ? projectPath + npc.image : npc.image
+
+								return (
+									<div
+										key={npc.id}
+										className={`npc-slot ${
+											npcSelector.selectedNpcs.some(
+												(selected) => selected.id === npc.id
+											)
+												? 'selected'
+												: ''
+										}`}
+										onClick={(e) => {
+											if (npcSelector.isShiftPressed) {
+												// Multi-selection mode - handled in EditModal
+												return
+											} else {
+												// Single selection mode
+												onSelectNpc(npc)
+											}
+										}}
+										onMouseEnter={(e) => onMouseEnter(npc, e)}
+										onMouseLeave={onMouseLeave}
+									>
+										<div className='npc-image-container'>
+											{npc.image ? (
+												<ImageDisplay
+													src={npcImageUrl || ''}
+													alt={npc.name}
+													className='npc-image'
+													fallback={<div className='no-image'>No Image</div>}
+												/>
+											) : (
+												<div className='no-image'>No Image</div>
+											)}
+										</div>
+										<div className='npc-name'>{npc.name}</div>
 									</div>
-									<div className='npc-name'>{npc.name}</div>
-								</div>
-							))}
+								)
+							})}
 						</div>
 					)}
 				</div>

@@ -68,4 +68,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	getEntityLinks: (): Promise<any> => ipcRenderer.invoke('get-entity-links'),
 	updateEntityLink: (entityId: string, questEntityId: string): Promise<any> =>
 		ipcRenderer.invoke('update-entity-link', { entityId, questEntityId }),
+	// Window operations
+	openPlayerWindow: (): Promise<void> =>
+		ipcRenderer.invoke('open-player-window'),
 })

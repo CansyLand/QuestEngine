@@ -430,3 +430,34 @@ ipcMain.handle(
 		return await questEngine.updateEntityLink(entityId, questEntityId)
 	}
 )
+
+// Open player window
+ipcMain.handle('open-player-window', async (): Promise<void> => {
+	const playerWindow = new BrowserWindow({
+		width: 1200,
+		height: 800,
+		webPreferences: {
+			nodeIntegration: false,
+			contextIsolation: true,
+			preload: path.join(__dirname, 'preload.js'),
+		},
+		title: 'QuestEngine Player',
+		show: false, // Don't show until ready
+	})
+
+	const isDev = process.env.NODE_ENV === 'development'
+	const htmlPath = isDev
+		? 'http://localhost:3000/player/'
+		: `file://${path.join(__dirname, 'index.html')}#/player/`
+
+	playerWindow.loadURL(htmlPath)
+
+	playerWindow.once('ready-to-show', () => {
+		playerWindow.show()
+		playerWindow.focus()
+	})
+
+	playerWindow.on('closed', () => {
+		// Cleanup if needed
+	})
+})
