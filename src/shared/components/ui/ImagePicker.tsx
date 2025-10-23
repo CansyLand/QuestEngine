@@ -56,13 +56,20 @@ export const ImageDisplay: React.FC<{
 						setImageDataUrl(dataUrl)
 					} else if (src.startsWith('/')) {
 						// This is a relative path that needs to be combined with project path
-						const projectPath = await electronAPI.getQuestEditorProjectPath()
+						const projectPath = electronAPI
+							? await electronAPI.getQuestEditorProjectPath()
+							: null
+
 						if (projectPath) {
 							const filePath = projectPath + src.substring(1)
-							const dataUrl = await electronAPI.readThumbnail(filePath)
-							setImageDataUrl(dataUrl)
+							try {
+								const dataUrl = await electronAPI.readThumbnail(filePath)
+								setImageDataUrl(dataUrl)
+							} catch (error) {
+								setImageDataUrl(null) // Force fallback
+							}
 						} else {
-							setImageDataUrl(src) // Fallback
+							setImageDataUrl(null) // Force fallback
 						}
 					} else {
 						setImageDataUrl(src) // Fallback for other types
@@ -116,6 +123,20 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 	const [selectedImageDataUrl, setSelectedImageDataUrl] = useState<
 		string | null
 	>(null)
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
+
+	const fullValue = projectPath ? projectPath + value : value
 
 	// Load all images from DCL project thumbnails
 	useEffect(() => {
@@ -131,21 +152,12 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 						throw new Error('Electron API not available')
 					}
 
-					console.log('ImagePicker: Making IPC request to get thumbnails')
 					const result = await electronAPI.getThumbnails()
-					console.log('ImagePicker: IPC result:', result)
 
 					if (result.success && result.data && result.data.length > 0) {
-						console.log(
-							'ImagePicker: Found',
-							result.data.length,
-							'images from IPC'
-						)
-
 						// Load image data for each thumbnail
 						const imagePromises = result.data.map(async (img: any) => {
 							try {
-								console.log('ImagePicker: Reading thumbnail:', img.name)
 								const dataUrl = await electronAPI.readThumbnail(img.url)
 								return {
 									name: `${img.project}/${img.name}`,
@@ -162,10 +174,7 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 						loadedImages = imageResults.filter(
 							(img): img is ImageInfo => img !== null
 						)
-
-						console.log('ImagePicker: Final loadedImages:', loadedImages.length)
 					} else {
-						console.log('ImagePicker: IPC returned success but no images found')
 					}
 				} catch (apiError) {
 					console.error('ImagePicker: Failed to load DCL thumbnails:', apiError)
@@ -184,24 +193,23 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 	}, [])
 
 	// Load selected image data when value changes
-	useEffect(() => {
-		const loadSelectedImage = async () => {
-			if (value && !selectedImageDataUrl) {
-				try {
-					const dataUrl = await loadImageForDisplay(value)
-					if (dataUrl && dataUrl !== value) {
-						setSelectedImageDataUrl(dataUrl)
-					}
-				} catch (error) {
-					console.warn('Failed to load selected image:', error)
-				}
-			} else if (!value) {
-				setSelectedImageDataUrl(null)
-			}
-		}
+	// useEffect(() => {
+	// 	const loadSelectedImage = async () => {
+	// 		if (value && !selectedImageDataUrl) {
+	// 			try {
+	// 				const dataUrl = await loadImageForDisplay(value)
+	// 				if (dataUrl && dataUrl !== value) {
+	// 					setSelectedImageDataUrl(dataUrl)
+	// 				}
+	// 			} catch (error) {
+	// 			}
+	// 		} else if (!value) {
+	// 			setSelectedImageDataUrl(null)
+	// 		}
+	// 	}
 
-		loadSelectedImage()
-	}, [value])
+	// 	loadSelectedImage()
+	// }, [value])
 
 	// Add a method to refresh images (can be called externally)
 	const refreshImages = async () => {
@@ -217,21 +225,12 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 						throw new Error('Electron API not available')
 					}
 
-					console.log('ImagePicker: Refreshing thumbnails via IPC')
 					const result = await electronAPI.getThumbnails()
-					console.log('ImagePicker: Refresh IPC result:', result)
 
 					if (result.success && result.data && result.data.length > 0) {
-						console.log(
-							'ImagePicker: Found',
-							result.data.length,
-							'images from IPC'
-						)
-
 						// Load image data for each thumbnail
 						const imagePromises = result.data.map(async (img: any) => {
 							try {
-								console.log('ImagePicker: Reading thumbnail:', img.name)
 								const dataUrl = await electronAPI.readThumbnail(img.url)
 								return {
 									name: `${img.project}/${img.name}`,
@@ -248,10 +247,7 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 						loadedImages = imageResults.filter(
 							(img): img is ImageInfo => img !== null
 						)
-
-						console.log('ImagePicker: Final loadedImages:', loadedImages.length)
 					} else {
-						console.log('ImagePicker: IPC returned success but no images found')
 					}
 				} catch (apiError) {
 					console.error('ImagePicker: Failed to load DCL thumbnails:', apiError)
@@ -278,10 +274,29 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 		refreshImages,
 	}))
 
-	const handleImageSelect = (imageUrl: string) => {
-		// Store the full file path - ImageDisplay will handle IPC loading
-		// This allows external images to be properly loaded via IPC
-		onChange(imageUrl)
+	const handleImageSelect = async (imageUrl: string) => {
+		try {
+			// Convert full path to relative path for storage
+			const electronAPI = (window as any).electronAPI
+			const projectPath = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			let pathToStore = imageUrl
+
+			if (projectPath && imageUrl.startsWith(projectPath)) {
+				// Convert absolute path to relative path: /project/path/thumbnails/file.png -> /thumbnails/file.png
+				pathToStore = imageUrl.substring(projectPath.length)
+				// Ensure it starts with /
+				if (!pathToStore.startsWith('/')) {
+					pathToStore = '/' + pathToStore
+				}
+			}
+
+			onChange(pathToStore)
+		} catch (error) {
+			console.warn('Failed to convert path, storing original:', error)
+			onChange(imageUrl) // Fallback to original path
+		}
 		setIsModalOpen(false)
 	}
 
@@ -292,52 +307,6 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 	const getDisplayUrl = (image: ImageInfo) => {
 		// Use dataUrl if available (for IPC-loaded images), otherwise fall back to url
 		return image.dataUrl || image.url || ''
-	}
-
-	// Helper function to load image data for stored paths
-	const loadImageForDisplay = async (
-		imagePath: string
-	): Promise<string | null> => {
-		if (!imagePath) return null
-
-		try {
-			const electronAPI = (window as any).electronAPI
-			if (!electronAPI) return imagePath // Fallback to original path
-
-			// If it's already a data URL or external URL, return as-is
-			if (imagePath.startsWith('data:') || imagePath.startsWith('http')) {
-				return imagePath
-			}
-
-			// Check if this is a relative web path that needs conversion
-			const isRelativeWebPath =
-				imagePath.startsWith('/') &&
-				!imagePath.includes(':\\') && // Not Windows drive letter
-				!imagePath.includes(':/') && // Not Unix absolute path with protocol
-				imagePath.split('/').length <= 4 // Relative paths have few segments
-
-			let filePath = imagePath
-
-			if (isRelativeWebPath) {
-				// This is a relative web path like "/thumbnails/image.png", convert to full file path
-				const projectPath = await electronAPI.getQuestEditorProjectPath()
-				if (projectPath) {
-					// Construct full file path: projectPath + relativePath
-					filePath = projectPath + imagePath.substring(1)
-				} else {
-					// Fallback: just use the relative path
-					filePath = imagePath.substring(1)
-				}
-			}
-			// If it's already a full file path, use it directly
-
-			// Try to read the image via IPC
-			const dataUrl = await electronAPI.readThumbnail(filePath)
-			return dataUrl
-		} catch (error) {
-			console.warn('Failed to load image for display:', imagePath, error)
-			return imagePath // Fallback to original path
-		}
 	}
 
 	return (
@@ -361,7 +330,7 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 				>
 					{value ? (
 						<ImageDisplay
-							src={value}
+							src={fullValue}
 							alt='Selected'
 							style={{
 								width: '100%',
@@ -369,7 +338,25 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 								objectFit: 'cover',
 								borderRadius: '4px',
 							}}
-							fallback={<div className='no-thumbnail'>?</div>}
+							fallback={
+								<div
+									style={{
+										width: '100%',
+										height: '100%',
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+										backgroundColor: '#444',
+										color: '#999',
+										fontSize: '10px',
+										textAlign: 'center',
+									}}
+								>
+									Image
+									<br />
+									Selected
+								</div>
+							}
 						/>
 					) : (
 						<span

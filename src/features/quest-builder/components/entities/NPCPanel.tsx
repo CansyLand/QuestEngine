@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { NPC } from '@/core/models/types'
 import { EntityPanel } from './EntityPanel'
 import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
@@ -16,6 +16,19 @@ export const NPCPanel: React.FC<NPCPanelProps> = ({
 	onEdit,
 	onDelete,
 }) => {
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
+
 	return (
 		<EntityPanel
 			title='NPCs'
@@ -23,7 +36,7 @@ export const NPCPanel: React.FC<NPCPanelProps> = ({
 			onAdd={onAdd}
 			renderEntity={(npc: NPC) => {
 				// Use the image link directly as provided
-				const displayImage = npc.image
+				const displayImage = projectPath ? projectPath + npc.image : npc.image
 
 				return (
 					<div className='entity-card npc-card'>

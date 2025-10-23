@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Portal } from '@/core/models/types'
 import { EntityPanel } from './EntityPanel'
 import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
@@ -16,6 +16,19 @@ export const PortalPanel: React.FC<PortalPanelProps> = ({
 	onEdit,
 	onDelete,
 }) => {
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
+
 	// Show all portals - they can be created without destinations assigned
 	const filteredPortals = portals
 
@@ -25,7 +38,9 @@ export const PortalPanel: React.FC<PortalPanelProps> = ({
 			entities={filteredPortals}
 			onAdd={onAdd}
 			renderEntity={(portal: Portal) => {
-				const displayImage = portal.image
+				const displayImage = projectPath
+					? projectPath + portal.image
+					: portal.image
 
 				return (
 					<div className='entity-card portal-card'>

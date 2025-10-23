@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Game } from '@/core/models/types'
+import { ImageDisplay } from './ImagePicker'
 
 export interface DCLEntity {
 	id: string
@@ -30,6 +31,19 @@ export const DCLEntityCard: React.FC<DCLEntityCardProps> = ({
 	onDragStart,
 	onDragEnd,
 }) => {
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
+
 	const getImageForEntity = (entityId: string): string => {
 		// Search through all entity types to find the matching entity
 		const allEntities = [
@@ -40,7 +54,10 @@ export const DCLEntityCard: React.FC<DCLEntityCardProps> = ({
 		]
 
 		const foundEntity = allEntities.find((e) => e.id === entityId)
-		return foundEntity?.image || '/assets/images/default.png'
+		const imagePath = foundEntity?.image || '/assets/images/default.png'
+
+		// Prepend project path for local images
+		return projectPath ? projectPath + imagePath : imagePath
 	}
 
 	const handleDrop = (e: React.DragEvent) => {
@@ -69,9 +86,10 @@ export const DCLEntityCard: React.FC<DCLEntityCardProps> = ({
 							onDragStart={handleDragStart}
 							onDragEnd={onDragEnd}
 						>
-							<img
+							<ImageDisplay
 								src={getImageForEntity(entity.questEntityId)}
 								alt={entity.questEntityId}
+								fallback={<div className='no-image'>No Image</div>}
 							/>
 						</div>
 					) : (

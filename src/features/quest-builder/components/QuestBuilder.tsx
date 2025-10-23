@@ -13,7 +13,6 @@ import {
 	EntityState,
 } from '@/core/models/types'
 import { loadGameData, saveGameData, generateId } from '@/shared/utils/api'
-import { EntityPanel } from './EntityPanel'
 import { NotificationContainer } from './Notification'
 import { EditModal } from './EditModal'
 import { QuestStepSelector } from './modals/QuestStepSelector'
@@ -21,6 +20,11 @@ import { BuilderTabs } from './layout/BuilderTabs'
 import { BuilderHeader } from './layout/BuilderHeader'
 import { LinksPanel } from './entities/LinksPanel'
 import { DialoguePanel } from './entities/DialoguePanel'
+import { LocationPanel } from './entities/LocationPanel'
+import { QuestPanel } from './entities/QuestPanel'
+import { NPCPanel } from './entities/NPCPanel'
+import { ItemPanel } from './entities/ItemPanel'
+import { PortalPanel } from './entities/PortalPanel'
 import { Project } from '@/shared/types'
 
 // Import all CSS files
@@ -993,39 +997,9 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 
 			<div className='builder-content'>
 				{activeTab === 'locations' && (
-					<EntityPanel
-						title='Locations'
-						entities={gameData.locations}
+					<LocationPanel
+						locations={gameData.locations}
 						onAdd={addLocation}
-						renderEntity={(location: Location) => {
-							// Use the image link directly as provided
-							const displayImage = location.image
-
-							return (
-								<div className='entity-card location-card'>
-									<div className='location-image'>
-										{displayImage ? (
-											<img
-												src={displayImage}
-												alt={`${location.name} background`}
-												className='location-image-preview'
-											/>
-										) : (
-											<div className='no-image'>No Image</div>
-										)}
-									</div>
-									<div className='location-details'>
-										<h3>{location.name}</h3>
-										<p>ID: {location.id}</p>
-										<p>Music: {location.backgroundMusic}</p>
-										<p>
-											Items: {location.items.length}, NPCs:{' '}
-											{location.npcs.length}, Portals: {location.portals.length}
-										</p>
-									</div>
-								</div>
-							)
-						}}
 						onEdit={(location: Location) => {
 							openEditModal('location', location)
 						}}
@@ -1034,19 +1008,9 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 				)}
 
 				{activeTab === 'quests' && (
-					<EntityPanel
-						title='Quests'
-						entities={gameData.quests}
+					<QuestPanel
+						quests={gameData.quests}
 						onAdd={addQuest}
-						renderEntity={(quest: Quest) => (
-							<div className='entity-card'>
-								<h3>{quest.title}</h3>
-								<p>Chapter: {quest.chapter}</p>
-								<p>Order: {quest.order}</p>
-								<p>Steps: {quest.steps.length}</p>
-								<p>{quest.description}</p>
-							</div>
-						)}
 						onEdit={(quest: Quest) => {
 							openEditModal('quest', quest)
 						}}
@@ -1055,34 +1019,9 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 				)}
 
 				{activeTab === 'npcs' && (
-					<EntityPanel
-						title='NPCs'
-						entities={(gameData as any).npcs || []}
+					<NPCPanel
+						npcs={(gameData as any).npcs || []}
 						onAdd={addNPC}
-						renderEntity={(npc: NPC) => {
-							// Use the image link directly as provided
-							const displayImage = npc.image
-
-							return (
-								<div className='entity-card npc-card'>
-									<div className='npc-portrait'>
-										{displayImage ? (
-											<img
-												src={displayImage}
-												alt={`${npc.name} image`}
-												className='portrait-image'
-											/>
-										) : (
-											<div className='no-portrait'>No Image</div>
-										)}
-									</div>
-									<div className='npc-details'>
-										<h3>{npc.name}</h3>
-										<p>State: {npc.state}</p>
-									</div>
-								</div>
-							)
-						}}
 						onEdit={(npc: NPC) => {
 							openEditModal('npc', npc)
 						}}
@@ -1091,35 +1030,9 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 				)}
 
 				{activeTab === 'items' && (
-					<EntityPanel
-						title='Items'
-						entities={(gameData as any).items || []}
+					<ItemPanel
+						items={(gameData as any).items || []}
 						onAdd={addItem}
-						renderEntity={(item: Item) => {
-							// Use the image link directly as provided
-							const displayImage = item.image
-
-							return (
-								<div className='entity-card item-card'>
-									<div className='item-image'>
-										{displayImage ? (
-											<img
-												src={displayImage}
-												alt={`${item.name} image`}
-												className='item-image-preview'
-											/>
-										) : (
-											<div className='no-image'>No Image</div>
-										)}
-									</div>
-									<div className='item-details'>
-										<h3>{item.name}</h3>
-										<p>Interactive: {item.interactive}</p>
-										<p>State: {item.state}</p>
-									</div>
-								</div>
-							)
-						}}
 						onEdit={(item: Item) => {
 							openEditModal('item', item)
 						}}
@@ -1128,34 +1041,9 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 				)}
 
 				{activeTab === 'portals' && (
-					<EntityPanel
-						title='Portals'
-						entities={(gameData as any).portals || []}
+					<PortalPanel
+						portals={(gameData as any).portals || []}
 						onAdd={addPortal}
-						renderEntity={(portal: Portal) => {
-							const displayImage = portal.image
-
-							return (
-								<div className='entity-card portal-card'>
-									<div className='portal-image'>
-										{displayImage ? (
-											<img
-												src={displayImage}
-												alt={`${portal.name} image`}
-												className='portal-image-preview'
-											/>
-										) : (
-											<div className='no-image'>No Image</div>
-										)}
-									</div>
-									<div className='portal-details'>
-										<h3>{portal.name}</h3>
-										<p>Destination: {portal.destinationLocationId}</p>
-										<p>State: {portal.state}</p>
-									</div>
-								</div>
-							)
-						}}
 						onEdit={(portal: Portal) => {
 							openEditModal('portal', portal)
 						}}

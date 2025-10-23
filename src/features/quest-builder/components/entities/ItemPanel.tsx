@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Item } from '@/core/models/types'
 import { EntityPanel } from './EntityPanel'
 import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
@@ -16,6 +16,19 @@ export const ItemPanel: React.FC<ItemPanelProps> = ({
 	onEdit,
 	onDelete,
 }) => {
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
+
 	// Filter out any portals that might have been mixed into the items array
 	// Portals have a destinationLocationId property that items don't have
 	const filteredItems = items.filter((item: any) => !item.destinationLocationId)
@@ -27,7 +40,7 @@ export const ItemPanel: React.FC<ItemPanelProps> = ({
 			onAdd={onAdd}
 			renderEntity={(item: Item) => {
 				// Use the image link directly as provided
-				const displayImage = item.image
+				const displayImage = projectPath ? projectPath + item.image : item.image
 
 				return (
 					<div className='entity-card item-card'>

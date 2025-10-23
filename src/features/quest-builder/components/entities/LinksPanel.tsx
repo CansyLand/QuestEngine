@@ -4,6 +4,7 @@ import {
 	EntityTooltip,
 	TooltipEntityBase,
 } from '@/shared/components/ui/EntityTooltip'
+import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 import { apiRequest } from '@/shared/utils/api'
 
 interface LinksPanelProps {
@@ -38,6 +39,7 @@ export const LinksPanel: React.FC<LinksPanelProps> = ({ gameData }) => {
 	>('all')
 	const [isSaving, setIsSaving] = useState(false)
 	const [saveError, setSaveError] = useState<string | null>(null)
+	const [projectPath, setProjectPath] = useState<string | null>(null)
 
 	// Load DCL entities from entityLinks.json
 	useEffect(() => {
@@ -91,6 +93,18 @@ export const LinksPanel: React.FC<LinksPanelProps> = ({ gameData }) => {
 
 		// Cleanup interval on unmount
 		return () => clearInterval(intervalId)
+	}, [])
+
+	// Load project path for image handling
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
 	}, [])
 
 	// Clear save status messages after timeout
@@ -352,7 +366,8 @@ export const LinksPanel: React.FC<LinksPanelProps> = ({ gameData }) => {
 														name: entity.questEntityId,
 														image: getImageForEntity(
 															entity.questEntityId,
-															gameData
+															gameData,
+															projectPath
 														),
 														type: 'item',
 													}
@@ -378,9 +393,14 @@ export const LinksPanel: React.FC<LinksPanelProps> = ({ gameData }) => {
 											}}
 											onDragEnd={handleDragEnd}
 										>
-											<img
-												src={getImageForEntity(entity.questEntityId, gameData)}
+											<ImageDisplay
+												src={getImageForEntity(
+													entity.questEntityId,
+													gameData,
+													projectPath
+												)}
 												alt={entity.questEntityId}
+												fallback={<div className='no-image'>No Image</div>}
 											/>
 										</div>
 									) : (
@@ -501,7 +521,11 @@ export const LinksPanel: React.FC<LinksPanelProps> = ({ gameData }) => {
 									onMouseMove={handleMouseMove}
 									onMouseLeave={handleMouseLeave}
 								>
-									<img src={item.image} alt={item.name} />
+									<ImageDisplay
+										src={projectPath ? projectPath + item.image : item.image}
+										alt={item.name}
+										fallback={<div className='no-image'>?</div>}
+									/>
 								</div>
 							))}
 					</div>
@@ -511,7 +535,11 @@ export const LinksPanel: React.FC<LinksPanelProps> = ({ gameData }) => {
 	)
 }
 
-function getImageForEntity(entityId: string, gameData: Game): string {
+function getImageForEntity(
+	entityId: string,
+	gameData: Game,
+	projectPath?: string | null
+): string {
 	// Search through all entity types to find the matching entity
 	const allEntities = [
 		...(gameData.items || []),
@@ -521,5 +549,8 @@ function getImageForEntity(entityId: string, gameData: Game): string {
 	]
 
 	const entity = allEntities.find((entity) => entity.id === entityId)
-	return entity?.image || '/assets/images/default.png'
+	const imagePath = entity?.image || '/assets/images/default.png'
+
+	// Prepend project path for local images
+	return projectPath ? projectPath + imagePath : imagePath
 }

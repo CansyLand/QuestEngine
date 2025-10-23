@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Item, NPC, Portal, Location } from '@/core/models/types'
 import { EntityTooltip, TooltipEntity } from './EntityTooltip'
 import { ImageDisplay } from './ImagePicker'
@@ -35,19 +35,40 @@ const EntityDisplay = <T extends BaseEntity>({
 	index,
 	className = '',
 }: EntityDisplayProps<T>) => {
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
+
 	const getEntityImage = (entity: any) => {
+		let imagePath: string | undefined
 		switch (entity.type || 'item') {
 			case 'item':
-				return (entity as Item).image
+				imagePath = (entity as Item).image
+				break
 			case 'npc':
-				return (entity as NPC).image
+				imagePath = (entity as NPC).image
+				break
 			case 'portal':
-				return (entity as Portal).image
+				imagePath = (entity as Portal).image
+				break
 			case 'location':
-				return (entity as Location).image
+				imagePath = (entity as Location).image
+				break
 			default:
 				return undefined
 		}
+
+		// Prepend project path for local images
+		return imagePath && projectPath ? projectPath + imagePath : imagePath
 	}
 
 	const getEntityTypeLabel = (entity: any) => {
