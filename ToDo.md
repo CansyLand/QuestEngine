@@ -1,7 +1,3 @@
-- Player still sthinks irts express -> electron time
-
-- add logo
-
 - dmg test
 
 - if thre is no npc in location then i get this error in DCL:

@@ -145,7 +145,7 @@ export const QuestStepEditModal: React.FC<QuestStepEditModalProps> = ({
 			isOpen={isOpen}
 			title={step ? 'Edit Quest Step' : 'Create Quest Step'}
 			size='large'
-			onClose={onCancel}
+			onClose={handleClose}
 			footer={footer}
 		>
 			<div className='quest-step-edit-form'>
