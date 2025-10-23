@@ -3,6 +3,16 @@ import { Project } from '@/shared/types'
 import { QuestBuilder } from '@/features/quest-builder/components/QuestBuilder'
 import { GamePlayer } from '@/features/game-player/components/GamePlayer'
 
+// Import all CSS files
+import '@/shared/styles/base.css'
+import '@/shared/styles/header.css'
+import '@/shared/styles/tabs.css'
+import '@/shared/styles/entity-panel.css'
+import '@/shared/styles/modals.css'
+import '@/shared/styles/forms.css'
+import '@/shared/styles/cards.css'
+import '@/shared/styles/utilities.css'
+
 declare global {
 	interface Window {
 		electronAPI: {
@@ -37,8 +47,10 @@ function App() {
 	const [showQuestEditor, setShowQuestEditor] = useState<boolean>(false)
 	const [openingProject, setOpeningProject] = useState<boolean>(false)
 
-	// Check if we're in player mode (accessed via /player route)
-	const isPlayerMode = window.location.pathname.startsWith('/player')
+	// Check if we're in player mode (accessed via /player route or #/player/ hash)
+	const isPlayerMode =
+		window.location.pathname.startsWith('/player') ||
+		window.location.hash.startsWith('#/player')
 
 	useEffect(() => {
 		loadProjects()
@@ -163,242 +175,292 @@ function App() {
 	}
 
 	return (
-		<div style={{ padding: 20, maxWidth: 800, margin: '0 auto' }}>
-			<h1 style={{ textAlign: 'center', marginBottom: 30 }}>QuestEngine</h1>
+		<div className='builder'>
+			<div
+				className='builder-content'
+				style={{ maxWidth: 800, margin: '0 auto' }}
+			>
+				<h1
+					style={{
+						textAlign: 'center',
+						marginBottom: 30,
+						color: '#00ffff',
+						textShadow: '0 0 10px rgba(0, 255, 255, 0.8)',
+						letterSpacing: '2px',
+					}}
+				>
+					QuestEngine
+				</h1>
 
-			{/* Existing Projects */}
-			<div style={{ marginBottom: 40 }}>
-				<h2>Your Projects</h2>
-				{projects.length === 0 ? (
-					<p style={{ color: '#666', fontStyle: 'italic' }}>
-						No projects yet. Create your first project below!
-					</p>
-				) : (
-					<div style={{ display: 'grid', gap: 15 }}>
-						{projects.map((project) => (
-							<div
-								key={project.id}
-								style={{
-									border: '1px solid #ddd',
-									borderRadius: 8,
-									padding: 15,
-									cursor: openingProject ? 'not-allowed' : 'pointer',
-									transition: 'all 0.2s',
-									backgroundColor: openingProject ? '#e9ecef' : '#f9f9f9',
-									opacity: openingProject ? 0.7 : 1,
-								}}
-								onMouseEnter={(e) => {
-									if (!openingProject) {
-										e.currentTarget.style.backgroundColor = '#f0f0f0'
-										e.currentTarget.style.transform = 'translateY(-2px)'
-									}
-								}}
-								onMouseLeave={(e) => {
-									if (!openingProject) {
-										e.currentTarget.style.backgroundColor = '#f9f9f9'
-										e.currentTarget.style.transform = 'translateY(0)'
-									}
-								}}
-								onClick={() => !openingProject && handleOpenProject(project)}
-							>
-								<h3 style={{ margin: '0 0 8px 0' }}>
-									{project.name}
-									{openingProject && (
-										<span
-											style={{
-												marginLeft: 10,
-												fontSize: '14px',
-												color: '#666',
-											}}
-										>
-											Opening...
-										</span>
-									)}
-								</h3>
-								<p
-									style={{
-										margin: '0 0 8px 0',
-										color: '#666',
-										fontSize: '14px',
-									}}
-								>
-									{project.path}
-								</p>
+				{/* Existing Projects */}
+				<div style={{ marginBottom: 40 }}>
+					<h2 style={{ color: '#00ffff', marginBottom: '1rem' }}>
+						Your Projects
+					</h2>
+					{projects.length === 0 ? (
+						<p style={{ color: '#666', fontStyle: 'italic' }}>
+							No projects yet. Create your first project below!
+						</p>
+					) : (
+						<div style={{ display: 'grid', gap: 15 }}>
+							{projects.map((project) => (
 								<div
+									key={project.id}
+									className={`entity-card ${openingProject ? 'disabled' : ''}`}
 									style={{
-										display: 'flex',
-										justifyContent: 'space-between',
-										alignItems: 'center',
-										marginBottom: '8px',
+										cursor: openingProject ? 'not-allowed' : 'pointer',
+										opacity: openingProject ? 0.7 : 1,
+										padding: '1rem',
+										background: 'rgba(255, 255, 255, 0.05)',
+										border: '1px solid rgba(0, 255, 255, 0.2)',
+										borderRadius: '8px',
+										transition: 'all 0.3s ease',
+										boxShadow: openingProject
+											? 'none'
+											: '0 0 10px rgba(0, 255, 255, 0.1)',
 									}}
+									onMouseEnter={(e) => {
+										if (!openingProject) {
+											e.currentTarget.style.background =
+												'rgba(0, 255, 255, 0.1)'
+											e.currentTarget.style.borderColor =
+												'rgba(0, 255, 255, 0.4)'
+											e.currentTarget.style.transform = 'translateY(-2px)'
+											e.currentTarget.style.boxShadow =
+												'0 0 15px rgba(0, 255, 255, 0.3)'
+										}
+									}}
+									onMouseLeave={(e) => {
+										if (!openingProject) {
+											e.currentTarget.style.background =
+												'rgba(255, 255, 255, 0.05)'
+											e.currentTarget.style.borderColor =
+												'rgba(0, 255, 255, 0.2)'
+											e.currentTarget.style.transform = 'translateY(0)'
+											e.currentTarget.style.boxShadow =
+												'0 0 10px rgba(0, 255, 255, 0.1)'
+										}
+									}}
+									onClick={() => !openingProject && handleOpenProject(project)}
 								>
-									<p style={{ margin: 0, color: '#888', fontSize: '12px' }}>
-										Created: {new Date(project.createdAt).toLocaleDateString()}
-										{project.lastOpenedAt && (
-											<span style={{ marginLeft: 15 }}>
-												Last opened:{' '}
-												{new Date(project.lastOpenedAt).toLocaleDateString()}
+									<h3 style={{ margin: '0 0 8px 0' }}>
+										{project.name}
+										{openingProject && (
+											<span
+												style={{
+													marginLeft: 10,
+													fontSize: '14px',
+													color: '#00ffff',
+													textShadow: '0 0 5px rgba(0, 255, 255, 0.3)',
+													fontWeight: 'bold',
+													letterSpacing: '0.5px',
+												}}
+											>
+												Opening...
 											</span>
 										)}
-									</p>
-									<button
-										onClick={(e) => {
-											e.stopPropagation()
-											handleDeleteProject(project)
-										}}
+									</h3>
+									<p
 										style={{
-											padding: '4px 8px',
-											fontSize: '12px',
-											backgroundColor: '#dc3545',
+											margin: '0 0 8px 0',
+											color: '#b0b0b0',
+											fontSize: '14px',
+											fontFamily: 'monospace',
+										}}
+									>
+										{project.path}
+									</p>
+									<div
+										style={{
+											display: 'flex',
+											justifyContent: 'space-between',
+											alignItems: 'center',
+											marginBottom: '8px',
+										}}
+									>
+										<p
+											style={{
+												margin: 0,
+												color: '#888',
+												fontSize: '12px',
+												fontFamily: 'inherit',
+											}}
+										>
+											Created:{' '}
+											{new Date(project.createdAt).toLocaleDateString()}
+											{project.lastOpenedAt && (
+												<span style={{ marginLeft: 15, color: '#b0b0b0' }}>
+													Last opened:{' '}
+													{new Date(project.lastOpenedAt).toLocaleDateString()}
+												</span>
+											)}
+										</p>
+										<button
+											onClick={(e) => {
+												e.stopPropagation()
+												handleDeleteProject(project)
+											}}
+											className='remove-button'
+											style={{
+												padding: '4px 8px',
+												fontSize: '12px',
+												backgroundColor: '#dc3545',
+												color: 'white',
+												border: 'none',
+												borderRadius: 4,
+												cursor: 'pointer',
+												transition: 'background-color 0.2s',
+												fontFamily: 'inherit',
+												textTransform: 'uppercase',
+												letterSpacing: '0.5px',
+											}}
+											onMouseEnter={(e) => {
+												e.currentTarget.style.backgroundColor = '#c82333'
+											}}
+											onMouseLeave={(e) => {
+												e.currentTarget.style.backgroundColor = '#dc3545'
+											}}
+										>
+											Delete
+										</button>
+									</div>
+								</div>
+							))}
+						</div>
+					)}
+				</div>
+
+				{/* Create New Project */}
+				<div
+					style={{
+						borderTop: '1px solid rgba(0, 255, 255, 0.2)',
+						paddingTop: 30,
+					}}
+				>
+					{!showCreateForm ? (
+						<button
+							onClick={() => setShowCreateForm(true)}
+							className='edit-button'
+							style={{
+								padding: '12px 24px',
+								fontSize: '16px',
+								backgroundColor: '#007bff',
+								color: 'white',
+								border: 'none',
+								borderRadius: 6,
+								cursor: 'pointer',
+								fontFamily: 'inherit',
+								textTransform: 'uppercase',
+								letterSpacing: '1px',
+							}}
+						>
+							Create New Project
+						</button>
+					) : (
+						<div
+							className='edit-form'
+							style={{
+								border: '1px solid rgba(0, 255, 255, 0.2)',
+								borderRadius: '8px',
+								padding: '1.5rem',
+								background: 'rgba(255, 255, 255, 0.05)',
+								boxShadow: '0 0 10px rgba(0, 255, 255, 0.1)',
+							}}
+						>
+							<h3
+								style={{
+									color: '#00ffff',
+									marginBottom: '1rem',
+									textShadow: '0 0 5px rgba(0, 255, 255, 0.3)',
+								}}
+							>
+								Create New Project
+							</h3>
+							<div className='form-group'>
+								<label>Project Name:</label>
+								<input
+									type='text'
+									value={newProjectName}
+									onChange={(e) => setNewProjectName(e.target.value)}
+									placeholder='Enter project name...'
+								/>
+							</div>
+							<div className='form-group'>
+								<label>Project Location:</label>
+								<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+									<input
+										type='text'
+										value={selectedPath}
+										readOnly
+										placeholder='Select a folder...'
+										style={{
+											flex: 1,
+											padding: '0.75rem',
+											border: '1px solid rgba(0, 255, 255, 0.3)',
+											background:
+												'linear-gradient(135deg, rgba(0, 255, 255, 0.05) 0%, rgba(255, 0, 255, 0.05) 100%)',
+											color: '#e0e0e0',
+											fontFamily: 'inherit',
+											fontSize: '0.9rem',
+											borderRadius: '4px',
+											transition: 'all 0.3s ease',
+										}}
+									/>
+									<button
+										onClick={handleSelectFolder}
+										className='edit-button'
+										style={{
+											padding: '8px 16px',
+											backgroundColor: '#6c757d',
 											color: 'white',
 											border: 'none',
 											borderRadius: 4,
 											cursor: 'pointer',
-											transition: 'background-color 0.2s',
-										}}
-										onMouseEnter={(e) => {
-											e.currentTarget.style.backgroundColor = '#c82333'
-										}}
-										onMouseLeave={(e) => {
-											e.currentTarget.style.backgroundColor = '#dc3545'
 										}}
 									>
-										Delete
+										Browse
 									</button>
 								</div>
 							</div>
-						))}
-					</div>
-				)}
-			</div>
-
-			{/* Create New Project */}
-			<div style={{ borderTop: '1px solid #eee', paddingTop: 30 }}>
-				{!showCreateForm ? (
-					<button
-						onClick={() => setShowCreateForm(true)}
-						style={{
-							padding: '12px 24px',
-							fontSize: '16px',
-							backgroundColor: '#007bff',
-							color: 'white',
-							border: 'none',
-							borderRadius: 6,
-							cursor: 'pointer',
-						}}
-					>
-						Create New Project
-					</button>
-				) : (
-					<div
-						style={{
-							border: '1px solid #ddd',
-							borderRadius: 8,
-							padding: 20,
-							backgroundColor: '#f9f9f9',
-						}}
-					>
-						<h3>Create New Project</h3>
-						<div style={{ marginBottom: 15 }}>
-							<label
-								style={{
-									display: 'block',
-									marginBottom: 5,
-									fontWeight: 'bold',
-								}}
-							>
-								Project Name:
-							</label>
-							<input
-								type='text'
-								value={newProjectName}
-								onChange={(e) => setNewProjectName(e.target.value)}
-								placeholder='Enter project name...'
-								style={{
-									width: '100%',
-									padding: '8px 12px',
-									border: '1px solid #ccc',
-									borderRadius: 4,
-									fontSize: '14px',
-								}}
-							/>
-						</div>
-						<div style={{ marginBottom: 20 }}>
-							<label
-								style={{
-									display: 'block',
-									marginBottom: 5,
-									fontWeight: 'bold',
-								}}
-							>
-								Project Location:
-							</label>
-							<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-								<input
-									type='text'
-									value={selectedPath}
-									readOnly
-									placeholder='Select a folder...'
-									style={{
-										flex: 1,
-										padding: '8px 12px',
-										border: '1px solid #ccc',
-										borderRadius: 4,
-										fontSize: '14px',
-										backgroundColor: '#f5f5f5',
-									}}
-								/>
+							<div style={{ display: 'flex', gap: 10 }}>
 								<button
-									onClick={handleSelectFolder}
+									onClick={handleCreateProject}
+									disabled={loading || !newProjectName.trim() || !selectedPath}
+									className='edit-button'
 									style={{
-										padding: '8px 16px',
-										backgroundColor: '#6c757d',
+										padding: '10px 20px',
+										backgroundColor: loading ? '#6c757d' : '#28a745',
 										color: 'white',
 										border: 'none',
 										borderRadius: 4,
-										cursor: 'pointer',
+										cursor: loading ? 'not-allowed' : 'pointer',
 									}}
 								>
-									Browse
+									{loading ? 'Creating...' : 'Create Project'}
+								</button>
+								<button
+									onClick={() => {
+										setShowCreateForm(false)
+										setNewProjectName('')
+										setSelectedPath('')
+									}}
+									disabled={loading}
+									className='remove-button'
+									style={{
+										padding: '10px 20px',
+										backgroundColor: '#dc3545',
+										color: 'white',
+										border: 'none',
+										borderRadius: 4,
+										cursor: loading ? 'not-allowed' : 'pointer',
+									}}
+								>
+									Cancel
 								</button>
 							</div>
 						</div>
-						<div style={{ display: 'flex', gap: 10 }}>
-							<button
-								onClick={handleCreateProject}
-								disabled={loading || !newProjectName.trim() || !selectedPath}
-								style={{
-									padding: '10px 20px',
-									backgroundColor: loading ? '#6c757d' : '#28a745',
-									color: 'white',
-									border: 'none',
-									borderRadius: 4,
-									cursor: loading ? 'not-allowed' : 'pointer',
-								}}
-							>
-								{loading ? 'Creating...' : 'Create Project'}
-							</button>
-							<button
-								onClick={() => {
-									setShowCreateForm(false)
-									setNewProjectName('')
-									setSelectedPath('')
-								}}
-								disabled={loading}
-								style={{
-									padding: '10px 20px',
-									backgroundColor: '#dc3545',
-									color: 'white',
-									border: 'none',
-									borderRadius: 4,
-									cursor: loading ? 'not-allowed' : 'pointer',
-								}}
-							>
-								Cancel
-							</button>
-						</div>
-					</div>
-				)}
+					)}
+				</div>
 			</div>
 		</div>
 	)
