@@ -13,8 +13,8 @@
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"keywords": [],
-	"author": "",
-	"license": "ISC",
+	"author": "CansyLand",
+	"license": "MIT",
 	"description": "Quest Engine - A visual quest builder and game engine",
 	"build": {
 		"appId": "com.cansyland.questengine",
@@ -36,8 +36,8 @@
 		"publish": [
 			{
 				"provider": "github",
-				"owner": "your-github-username",
-				"repo": "questengine",
+				"owner": "CansyLand",
+				"repo": "QuestEngine",
 				"private": false
 			}
 		]
