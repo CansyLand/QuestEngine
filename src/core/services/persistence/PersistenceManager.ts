@@ -247,9 +247,7 @@ export class PersistenceManager {
 		const dialogues = await this.loadDialogues()
 		const locations = await this.loadLocations(items, npcs, portals)
 
-		// Create default game state
-		const myceliumCaves = locations.find((l) => l.id === 'mycelium_caves')
-		const abyss = locations.find((l) => l.id === 'abyss')
+		// Create default game state - start at the first location in the array
 		return {
 			locations,
 			quests,
@@ -257,13 +255,7 @@ export class PersistenceManager {
 			items,
 			portals,
 			dialogues,
-			currentLocationId: myceliumCaves
-				? myceliumCaves.id
-				: abyss
-				? abyss.id
-				: locations.length > 0
-				? locations[0].id
-				: '',
+			currentLocationId: locations.length > 0 ? locations[0].id : '',
 			activeQuests: [],
 			inventory: [],
 		}
