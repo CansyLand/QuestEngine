@@ -45,8 +45,8 @@ export class PersistenceManager {
 			const data = await fs.readFile(filePath, 'utf-8')
 			const savedLocations = JSON.parse(data) as SavedLocation[]
 
-			// Convert references to full objects
-			return savedLocations.map((location) => ({
+			// First pass: Convert references to full objects except locations
+			const locationsWithoutLocationRefs = savedLocations.map((location) => ({
 				...location,
 				items: location.items
 					.map((itemId: string) => {
@@ -78,6 +78,28 @@ export class PersistenceManager {
 						return portal
 					})
 					.filter(Boolean) as Portal[],
+				locations: [] as Location[], // Temporary empty array
+			}))
+
+			// Second pass: Resolve location references
+			return locationsWithoutLocationRefs.map((location) => ({
+				...location,
+				locations: (
+					savedLocations.find((sl) => sl.id === location.id)?.locations || []
+				)
+					.map((locationId: string) => {
+						const childLocation = locationsWithoutLocationRefs.find(
+							(l) => l.id === locationId
+						)
+						if (!childLocation) {
+							console.warn(
+								`Location ${locationId} not found in loaded locations`
+							)
+							return null
+						}
+						return childLocation
+					})
+					.filter(Boolean) as Location[],
 			}))
 		} catch (error) {
 			console.error('Error loading locations:', error)
@@ -98,6 +120,7 @@ export class PersistenceManager {
 			items: location.items.map((item) => item.id),
 			npcs: location.npcs.map((npc) => npc.id),
 			portals: location.portals.map((portal) => portal.id),
+			locations: location.locations.map((childLocation) => childLocation.id),
 		}))
 
 		// Write to temp file first for atomicity

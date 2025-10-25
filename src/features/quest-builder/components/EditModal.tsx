@@ -1682,7 +1682,9 @@ export const EditModal: React.FC<EditModalProps> = ({
 						onOpenItemSelector={openItemSelector}
 						onOpenNpcSelector={openNpcSelector}
 						onOpenPortalSelector={openPortalSelector}
+						onOpenLocationSelector={openLocationSelector}
 						availableItems={availableItems}
+						availableLocations={availableLocations}
 					/>
 				)
 			case 'quest':

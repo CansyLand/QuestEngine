@@ -90,6 +90,7 @@ export interface SavedLocation {
 	items: string[] // Item IDs
 	npcs: string[] // NPC IDs
 	portals: string[] // Portal IDs
+	locations: string[] // Child location IDs
 }
 
 export interface Location {
@@ -100,6 +101,7 @@ export interface Location {
 	items: Item[] // Item objects (expanded from IDs at runtime)
 	npcs: NPC[] // NPC objects (expanded from IDs at runtime)
 	portals: Portal[] // Portal objects (expanded from IDs at runtime)
+	locations: Location[] // Child locations (expanded from IDs at runtime)
 }
 
 export interface QuestStep {

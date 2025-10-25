@@ -45,6 +45,8 @@ function createWindow(): void {
 			contextIsolation: true,
 			preload: path.join(__dirname, 'preload.js'), // Compiled from preload.ts
 		},
+		backgroundColor: '#0a0a0a', // Set dark background to prevent white flash
+		paintWhenInitiallyHidden: false, // Prevent painting until window is shown
 	})
 
 	// Disable HMR for Electron renderer to prevent hot-update.js requests
@@ -77,6 +79,11 @@ function createWindow(): void {
 
 	// Always open dev tools for debugging
 	mainWindow.webContents.openDevTools({ mode: 'detach' })
+
+	// Prevent white flash on close by setting background color
+	mainWindow.on('close', () => {
+		mainWindow?.setBackgroundColor('#0a0a0a')
+	})
 
 	mainWindow.on('closed', () => {
 		mainWindow = null
@@ -443,6 +450,8 @@ ipcMain.handle('open-player-window', async (): Promise<void> => {
 		},
 		title: 'QuestEngine Player',
 		show: false, // Don't show until ready
+		backgroundColor: '#0a0a0a', // Set dark background to prevent white flash
+		paintWhenInitiallyHidden: false, // Prevent painting until window is shown
 	})
 
 	const isDev = process.env.NODE_ENV === 'development'
@@ -455,6 +464,11 @@ ipcMain.handle('open-player-window', async (): Promise<void> => {
 	playerWindow.once('ready-to-show', () => {
 		playerWindow.show()
 		playerWindow.focus()
+	})
+
+	// Prevent white flash on close by setting background color
+	playerWindow.on('close', () => {
+		playerWindow.setBackgroundColor('#0a0a0a')
 	})
 
 	playerWindow.on('closed', () => {

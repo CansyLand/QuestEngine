@@ -14,6 +14,9 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 	const [gameStarted, setGameStarted] = useState(false)
 	const [currentLocation, setCurrentLocation] = useState<any>(null)
 	const [currentEntities, setCurrentEntities] = useState<any[]>([])
+	const [childLocations, setChildLocations] = useState<any[]>([])
+	const [currentChildLocationIndex, setCurrentChildLocationIndex] =
+		useState<number>(0)
 	const [inventory, setInventory] = useState<string[]>([])
 	const [activeDialogue, setActiveDialogue] = useState<{
 		sequence: any
@@ -114,10 +117,34 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 						id: command.params.locationId,
 						name: command.params.locationName,
 					})
-					setCurrentEntities(command.params.entities || [])
-					setBackgroundImage(command.params.backgroundImage)
-					setBackgroundMusic(command.params.backgroundMusic)
-					addToQuestLog(`Entered location: ${command.params.locationName}`)
+
+					// Check if this location has child locations
+					if (
+						command.params.childLocations &&
+						command.params.childLocations.length > 0
+					) {
+						setChildLocations(command.params.childLocations)
+						setCurrentChildLocationIndex(0)
+
+						// Show the first child location
+						const firstChild = command.params.childLocations[0]
+						setCurrentEntities(firstChild.entities || [])
+						setBackgroundImage(
+							firstChild.backgroundImage || command.params.backgroundImage
+						)
+						setBackgroundMusic(
+							firstChild.backgroundMusic || command.params.backgroundMusic
+						)
+						addToQuestLog(`Entered location: ${firstChild.name}`)
+					} else {
+						// Regular location without children
+						setChildLocations([])
+						setCurrentChildLocationIndex(0)
+						setCurrentEntities(command.params.entities || [])
+						setBackgroundImage(command.params.backgroundImage)
+						setBackgroundMusic(command.params.backgroundMusic)
+						addToQuestLog(`Entered location: ${command.params.locationName}`)
+					}
 					break
 				case 'changeBackground':
 					setBackgroundImage(command.params.image)
@@ -347,6 +374,22 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 		}
 	}
 
+	const handleNavigateChildLocation = (direction: 'prev' | 'next') => {
+		const newIndex =
+			direction === 'next'
+				? Math.min(currentChildLocationIndex + 1, childLocations.length - 1)
+				: Math.max(currentChildLocationIndex - 1, 0)
+
+		if (newIndex !== currentChildLocationIndex) {
+			setCurrentChildLocationIndex(newIndex)
+			const childLocation = childLocations[newIndex]
+			setCurrentEntities(childLocation.entities || [])
+			setBackgroundImage(childLocation.backgroundImage || '')
+			setBackgroundMusic(childLocation.backgroundMusic || '')
+			addToQuestLog(`Entered location: ${childLocation.name}`)
+		}
+	}
+
 	const addToQuestLog = (message: string) => {
 		setQuestLog((prev) => [
 			...prev,
@@ -404,6 +447,9 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 					onEntityClick={handleEntityClick}
 					backgroundImage={backgroundImage}
 					entities={currentEntities}
+					childLocations={childLocations}
+					currentChildLocationIndex={currentChildLocationIndex}
+					onNavigateChildLocation={handleNavigateChildLocation}
 				/>
 
 				{/* Inventory */}

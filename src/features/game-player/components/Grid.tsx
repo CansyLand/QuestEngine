@@ -6,6 +6,9 @@ interface GridProps {
 	onEntityClick: (entityType: string, entityId: string) => void
 	backgroundImage: string
 	entities?: any[]
+	childLocations?: any[]
+	currentChildLocationIndex?: number
+	onNavigateChildLocation?: (direction: 'prev' | 'next') => void
 }
 
 // Simple seeded random number generator
@@ -24,6 +27,9 @@ export const Grid: React.FC<GridProps> = ({
 	onEntityClick,
 	backgroundImage,
 	entities = [],
+	childLocations = [],
+	currentChildLocationIndex = 0,
+	onNavigateChildLocation,
 }) => {
 	const [hoveredEntity, setHoveredEntity] = useState<any>(null)
 	const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -158,6 +164,34 @@ export const Grid: React.FC<GridProps> = ({
 
 	return (
 		<div className='grid-container'>
+			{/* Child Location Navigation */}
+			{childLocations.length > 0 && (
+				<div className='child-location-navigation'>
+					{currentChildLocationIndex > 0 && (
+						<button
+							className='nav-button nav-prev'
+							onClick={() => onNavigateChildLocation?.('prev')}
+							title='Previous location'
+						>
+							← Previous
+						</button>
+					)}
+					<div className='location-indicator'>
+						{childLocations[currentChildLocationIndex]?.name ||
+							'Unknown Location'}
+					</div>
+					{currentChildLocationIndex < childLocations.length - 1 && (
+						<button
+							className='nav-button nav-next'
+							onClick={() => onNavigateChildLocation?.('next')}
+							title='Next location'
+						>
+							Next →
+						</button>
+					)}
+				</div>
+			)}
+
 			<div className='grid'>
 				{gridCells.map(({ x, y, entity, isInteractive }) => (
 					<div

@@ -753,7 +753,43 @@ export class GameEngine {
 			})
 		})
 
-		// Send updateLocation command with all entities
+		// Prepare child locations if this location has them
+		let childLocations: any[] = []
+		if (newLocation.locations && newLocation.locations.length > 0) {
+			childLocations = newLocation.locations.map((childLocation) => ({
+				id: childLocation.id,
+				name: childLocation.name,
+				backgroundImage: childLocation.image,
+				backgroundMusic: childLocation.backgroundMusic,
+				entities: [
+					...childLocation.items.map((item) => ({
+						id: item.id,
+						name: item.name,
+						type: 'item',
+						image: item.image,
+						state: item.state,
+						interactive: item.interactive,
+					})),
+					...childLocation.npcs.map((npc) => ({
+						id: npc.id,
+						name: npc.name,
+						type: 'npc',
+						image: npc.image,
+						state: npc.state,
+					})),
+					...childLocation.portals.map((portal) => ({
+						id: portal.id,
+						name: portal.name,
+						type: 'portal',
+						image: portal.image,
+						state: portal.state,
+						interactive: portal.interactive,
+					})),
+				],
+			}))
+		}
+
+		// Send updateLocation command with all entities and child locations
 		commands.push({
 			type: 'updateLocation',
 			params: {
@@ -762,6 +798,7 @@ export class GameEngine {
 				backgroundImage: newLocation.image,
 				backgroundMusic: newLocation.backgroundMusic,
 				entities: gridEntities,
+				childLocations: childLocations.length > 0 ? childLocations : undefined,
 			},
 		})
 

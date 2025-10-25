@@ -240,3 +240,72 @@
   filter: grayscale(100%) opacity(0.4);
   transition: all 0.3s ease;
 }
+
+/* Child Location Navigation Styles */
+.child-location-navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.nav-button {
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.5);
+  color: #00ffff;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.nav-button:hover {
+  background: rgba(0, 255, 255, 0.2);
+  border-color: #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+.nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: rgba(0, 255, 255, 0.2);
+}
+
+.nav-button:disabled:hover {
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.location-indicator {
+  color: #00ffff;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+  min-width: 150px;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+}
+
+/* Drag and Drop Styles for ArrayField */
+.array-item.drag-handle {
+  cursor: grab;
+}
+
+.array-item.drag-handle:active {
+  cursor: grabbing;
+}
+
+.array-item.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+  box-shadow: 0 8px 25px rgba(0, 255, 255, 0.3);
+}

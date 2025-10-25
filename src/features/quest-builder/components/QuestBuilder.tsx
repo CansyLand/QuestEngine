@@ -712,6 +712,7 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 			items: [],
 			npcs: [],
 			portals: [],
+			locations: [],
 		}
 		openEditModal('location', newLocation)
 	}

@@ -454,7 +454,9 @@ export const EditModal: React.FC<EditModalProps> = ({
 								onOpenItemSelector={openItemSelector}
 								onOpenNpcSelector={() => {}}
 								onOpenPortalSelector={() => {}}
+								onOpenLocationSelector={openLocationSelector}
 								availableItems={availableItems}
+								availableLocations={availableLocations}
 							/>
 						)}
 						{entityType === 'quest' && (

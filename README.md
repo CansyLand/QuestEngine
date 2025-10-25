@@ -19,7 +19,7 @@ QuestEngine is a desktop application built with Electron that integrates with th
 
 ### Via App (macOS)
 
-1. Download the latest [QuestEngine.dmg](https://github.com/CansyLand/QuestEngine/releases/latest/download/QuestEngine.dmg) from [Releases](https://github.com/CansyLand/QuestEngine/releases/latest).
+1. Download the latest [QuestEngine.dmg](https://github.com/CansyLand/QuestEngine/releases/latest) from [Releases](https://github.com/CansyLand/QuestEngine/releases/latest).
 2. Open the DMG and drag `QuestEngine.app` to your Applications folder.
 3. Launch `QuestEngine.app` and select the folder containing your Decentraland scene (created with Creator Hub).
 
