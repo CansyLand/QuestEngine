@@ -104,6 +104,14 @@ export class GameEngine {
 				console.log(`Handling portal interaction for ${params.id}`)
 				commands.push(...this.handlePortalInteraction(params.id))
 				break
+			case 'navigateChildLocation':
+				console.log(
+					`Handling child location navigation to ${params.childLocationId}`
+				)
+				commands.push(
+					...this.handleNavigateChildLocation(params.childLocationId)
+				)
+				break
 			default:
 				console.warn(`Unknown interaction type: ${type}`)
 		}
@@ -118,7 +126,17 @@ export class GameEngine {
 
 		if (!currentLocation) return commands
 
-		const item = currentLocation.items.find((i) => i.id === itemId)
+		// Check parent location first
+		let item = currentLocation.items.find((i) => i.id === itemId)
+
+		// If not found and we have an active child location, check there
+		if (!item && this.game.currentChildLocationId) {
+			const childLocation = this.game.locations.find(
+				(l) => l.id === this.game.currentChildLocationId
+			)
+			item = childLocation?.items.find((i) => i.id === itemId)
+		}
+
 		if (!item || item.state !== EntityState.World) return commands
 
 		// Play interaction audio if specified
@@ -165,12 +183,27 @@ export class GameEngine {
 		}
 
 		console.log(
-			`Current location: ${currentLocation.id}, npcs:`,
+			`Current location: ${currentLocation.id}, child: ${this.game.currentChildLocationId}, npcs:`,
 			currentLocation.npcs.map((n) => n.id)
 		)
-		const npc = currentLocation.npcs.find((n) => n.id === npcId)
+
+		// Check parent location first
+		let npc = currentLocation.npcs.find((n) => n.id === npcId)
+
+		// If not found and we have an active child location, check there
+		if (!npc && this.game.currentChildLocationId) {
+			const childLocation = this.game.locations.find(
+				(l) => l.id === this.game.currentChildLocationId
+			)
+			npc = childLocation?.npcs.find((n) => n.id === npcId)
+			console.log(
+				`Child location npcs:`,
+				childLocation?.npcs.map((n) => n.id)
+			)
+		}
+
 		if (!npc) {
-			console.log(`NPC ${npcId} not found in current location`)
+			console.log(`NPC ${npcId} not found in current location or active child`)
 			return commands
 		}
 		if (npc.state !== EntityState.World) {
@@ -221,12 +254,29 @@ export class GameEngine {
 		}
 
 		console.log(
-			`Current location: ${currentLocation.id}, portals:`,
+			`Current location: ${currentLocation.id}, child: ${this.game.currentChildLocationId}, portals:`,
 			currentLocation.portals.map((p) => p.id)
 		)
-		const portal = currentLocation.portals.find((p) => p.id === portalId)
+
+		// Check parent location first
+		let portal = currentLocation.portals.find((p) => p.id === portalId)
+
+		// If not found and we have an active child location, check there
+		if (!portal && this.game.currentChildLocationId) {
+			const childLocation = this.game.locations.find(
+				(l) => l.id === this.game.currentChildLocationId
+			)
+			portal = childLocation?.portals.find((p) => p.id === portalId)
+			console.log(
+				`Child location portals:`,
+				childLocation?.portals.map((p) => p.id)
+			)
+		}
+
 		if (!portal) {
-			console.log(`Portal ${portalId} not found in current location`)
+			console.log(
+				`Portal ${portalId} not found in current location or active child`
+			)
 			return commands
 		}
 		if (portal.state !== EntityState.World) {
@@ -709,19 +759,11 @@ export class GameEngine {
 		return commands
 	}
 
-	private changeLocation(locationId: string): Command[] {
-		const commands: Command[] = []
-		const newLocation = this.game.locations.find((l) => l.id === locationId)
-
-		if (!newLocation) return commands
-
-		// Update current location
-		this.game.currentLocationId = locationId
-
-		// Create grid entities for the new location
+	// Helper method to create grid entities for a single location
+	private createGridEntities(location: Location): GridEntity[] {
 		const gridEntities: GridEntity[] = []
 
-		newLocation.items.forEach((item) => {
+		location.items.forEach((item) => {
 			gridEntities.push({
 				id: item.id,
 				name: item.name,
@@ -732,7 +774,7 @@ export class GameEngine {
 			})
 		})
 
-		newLocation.npcs.forEach((npc) => {
+		location.npcs.forEach((npc) => {
 			gridEntities.push({
 				id: npc.id,
 				name: npc.name,
@@ -742,7 +784,7 @@ export class GameEngine {
 			})
 		})
 
-		newLocation.portals.forEach((portal) => {
+		location.portals.forEach((portal) => {
 			gridEntities.push({
 				id: portal.id,
 				name: portal.name,
@@ -753,51 +795,117 @@ export class GameEngine {
 			})
 		})
 
-		// Prepare child locations if this location has them
+		return gridEntities
+	}
+
+	// Helper method to combine parent and child entities (parent first, then child, no duplicates)
+	private createCombinedEntities(
+		parentLocation: Location,
+		childLocation: Location
+	): GridEntity[] {
+		const entities: GridEntity[] = []
+
+		// Add parent entities first
+		entities.push(...this.createGridEntities(parentLocation))
+
+		// Add child entities (skip duplicates by ID)
+		const parentEntityIds = new Set([
+			...parentLocation.items.map((i) => i.id),
+			...parentLocation.npcs.map((n) => n.id),
+			...parentLocation.portals.map((p) => p.id),
+		])
+
+		childLocation.items.forEach((item) => {
+			if (!parentEntityIds.has(item.id)) {
+				entities.push({
+					id: item.id,
+					name: item.name,
+					type: 'item',
+					image: item.image,
+					state: item.state,
+					interactive: item.interactive,
+				})
+			}
+		})
+
+		childLocation.npcs.forEach((npc) => {
+			if (!parentEntityIds.has(npc.id)) {
+				entities.push({
+					id: npc.id,
+					name: npc.name,
+					type: 'npc',
+					image: npc.image,
+					state: npc.state,
+				})
+			}
+		})
+
+		childLocation.portals.forEach((portal) => {
+			if (!parentEntityIds.has(portal.id)) {
+				entities.push({
+					id: portal.id,
+					name: portal.name,
+					type: 'portal',
+					image: portal.image,
+					state: portal.state,
+					interactive: portal.interactive,
+				})
+			}
+		})
+
+		return entities
+	}
+
+	private changeLocation(locationId: string): Command[] {
+		const commands: Command[] = []
+		const newLocation = this.game.locations.find((l) => l.id === locationId)
+
+		if (!newLocation) return commands
+
+		this.game.currentLocationId = locationId
+
+		let entities: GridEntity[] = []
 		let childLocations: any[] = []
+		let displayLocationName = newLocation.name
+		let displayBackgroundImage = newLocation.image
+		let displayBackgroundMusic = newLocation.backgroundMusic
+
 		if (newLocation.locations && newLocation.locations.length > 0) {
+			// Parent location with children - set first child as active
+			const firstChild = newLocation.locations[0]
+			this.game.currentChildLocationId = firstChild.id
+
+			// Combine parent and child entities
+			entities = this.createCombinedEntities(newLocation, firstChild)
+
+			// Use child location's display properties
+			displayLocationName = firstChild.name
+			displayBackgroundImage = firstChild.image || newLocation.image
+			displayBackgroundMusic =
+				firstChild.backgroundMusic || newLocation.backgroundMusic
+
+			// Set up child locations for navigation
 			childLocations = newLocation.locations.map((childLocation) => ({
 				id: childLocation.id,
 				name: childLocation.name,
 				backgroundImage: childLocation.image,
 				backgroundMusic: childLocation.backgroundMusic,
-				entities: [
-					...childLocation.items.map((item) => ({
-						id: item.id,
-						name: item.name,
-						type: 'item',
-						image: item.image,
-						state: item.state,
-						interactive: item.interactive,
-					})),
-					...childLocation.npcs.map((npc) => ({
-						id: npc.id,
-						name: npc.name,
-						type: 'npc',
-						image: npc.image,
-						state: npc.state,
-					})),
-					...childLocation.portals.map((portal) => ({
-						id: portal.id,
-						name: portal.name,
-						type: 'portal',
-						image: portal.image,
-						state: portal.state,
-						interactive: portal.interactive,
-					})),
-				],
+				entities: this.createGridEntities(childLocation),
 			}))
+		} else {
+			// Regular location without children
+			this.game.currentChildLocationId = undefined
+			entities = this.createGridEntities(newLocation)
 		}
 
-		// Send updateLocation command with all entities and child locations
 		commands.push({
 			type: 'updateLocation',
 			params: {
 				locationId,
-				locationName: newLocation.name,
-				backgroundImage: newLocation.image,
-				backgroundMusic: newLocation.backgroundMusic,
-				entities: gridEntities,
+				locationName: displayLocationName,
+				backgroundImage: displayBackgroundImage,
+				backgroundMusic: displayBackgroundMusic,
+				entities,
 				childLocations: childLocations.length > 0 ? childLocations : undefined,
 			},
 		})
@@ -1031,6 +1139,58 @@ export class GameEngine {
 		if (globalPortal) return globalPortal
 
 		return undefined
+	}
+
+	private handleNavigateChildLocation(childLocationId: string): Command[] {
+		const commands: Command[] = []
+
+		// Get the parent location (should be currentLocationId)
+		const parentLocation = this.game.locations.find(
+			(l) => l.id === this.game.currentLocationId
+		)
+		if (!parentLocation) {
+			console.warn(`Parent location ${this.game.currentLocationId} not found`)
+			return commands
+		}
+
+		// Verify the child location exists and is a child of the parent
+		const childLocation = parentLocation.locations?.find(
+			(l) => l.id === childLocationId
+		)
+		if (!childLocation) {
+			console.warn(
+				`Child location ${childLocationId} not found in parent ${parentLocation.id}`
+			)
+			return commands
+		}
+
+		// Update the active child location
+		this.game.currentChildLocationId = childLocationId
+
+		// Combine parent and new child entities
+		const entities = this.createCombinedEntities(parentLocation, childLocation)
+
+		// Return commands to update the frontend
+		commands.push({
+			type: 'updateLocation',
+			params: {
+				locationId: this.game.currentLocationId, // Parent location ID
+				locationName: childLocation.name, // Show child name in UI
+				backgroundImage: childLocation.image || parentLocation.image,
+				backgroundMusic:
+					childLocation.backgroundMusic || parentLocation.backgroundMusic,
+				entities,
+				childLocations: parentLocation.locations?.map((child) => ({
+					id: child.id,
+					name: child.name,
+					backgroundImage: child.image,
+					backgroundMusic: child.backgroundMusic,
+					entities: this.createGridEntities(child),
+				})),
+			},
+		})
+
+		return commands
 	}
 
 	private getCurrentLocation(): Location | undefined {

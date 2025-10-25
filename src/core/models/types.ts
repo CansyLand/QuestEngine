@@ -140,6 +140,7 @@ export interface Game {
 	dialogues: DialogueSequence[] // Global dialogue sequences
 	// Runtime state
 	currentLocationId: string
+	currentChildLocationId?: string // Active child location when in parent context
 	activeQuests: string[] // Quest IDs
 	inventory: string[] // Array of entity IDs in inventory
 	seedsPlaced?: number // Track number of seeds placed for Persephone quest

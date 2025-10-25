@@ -249,6 +249,7 @@ export class PersistenceManager {
 
 		// Create default game state
 		const myceliumCaves = locations.find((l) => l.id === 'mycelium_caves')
+		const abyss = locations.find((l) => l.id === 'abyss')
 		return {
 			locations,
 			quests,
@@ -258,6 +259,8 @@ export class PersistenceManager {
 			dialogues,
 			currentLocationId: myceliumCaves
 				? myceliumCaves.id
+				: abyss
+				? abyss.id
 				: locations.length > 0
 				? locations[0].id
 				: '',

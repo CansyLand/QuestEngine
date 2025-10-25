@@ -127,38 +127,36 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 					)
 					break
 				case 'updateLocation':
-					setCurrentLocation({
-						id: command.params.locationId,
-						name: command.params.locationName,
-					})
-
-					// Check if this location has child locations
+					// Check if this location has child locations (composite parent-child system)
 					if (
 						command.params.childLocations &&
 						command.params.childLocations.length > 0
 					) {
+						// Parent location with children - the locationId is the parent
+						setCurrentLocation({
+							id: command.params.locationId, // Parent location ID
+							name: command.params.locationName, // Child location name for display
+						})
 						setChildLocations(command.params.childLocations)
-						setCurrentChildLocationIndex(0)
-
-						// Show the first child location
-						const firstChild = command.params.childLocations[0]
-						setCurrentEntities(firstChild.entities || [])
-						setBackgroundImage(
-							firstChild.backgroundImage || command.params.backgroundImage
+						setCurrentChildLocationIndex(
+							command.params.childLocations.findIndex(
+								(child: any) => child.name === command.params.locationName
+							)
 						)
-						setBackgroundMusic(
-							firstChild.backgroundMusic || command.params.backgroundMusic
-						)
-						addToQuestLog(`Entered location: ${firstChild.name}`)
 					} else {
 						// Regular location without children
+						setCurrentLocation({
+							id: command.params.locationId,
+							name: command.params.locationName,
+						})
 						setChildLocations([])
 						setCurrentChildLocationIndex(0)
-						setCurrentEntities(command.params.entities || [])
-						setBackgroundImage(command.params.backgroundImage)
-						setBackgroundMusic(command.params.backgroundMusic)
-						addToQuestLog(`Entered location: ${command.params.locationName}`)
 					}
+
+					setCurrentEntities(command.params.entities || [])
+					setBackgroundImage(command.params.backgroundImage)
+					setBackgroundMusic(command.params.backgroundMusic)
+					addToQuestLog(`Entered location: ${command.params.locationName}`)
 					break
 				case 'changeBackground':
 					setBackgroundImage(command.params.image)
@@ -388,19 +386,26 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 		}
 	}
 
-	const handleNavigateChildLocation = (direction: 'prev' | 'next') => {
+	const handleNavigateChildLocation = async (direction: 'prev' | 'next') => {
+		if (childLocations.length === 0) return
+
 		const newIndex =
 			direction === 'next'
 				? Math.min(currentChildLocationIndex + 1, childLocations.length - 1)
 				: Math.max(currentChildLocationIndex - 1, 0)
 
 		if (newIndex !== currentChildLocationIndex) {
-			setCurrentChildLocationIndex(newIndex)
 			const childLocation = childLocations[newIndex]
-			setCurrentEntities(childLocation.entities || [])
-			setBackgroundImage(childLocation.backgroundImage || '')
-			setBackgroundMusic(childLocation.backgroundMusic || '')
-			addToQuestLog(`Entered location: ${childLocation.name}`)
+
+			// Send navigation interaction to backend
+			const response = await sendInteraction('navigateChildLocation', {
+				childLocationId: childLocation.id,
+			})
+
+			if (response.success && response.commands) {
+				// Backend will send updateLocation command, which will be handled by executeCommandsLocally
+				executeCommandsLocally(response.commands)
+			}
 		}
 	}
 
