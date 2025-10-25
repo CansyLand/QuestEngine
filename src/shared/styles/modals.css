@@ -27,7 +27,7 @@
     0 20px 60px rgba(0, 0, 0, 0.5);
   max-width: 600px;
   width: 90%;
-  max-height: 80vh;
+  height: 80vh;
   overflow: hidden;
   backdrop-filter: blur(20px);
   animation: slideIn 0.3s ease;

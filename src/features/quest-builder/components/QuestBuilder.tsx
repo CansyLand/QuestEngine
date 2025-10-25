@@ -571,6 +571,15 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 				)
 			}
 
+			// Update child location references in location arrays
+			if (entityType === 'location') {
+				location.locations = location.locations.map((childLocation: any) =>
+					childLocation.id === oldId
+						? { ...childLocation, id: newId }
+						: childLocation
+				)
+			}
+
 			// Update item references in onInteract actions
 			location.items.forEach((item: any) => {
 				if (item.onInteract) {

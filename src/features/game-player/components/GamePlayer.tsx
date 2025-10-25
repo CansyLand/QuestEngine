@@ -42,8 +42,22 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 				return
 			}
 
+			// First, try to get project path from URL parameters (for player window)
+			const urlParams = new URLSearchParams(window.location.search)
+			const projectPathParam = urlParams.get('projectPath')
+
+			if (projectPathParam) {
+				console.log(
+					'[GamePlayer] Project path from URL parameter:',
+					projectPathParam
+				)
+				setProjectPath(projectPathParam)
+				return
+			}
+
+			// Fallback: try to get from electronAPI (for backward compatibility)
 			console.log(
-				'[GamePlayer] Window object available, checking for electronAPI'
+				'[GamePlayer] No project path in URL, checking for electronAPI'
 			)
 			const electronAPI = (window as any).electronAPI
 

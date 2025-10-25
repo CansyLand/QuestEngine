@@ -29,10 +29,29 @@ export const LocationPanel: React.FC<LocationPanelProps> = ({
 		getProjectPath()
 	}, [])
 
+	// Filter out locations that are children of other locations
+	const getTopLevelLocations = (allLocations: Location[]): Location[] => {
+		const childLocationIds = new Set<string>()
+
+		// Collect all child location IDs
+		allLocations.forEach((location) => {
+			if (location.locations) {
+				location.locations.forEach((childLocation) => {
+					childLocationIds.add(childLocation.id)
+				})
+			}
+		})
+
+		// Return only locations that are not children of other locations
+		return allLocations.filter((location) => !childLocationIds.has(location.id))
+	}
+
+	const topLevelLocations = getTopLevelLocations(locations)
+
 	return (
 		<EntityPanel
 			title='Locations'
-			entities={locations}
+			entities={topLevelLocations}
 			onAdd={onAdd}
 			renderEntity={(location: Location) => {
 				// Use the image link directly as provided
@@ -47,7 +66,7 @@ export const LocationPanel: React.FC<LocationPanelProps> = ({
 				if (isParentLocation) {
 					return (
 						<div className='entity-card location-card parent-location-card'>
-							<div className='parent-location-header'>
+							<div className='parent-location-info'>
 								<div className='location-image'>
 									<ImageDisplay
 										src={displayImage || ''}
@@ -67,9 +86,9 @@ export const LocationPanel: React.FC<LocationPanelProps> = ({
 									</p>
 								</div>
 							</div>
-							<div className='child-locations'>
+							<div className='child-locations-section'>
 								<h4>Child Locations:</h4>
-								<div className='child-locations-grid'>
+								<div className='child-locations-fullwidth'>
 									{location.locations.map((childLocation) => {
 										const childDisplayImage = projectPath
 											? projectPath + childLocation.image
@@ -78,19 +97,51 @@ export const LocationPanel: React.FC<LocationPanelProps> = ({
 										return (
 											<div
 												key={childLocation.id}
-												className='entity-card child-location-card'
+												className='entity-card child-location-card-fullwidth'
 											>
-												<div className='location-image'>
-													<ImageDisplay
-														src={childDisplayImage || ''}
-														alt={`${childLocation.name} background`}
-														className='location-image-preview'
-														fallback={<div className='no-image'>No Image</div>}
-													/>
+												<div className='child-location-content'>
+													<div className='location-image'>
+														<ImageDisplay
+															src={childDisplayImage || ''}
+															alt={`${childLocation.name} background`}
+															className='location-image-preview'
+															fallback={
+																<div className='no-image'>No Image</div>
+															}
+														/>
+													</div>
+													<div className='location-details'>
+														<h4>{childLocation.name}</h4>
+														<p>ID: {childLocation.id}</p>
+														<p>Music: {childLocation.backgroundMusic}</p>
+														<p>
+															Items: {childLocation.items.length}, NPCs:{' '}
+															{childLocation.npcs.length}, Portals:{' '}
+															{childLocation.portals.length}
+														</p>
+													</div>
 												</div>
-												<div className='location-details'>
-													<h4>{childLocation.name}</h4>
-													<p>ID: {childLocation.id}</p>
+												<div className='child-location-actions'>
+													<button
+														className='btn btn-secondary btn-small'
+														onClick={(e) => {
+															e.stopPropagation()
+															onEdit(childLocation)
+														}}
+														title='Edit child location'
+													>
+														Edit
+													</button>
+													<button
+														className='btn btn-danger btn-small'
+														onClick={(e) => {
+															e.stopPropagation()
+															onDelete(childLocation)
+														}}
+														title='Delete child location'
+													>
+														Delete
+													</button>
 												</div>
 											</div>
 										)

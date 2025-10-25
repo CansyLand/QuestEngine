@@ -645,22 +645,42 @@ export const EditModal: React.FC<EditModalProps> = ({
 
 	// Location selector management functions
 	const openLocationSelector = () => {
-		if (entityType !== 'portal' || !formData) return
+		if (!formData) return
 
-		const portal = formData as Portal
-		// Show all available locations - portals can link to any location
-		const filteredLocations = availableLocations
+		if (entityType === 'portal') {
+			const portal = formData as Portal
+			// Show all available locations - portals can link to any location
+			const filteredLocations = availableLocations
 
-		setLocationSelector({
-			isOpen: true,
-			availableLocations: filteredLocations,
-			hoveredLocation: null,
-			mousePosition: { x: 0, y: 0 },
-			selectedLocation:
-				availableLocations.find(
-					(loc) => loc.id === portal.destinationLocationId
-				) || null,
-		})
+			setLocationSelector({
+				isOpen: true,
+				availableLocations: filteredLocations,
+				hoveredLocation: null,
+				mousePosition: { x: 0, y: 0 },
+				selectedLocation:
+					availableLocations.find(
+						(loc) => loc.id === portal.destinationLocationId
+					) || null,
+			})
+		} else if (entityType === 'location') {
+			const currentLocation = formData as Location
+			const existingLocationIds = currentLocation.locations.map((loc) => loc.id)
+
+			// Filter out locations that are already children of this location
+			const filteredLocations = availableLocations.filter(
+				(location) =>
+					!existingLocationIds.includes(location.id) &&
+					location.id !== currentLocation.id
+			)
+
+			setLocationSelector({
+				isOpen: true,
+				availableLocations: filteredLocations,
+				hoveredLocation: null,
+				mousePosition: { x: 0, y: 0 },
+				selectedLocation: null,
+			})
+		}
 	}
 
 	const closeLocationSelector = () => {
@@ -674,10 +694,25 @@ export const EditModal: React.FC<EditModalProps> = ({
 	}
 
 	const selectLocation = (location: Location) => {
-		if (!formData || entityType !== 'portal') return
+		if (!formData) return
 
-		updateFormData({ destinationLocationId: location.id })
-		closeLocationSelector()
+		if (entityType === 'portal') {
+			updateFormData({ destinationLocationId: location.id })
+			closeLocationSelector()
+		} else if (entityType === 'location') {
+			const currentLocation = formData as Location
+			// Check if location is already a child of this location
+			const locationExists = currentLocation.locations.some(
+				(existingLocation) => existingLocation.id === location.id
+			)
+
+			if (!locationExists && location.id !== currentLocation.id) {
+				// Add the location to the locations array
+				const newLocations = [...currentLocation.locations, location]
+				updateFormData({ locations: newLocations })
+			}
+			closeLocationSelector()
+		}
 	}
 
 	const renderLocationForm = () => {
@@ -1345,14 +1380,24 @@ export const EditModal: React.FC<EditModalProps> = ({
 					onClick={(e) => e.stopPropagation()}
 				>
 					<div className='modal-header'>
-						<h2>Select Destination Location</h2>
+						<h2>
+							{entityType === 'portal'
+								? 'Select Destination Location'
+								: 'Select Child Location'}
+						</h2>
 						<button className='modal-close' onClick={closeLocationSelector}>
 							&times;
 						</button>
 					</div>
 					<div className='modal-body'>
 						<div className='selector-help'>
-							<p>💡 Click on a location to select it as the destination.</p>
+							<p>
+								💡 Click on a location to{' '}
+								{entityType === 'portal'
+									? 'select it as the destination'
+									: 'add it as a child location'}
+								.
+							</p>
 							{locationSelector.selectedLocation && (
 								<p className='selection-count'>
 									Selected:{' '}
