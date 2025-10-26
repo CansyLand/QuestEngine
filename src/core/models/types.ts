@@ -17,11 +17,15 @@ export enum ActionType {
 	AddToInventory = 'addToInventory', // Entity ID (World → Inventory)
 	RemoveFromInventory = 'removeFromInventory', // Entity ID
 	RemoveFromInventoryByName = 'removeFromInventoryByName', // Item name + count
+	RemoveFromInventoryByType = 'removeFromInventoryByType', // Item type + count
 	GrantToInventory = 'grantToInventory', // Entity ID (Void → Inventory)
 	SpawnEntity = 'spawnEntity', // Entity: item/npc/portal ID (Void → World)
+	SpawnEntityByType = 'spawnEntityByType', // Entity type (spawns all matching entities)
 	ClearEntity = 'clearEntity', // Entity ID (World → Void)
+	ClearEntityByType = 'clearEntityByType', // Entity type (clears all matching entities)
 	SetInteractive = 'setInteractive', // Entity ID + InteractiveMode
 	SetInteractiveByName = 'setInteractiveByName', // Item name + InteractiveMode (affects all matching items)
+	SetInteractiveByType = 'setInteractiveByType', // Item type + InteractiveMode (affects all matching items)
 	ActivateQuest = 'activateQuest', // Quest ID
 	AdvanceStep = 'advanceStep', // In current quest
 	ChangeLocation = 'changeLocation', // Location ID
@@ -74,6 +78,7 @@ export interface Item {
 	audioOnGrab?: string
 	state: EntityState
 	interactive: InteractiveMode
+	type?: string // Item type for grouping similar items (e.g., "drum", "crystal")
 	onInteract: Action[] // e.g., [{ type: 'addToInventory', params: { entityId: 'item_id' } }, { type: 'playSound', params: { url: 'grab.mp3' } }]
 }
 
@@ -111,10 +116,11 @@ export interface QuestStep {
 		| 'talkTo'
 		| 'collectEntities'
 		| 'collectByName'
+		| 'collectByType'
 		| 'interact'
 		| 'goToLocation'
 		| 'custom' // For auto-advance logic
-	objectiveParams: Record<string, any> // e.g., { npcId: string } or { entityIds: ['crystal_1', 'crystal_2'] } or { itemName: 'crystal', count: 5 }
+	objectiveParams: Record<string, any> // e.g., { npcId: string } or { entityIds: ['crystal_1', 'crystal_2'] } or { itemName: 'crystal', count: 5 } or { itemType: 'drum' }
 	onStart: Action[] // e.g., set items grabbable, set NPC dialogue
 	onComplete: Action[] // e.g., spawn mushrooms, activateQuest
 	isCompleted?: boolean // Runtime state

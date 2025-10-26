@@ -1748,7 +1748,11 @@ export const EditModal: React.FC<EditModalProps> = ({
 				return <NPCEditForm npc={formData as NPC} onUpdate={updateFormData} />
 			case 'item':
 				return (
-					<ItemEditForm item={formData as Item} onUpdate={updateFormData} />
+					<ItemEditForm
+						item={formData as Item}
+						onUpdate={updateFormData}
+						availableItems={availableItems}
+					/>
 				)
 			case 'portal':
 				return (

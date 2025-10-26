@@ -350,6 +350,24 @@ export class GameEngine {
 				)
 				break
 
+			case ActionType.RemoveFromInventoryByType:
+				commands.push(
+					...this.removeFromInventoryByType(
+						action.params.itemType,
+						action.params.count
+					)
+				)
+				break
+
+			case ActionType.SetInteractiveByType:
+				commands.push(
+					...this.setInteractiveByType(
+						action.params.itemType,
+						action.params.interactiveMode
+					)
+				)
+				break
+
 			case ActionType.SpawnEntity:
 				commands.push({
 					type: 'spawnEntity',
@@ -362,6 +380,10 @@ export class GameEngine {
 				})
 				break
 
+			case ActionType.SpawnEntityByType:
+				commands.push(...this.spawnEntityByType(action.params.entityType))
+				break
+
 			case ActionType.ClearEntity:
 				commands.push({
 					type: 'clearEntity',
@@ -372,6 +394,10 @@ export class GameEngine {
 					type: 'updateEntity',
 					params: { id: action.params.entityId, state: EntityState.Void },
 				})
+				break
+
+			case ActionType.ClearEntityByType:
+				commands.push(...this.clearEntityByType(action.params.entityType))
 				break
 
 			case ActionType.ActivateQuest:
@@ -637,6 +663,204 @@ export class GameEngine {
 			type: 'updateEntity',
 			params: { id: entityId, interactive: interactiveMode },
 		}))
+	}
+
+	private removeFromInventoryByType(
+		itemType: string,
+		count: number
+	): Command[] {
+		// Find entities in inventory that match the type
+		const entitiesToRemove: string[] = []
+		let removedCount = 0
+
+		for (const entityId of this.game.inventory) {
+			if (removedCount >= count) break
+
+			const entity = this.findEntityById(entityId)
+			if (entity && 'type' in entity && entity.type === itemType) {
+				entitiesToRemove.push(entityId)
+				removedCount++
+			}
+		}
+
+		// Remove the entities from inventory
+		for (const entityId of entitiesToRemove) {
+			const index = this.game.inventory.indexOf(entityId)
+			if (index > -1) {
+				this.game.inventory.splice(index, 1)
+				// Set entity state to Void (consumed)
+				this.setEntityState(entityId, EntityState.Void)
+			}
+		}
+
+		return [
+			{
+				type: 'updateInventory',
+				params: { inventory: [...this.game.inventory] },
+			},
+		]
+	}
+
+	private setInteractiveByType(
+		itemType: string,
+		interactiveMode: InteractiveMode
+	): Command[] {
+		const updatedEntityIds: string[] = []
+
+		// Update all items with matching type across all locations
+		for (const location of this.game.locations) {
+			location.items.forEach((item) => {
+				if (item.type === itemType) {
+					item.interactive = interactiveMode
+					updatedEntityIds.push(item.id)
+				}
+			})
+
+			// Portals can also be updated by type
+			location.portals.forEach((portal) => {
+				if (portal.type === itemType) {
+					portal.interactive = interactiveMode
+					updatedEntityIds.push(portal.id)
+				}
+			})
+		}
+
+		// Also check global entities
+		this.game.items.forEach((item) => {
+			if (item.type === itemType) {
+				item.interactive = interactiveMode
+				if (!updatedEntityIds.includes(item.id)) {
+					updatedEntityIds.push(item.id)
+				}
+			}
+		})
+
+		this.game.portals.forEach((portal) => {
+			if (portal.type === itemType) {
+				portal.interactive = interactiveMode
+				if (!updatedEntityIds.includes(portal.id)) {
+					updatedEntityIds.push(portal.id)
+				}
+			}
+		})
+
+		// Return commands for each updated entity
+		return updatedEntityIds.map((entityId) => ({
+			type: 'updateEntity',
+			params: { id: entityId, interactive: interactiveMode },
+		}))
+	}
+
+	private spawnEntityByType(entityType: string): Command[] {
+		const commands: Command[] = []
+		const spawnedEntityIds: string[] = []
+
+		// Spawn all entities of the given type across all locations
+		for (const location of this.game.locations) {
+			// Check items
+			location.items.forEach((item) => {
+				if (item.type === entityType && item.state === EntityState.Void) {
+					item.state = EntityState.World
+					spawnedEntityIds.push(item.id)
+				}
+			})
+
+			// Check portals
+			location.portals.forEach((portal) => {
+				if (portal.type === entityType && portal.state === EntityState.Void) {
+					portal.state = EntityState.World
+					spawnedEntityIds.push(portal.id)
+				}
+			})
+		}
+
+		// Also check global entities
+		this.game.items.forEach((item) => {
+			if (item.type === entityType && item.state === EntityState.Void) {
+				item.state = EntityState.World
+				if (!spawnedEntityIds.includes(item.id)) {
+					spawnedEntityIds.push(item.id)
+				}
+			}
+		})
+
+		this.game.portals.forEach((portal) => {
+			if (portal.type === entityType && portal.state === EntityState.Void) {
+				portal.state = EntityState.World
+				if (!spawnedEntityIds.includes(portal.id)) {
+					spawnedEntityIds.push(portal.id)
+				}
+			}
+		})
+
+		// Return spawn commands for each entity
+		spawnedEntityIds.forEach((entityId) => {
+			commands.push(
+				{ type: 'spawnEntity', params: { id: entityId } },
+				{
+					type: 'updateEntity',
+					params: { id: entityId, state: EntityState.World },
+				}
+			)
+		})
+
+		return commands
+	}
+
+	private clearEntityByType(entityType: string): Command[] {
+		const commands: Command[] = []
+		const clearedEntityIds: string[] = []
+
+		// Clear all entities of the given type across all locations
+		for (const location of this.game.locations) {
+			// Check items
+			location.items.forEach((item) => {
+				if (item.type === entityType && item.state === EntityState.World) {
+					item.state = EntityState.Void
+					clearedEntityIds.push(item.id)
+				}
+			})
+
+			// Check portals
+			location.portals.forEach((portal) => {
+				if (portal.type === entityType && portal.state === EntityState.World) {
+					portal.state = EntityState.Void
+					clearedEntityIds.push(portal.id)
+				}
+			})
+		}
+
+		// Also check global entities
+		this.game.items.forEach((item) => {
+			if (item.type === entityType && item.state === EntityState.World) {
+				item.state = EntityState.Void
+				if (!clearedEntityIds.includes(item.id)) {
+					clearedEntityIds.push(item.id)
+				}
+			}
+		})
+
+		this.game.portals.forEach((portal) => {
+			if (portal.type === entityType && portal.state === EntityState.World) {
+				portal.state = EntityState.Void
+				if (!clearedEntityIds.includes(portal.id)) {
+					clearedEntityIds.push(portal.id)
+				}
+			}
+		})
+
+		// Return clear commands for each entity
+		clearedEntityIds.forEach((entityId) => {
+			commands.push(
+				{ type: 'clearEntity', params: { id: entityId } },
+				{
+					type: 'updateEntity',
+					params: { id: entityId, state: EntityState.Void },
+				}
+			)
+		})
+
+		return commands
 	}
 
 	private activateQuest(questId: string): Command[] {
@@ -971,6 +1195,45 @@ export class GameEngine {
 						} else {
 							console.log(
 								`[QuestEngine] Objective not completed. ${matchingItems.length} < ${count}`
+							)
+						}
+					}
+					break
+
+				case 'collectByType':
+					const { itemType, count: typeCount = 1 } = currentStep.objectiveParams
+					console.log(
+						`[QuestEngine] Checking collectByType objective: looking for "${itemType}" (count: ${typeCount})`
+					)
+					console.log(`[QuestEngine] Current inventory:`, this.game.inventory)
+					if (itemType) {
+						// Count how many items with this type are in inventory
+						let itemsOfTypeCount = 0
+						for (const entityId of this.game.inventory) {
+							// Find the entity and check if it's an Item with matching type
+							const entity = this.findEntityById(entityId)
+							const isItemWithType =
+								entity && 'type' in entity && entity.type === itemType
+							console.log(
+								`[QuestEngine] Checking item ${entityId}: type="${
+									entity && 'type' in entity ? entity.type : 'N/A'
+								}", matches="${isItemWithType}"`
+							)
+							if (isItemWithType) {
+								itemsOfTypeCount++
+							}
+						}
+						console.log(
+							`[QuestEngine] Found ${itemsOfTypeCount} items of type "${itemType}" (required: ${typeCount})`
+						)
+						if (itemsOfTypeCount >= typeCount) {
+							console.log(
+								`[QuestEngine] Objective completed! ${itemsOfTypeCount} >= ${typeCount}`
+							)
+							objectiveCompleted = true
+						} else {
+							console.log(
+								`[QuestEngine] Objective not completed. ${itemsOfTypeCount} < ${typeCount}`
 							)
 						}
 					}

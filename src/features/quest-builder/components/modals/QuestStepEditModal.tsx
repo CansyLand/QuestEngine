@@ -205,6 +205,7 @@ export const QuestStepEditModal: React.FC<QuestStepEditModalProps> = ({
 						<option value='talkTo'>Talk to NPC</option>
 						<option value='collectEntities'>Collect Specific Entities</option>
 						<option value='collectByName'>Collect by Name</option>
+						<option value='collectByType'>Collect by Type</option>
 						<option value='interact'>Interact with Item</option>
 						<option value='goToLocation'>Go to Location</option>
 						<option value='custom'>Custom</option>
@@ -282,6 +283,45 @@ export const QuestStepEditModal: React.FC<QuestStepEditModalProps> = ({
 										</option>
 									)
 								)}
+							</select>
+						</div>
+						<div className='form-group'>
+							<label>Required Count:</label>
+							<input
+								type='number'
+								min='1'
+								value={formData.objectiveParams.count || 1}
+								onChange={(e) =>
+									updateObjectiveParams('count', parseInt(e.target.value) || 1)
+								}
+							/>
+						</div>
+					</>
+				)}
+
+				{formData.objectiveType === 'collectByType' && (
+					<>
+						<div className='form-group'>
+							<label>Select Item Type:</label>
+							<select
+								value={formData.objectiveParams.itemType || ''}
+								onChange={(e) =>
+									updateObjectiveParams('itemType', e.target.value)
+								}
+							>
+								<option value=''>Choose an item type...</option>
+								{/* Get unique item types */}
+								{[
+									...new Set(
+										items
+											.map((item) => item.type)
+											.filter((type) => type && type.trim() !== '')
+									),
+								].map((itemType) => (
+									<option key={itemType} value={itemType}>
+										{itemType}
+									</option>
+								))}
 							</select>
 						</div>
 						<div className='form-group'>
@@ -418,17 +458,29 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
 				<option value={ActionType.RemoveFromInventoryByName}>
 					Remove from Inventory (by Name)
 				</option>
+				<option value={ActionType.RemoveFromInventoryByType}>
+					Remove from Inventory (by Type)
+				</option>
 				<option value={ActionType.SpawnEntity}>
 					Spawn Entity (Void → World)
 				</option>
+				<option value={ActionType.SpawnEntityByType}>
+					Spawn Entity (by Type)
+				</option>
 				<option value={ActionType.ClearEntity}>
 					Clear Entity (World → Void)
+				</option>
+				<option value={ActionType.ClearEntityByType}>
+					Clear Entity (by Type)
 				</option>
 				<option value={ActionType.SetInteractive}>
 					Set Interactive Mode (by ID)
 				</option>
 				<option value={ActionType.SetInteractiveByName}>
 					Set Interactive Mode (by Name)
+				</option>
+				<option value={ActionType.SetInteractiveByType}>
+					Set Interactive Mode (by Type)
 				</option>
 				<option value={ActionType.ActivateQuest}>Activate Quest</option>
 				<option value={ActionType.AdvanceStep}>Advance Step</option>
@@ -512,6 +564,111 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
 						{[...new Set(items.map((item) => item.name))].map((itemName) => (
 							<option key={itemName} value={itemName}>
 								{itemName}
+							</option>
+						))}
+					</select>
+					<select
+						value={action.params.interactiveMode || ''}
+						onChange={(e) =>
+							updateParam('interactiveMode', e.target.value as InteractiveMode)
+						}
+					>
+						<option value={InteractiveMode.NotInteractive}>
+							Not Interactive
+						</option>
+						<option value={InteractiveMode.Grabbable}>Grabbable</option>
+						<option value={InteractiveMode.Interactive}>Interactive</option>
+					</select>
+				</>
+			)}
+
+			{action.type === ActionType.RemoveFromInventoryByType && (
+				<>
+					<select
+						value={action.params.itemType || ''}
+						onChange={(e) => updateParam('itemType', e.target.value)}
+					>
+						<option value=''>Select Item Type</option>
+						{[
+							...new Set(
+								items
+									.map((item) => item.type)
+									.filter((type) => type && type.trim() !== '')
+							),
+						].map((itemType) => (
+							<option key={itemType} value={itemType}>
+								{itemType}
+							</option>
+						))}
+					</select>
+					<input
+						type='number'
+						min='1'
+						placeholder='Count'
+						value={action.params.count || 1}
+						onChange={(e) =>
+							updateParam('count', parseInt(e.target.value) || 1)
+						}
+					/>
+				</>
+			)}
+
+			{action.type === ActionType.SpawnEntityByType && (
+				<select
+					value={action.params.entityType || ''}
+					onChange={(e) => updateParam('entityType', e.target.value)}
+				>
+					<option value=''>Select Entity Type</option>
+					{[
+						...new Set(
+							[...items, ...locations.flatMap((l) => l.portals)]
+								.map((entity) => entity.type)
+								.filter((type) => type && type.trim() !== '')
+						),
+					].map((entityType) => (
+						<option key={entityType} value={entityType}>
+							{entityType}
+						</option>
+					))}
+				</select>
+			)}
+
+			{action.type === ActionType.ClearEntityByType && (
+				<select
+					value={action.params.entityType || ''}
+					onChange={(e) => updateParam('entityType', e.target.value)}
+				>
+					<option value=''>Select Entity Type</option>
+					{[
+						...new Set(
+							[...items, ...locations.flatMap((l) => l.portals)]
+								.map((entity) => entity.type)
+								.filter((type) => type && type.trim() !== '')
+						),
+					].map((entityType) => (
+						<option key={entityType} value={entityType}>
+							{entityType}
+						</option>
+					))}
+				</select>
+			)}
+
+			{action.type === ActionType.SetInteractiveByType && (
+				<>
+					<select
+						value={action.params.itemType || ''}
+						onChange={(e) => updateParam('itemType', e.target.value)}
+					>
+						<option value=''>Select Item Type</option>
+						{[
+							...new Set(
+								items
+									.map((item) => item.type)
+									.filter((type) => type && type.trim() !== '')
+							),
+						].map((itemType) => (
+							<option key={itemType} value={itemType}>
+								{itemType}
 							</option>
 						))}
 					</select>

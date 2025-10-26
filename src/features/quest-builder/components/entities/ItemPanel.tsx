@@ -54,6 +54,7 @@ export const ItemPanel: React.FC<ItemPanelProps> = ({
 						</div>
 						<div className='item-details'>
 							<h3>{item.name}</h3>
+							{item.type && <p>Type: {item.type}</p>}
 							<p>Interactive: {item.interactive}</p>
 							<p>State: {item.state}</p>
 						</div>
