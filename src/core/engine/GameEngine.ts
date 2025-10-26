@@ -283,7 +283,7 @@ export class GameEngine {
 		}
 
 		// Check quest objectives
-		commands.push(...this.checkObjectives())
+		commands.push(...this.checkObjectives(undefined, itemId))
 
 		return commands
 	}
@@ -1297,7 +1297,10 @@ export class GameEngine {
 		return commands
 	}
 
-	private checkObjectives(interactedNpcId?: string): Command[] {
+	private checkObjectives(
+		interactedNpcId?: string,
+		interactedItemId?: string
+	): Command[] {
 		const commands: Command[] = []
 
 		console.log(
@@ -1412,7 +1415,13 @@ export class GameEngine {
 					break
 
 				case 'interact':
-					// Custom interaction logic
+					// Check if this is the item that was just interacted with
+					if (
+						interactedItemId &&
+						currentStep.objectiveParams.itemId === interactedItemId
+					) {
+						objectiveCompleted = true
+					}
 					break
 
 				case 'custom':
