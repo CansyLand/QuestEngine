@@ -454,11 +454,53 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 	}, [])
 
 	useEffect(() => {
-		if (backgroundMusic && audioRef.current) {
-			audioRef.current.src = backgroundMusic
-			audioRef.current.play().catch(console.error)
+		if (backgroundMusic && projectPath && audioRef.current) {
+			console.log('🎵 GamePlayer: Loading background music:', backgroundMusic)
+
+			// Use Electron API to read audio file as data URL (same as sound effects)
+			const fullPath = projectPath + backgroundMusic
+			console.log('GamePlayer: Full background music path:', fullPath)
+
+			const electronAPI = (window as any).electronAPI
+			if (electronAPI && electronAPI.readAudio) {
+				electronAPI
+					.readAudio(fullPath)
+					.then((dataUrl: string | null) => {
+						if (dataUrl && audioRef.current) {
+							console.log('GamePlayer: Setting background music data URL')
+							audioRef.current.src = dataUrl
+							audioRef.current.loop = true // Background music should loop
+							audioRef.current.volume = 0.5 // Set moderate volume for background
+							audioRef.current
+								.play()
+								.then(() => {
+									console.log('GamePlayer: Background music started playing')
+								})
+								.catch((playError) => {
+									console.error(
+										'GamePlayer: Failed to play background music:',
+										playError
+									)
+								})
+						} else {
+							console.error('GamePlayer: Failed to read background music file')
+						}
+					})
+					.catch((apiError: any) => {
+						console.error('GamePlayer: electronAPI.readAudio failed:', apiError)
+					})
+			} else {
+				console.error(
+					'GamePlayer: electronAPI not available for background music'
+				)
+			}
+		} else if (!backgroundMusic && audioRef.current) {
+			// Stop background music if no music is set
+			console.log('GamePlayer: Stopping background music (no music specified)')
+			audioRef.current.pause()
+			audioRef.current.src = ''
 		}
-	}, [backgroundMusic])
+	}, [backgroundMusic, projectPath])
 
 	const startGameSession = async () => {
 		try {
