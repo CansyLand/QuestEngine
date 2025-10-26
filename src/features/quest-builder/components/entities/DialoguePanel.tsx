@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { DialogueSequence, NPC, Quest, QuestStep } from '@/core/models/types'
 import { EntityPanel } from './EntityPanel'
 import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
@@ -22,6 +22,18 @@ export const DialoguePanel: React.FC<DialoguePanelProps> = ({
 	onDelete,
 	onAttachQuestSteps,
 }) => {
+	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	useEffect(() => {
+		const getProjectPath = async () => {
+			const electronAPI = (window as any).electronAPI
+			const path = electronAPI
+				? await electronAPI.getQuestEditorProjectPath()
+				: null
+			setProjectPath(path)
+		}
+		getProjectPath()
+	}, [])
 	return (
 		<EntityPanel
 			title='Dialogue Sequences'
@@ -31,6 +43,10 @@ export const DialoguePanel: React.FC<DialoguePanelProps> = ({
 				const npc = dialogue.npcId
 					? npcs.find((n) => n.id === dialogue.npcId)
 					: null
+
+				// Construct image URL with project path
+				const displayImage =
+					npc?.image && projectPath ? projectPath + npc.image : npc?.image || ''
 
 				// Get quest step assigned to this dialogue
 				const allQuestSteps = quests.flatMap((quest) =>
@@ -48,7 +64,7 @@ export const DialoguePanel: React.FC<DialoguePanelProps> = ({
 					<div className='entity-card dialogue-card'>
 						<div className='npc-portrait'>
 							<ImageDisplay
-								src={npc?.image || ''}
+								src={displayImage}
 								alt={`${npc?.name || 'Unknown'} image`}
 								className='portrait-image'
 								fallback={<div className='no-portrait'>No NPC</div>}
