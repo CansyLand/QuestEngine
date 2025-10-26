@@ -531,13 +531,22 @@ export class QuestEngineService {
 	 */
 	async getEntityLinks(): Promise<any> {
 		try {
-			const linksPath = path.join(this.projectPath!, 'entityLinks.json')
+			const linksPath = path.join(
+				this.projectPath!,
+				'src/questEngine/data/entityLinks.json'
+			)
 			try {
 				await fsPromises.access(linksPath)
 				const data = await fsPromises.readFile(linksPath, 'utf8')
-				return JSON.parse(data)
+				return {
+					success: true,
+					data: JSON.parse(data),
+				}
 			} catch {
-				return {}
+				return {
+					success: true,
+					data: {},
+				}
 			}
 		} catch (error) {
 			return {
@@ -555,7 +564,10 @@ export class QuestEngineService {
 		questEntityId: string
 	): Promise<any> {
 		try {
-			const linksPath = path.join(this.projectPath!, 'entityLinks.json')
+			const linksPath = path.join(
+				this.projectPath!,
+				'src/questEngine/data/entityLinks.json'
+			)
 			let data: Record<string, any> = {}
 
 			try {

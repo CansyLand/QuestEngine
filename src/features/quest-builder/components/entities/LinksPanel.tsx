@@ -194,9 +194,9 @@ export const LinksPanel: React.FC<LinksPanelProps> = ({ gameData }) => {
 
 		try {
 			// Update entityLinks.json via API
-			const response = await apiRequest(`/entityLinks/${dclEntityId}`, {
+			const response = await apiRequest('/entityLinks', {
 				method: 'PATCH',
-				body: JSON.stringify({ questEntityId: itemId }),
+				body: JSON.stringify({ entityId: dclEntityId, questEntityId: itemId }),
 			})
 
 			if (response.success) {
@@ -255,9 +255,9 @@ export const LinksPanel: React.FC<LinksPanelProps> = ({ gameData }) => {
 		setSaveError(null)
 
 		try {
-			const response = await apiRequest(`/entityLinks/${dclEntityId}`, {
+			const response = await apiRequest('/entityLinks', {
 				method: 'PATCH',
-				body: JSON.stringify({ questEntityId: null }),
+				body: JSON.stringify({ entityId: dclEntityId, questEntityId: null }),
 			})
 
 			if (response.success) {
@@ -410,10 +410,12 @@ export const LinksPanel: React.FC<LinksPanelProps> = ({ gameData }) => {
 									)}
 								</div>
 								<div className='dcl-info-section'>
-									<div className='entity-name'>
-										<strong>{entity.name}</strong>
+									<div className='entity-name-dcl-entity'>
+										<strong>{entity.name || `Entity ${entity.id}`}</strong>
 									</div>
-									<div className='entity-id'>ID: {entity.id}</div>
+									<div className='entity-details'>
+										<span className='entity-id'>ID: {entity.id}</span>
+									</div>
 									<div className='entity-parent'>
 										{(() => {
 											if (entity.parentName) {

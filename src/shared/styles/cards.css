@@ -1129,10 +1129,17 @@
   gap: 0.25rem;
 }
 
-.entity-name {
+.entity-name-dcl-entity {
   font-size: 1rem;
   color: #00ffff;
   font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.entity-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .entity-id {
