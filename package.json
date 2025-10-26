@@ -1,6 +1,6 @@
 {
 	"name": "questengine",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"main": "build/main.js",
 	"scripts": {
 		"start": "cross-env NODE_ENV=development concurrently \"npm run start:react\" \"wait-on http://localhost:3000 && electron .\"",

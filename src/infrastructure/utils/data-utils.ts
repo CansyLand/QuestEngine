@@ -169,30 +169,31 @@ export async function updateEntityLinks(
 
 	const updatedLinks: Record<string, any> = {}
 
-	// Process existing entities
-	for (const entityId in existingLinks) {
+	// Process all entities from main.composite (newLinks)
+	for (const entityId in newLinks) {
+		const newEntity = newLinks[entityId]
 		const existingEntity = existingLinks[entityId]
 
-		if (newLinks[entityId]) {
-			// Entity still exists, update with new data (including name changes)
+		if (existingEntity) {
+			// Entity exists in both - preserve questEntityId, update other data
 			updatedLinks[entityId] = {
-				...newLinks[entityId],
+				...newEntity,
 				questEntityId: existingEntity.questEntityId, // Preserve existing quest entity links
 			}
 		} else {
-			// Entity was removed from main.composite - delete it entirely
+			// New entity from main.composite
+			updatedLinks[entityId] = newEntity
 			console.log(
-				`Removing entity ${entityId} (${existingEntity.name}) from entityLinks.json`
+				`Adding new entity ${entityId} (${newEntity.name}) to entityLinks.json`
 			)
 		}
 	}
 
-	// Add any new entities from main.composite
-	for (const entityId in newLinks) {
-		if (!existingLinks[entityId]) {
-			updatedLinks[entityId] = newLinks[entityId]
+	// Remove entities that no longer exist in main.composite
+	for (const entityId in existingLinks) {
+		if (!newLinks[entityId]) {
 			console.log(
-				`Adding new entity ${entityId} (${newLinks[entityId].name}) to entityLinks.json`
+				`Removing entity ${entityId} (${existingLinks[entityId].name}) from entityLinks.json`
 			)
 		}
 	}
