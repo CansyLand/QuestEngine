@@ -26,7 +26,32 @@ export class GameEngine {
 
 	async initializeGame(): Promise<void> {
 		this.game = await this.persistence.loadGame()
+		this.initializeActiveQuests()
 		this.resetClearedStates()
+	}
+
+	private initializeActiveQuests(): void {
+		// Initialize active quests based on quest states
+		// A quest is active if it's not completed and has at least one incomplete step
+		this.game.activeQuests = []
+
+		this.game.quests.forEach((quest) => {
+			if (!quest.completed) {
+				// Check if the quest has any incomplete steps
+				const hasIncompleteSteps = quest.steps.some((step) => !step.isCompleted)
+				if (hasIncompleteSteps) {
+					this.game.activeQuests.push(quest.id)
+
+					// Set the active step to the first incomplete step
+					const firstIncompleteStep = quest.steps.find(
+						(step) => !step.isCompleted
+					)
+					if (firstIncompleteStep) {
+						quest.activeStepId = firstIncompleteStep.id
+					}
+				}
+			}
+		})
 	}
 
 	private resetClearedStates(): void {
@@ -77,11 +102,21 @@ export class GameEngine {
 			commands.push(...this.changeLocation(this.game.currentLocationId))
 		}
 
-		// Activate starting quests (those with order 0 or prerequisites met)
-		const startingQuests = this.game.quests.filter((quest) => quest.order === 0)
-		startingQuests.forEach((quest) => {
-			commands.push(...this.activateQuest(quest.id))
+		// Execute onStart actions for current steps of active quests
+		this.game.activeQuests.forEach((questId) => {
+			const quest = this.game.quests.find((q) => q.id === questId)
+			if (quest && quest.activeStepId) {
+				const currentStep = quest.steps.find((s) => s.id === quest.activeStepId)
+				if (currentStep && currentStep.onStart) {
+					currentStep.onStart.forEach((action) => {
+						commands.push(...this.executeAction(action))
+					})
+				}
+			}
 		})
+
+		// Send initial quest progress update
+		commands.push(...this.sendQuestProgressUpdate())
 
 		return commands
 	}
@@ -953,26 +988,55 @@ export class GameEngine {
 		}
 
 		this.game.activeQuests.push(questId)
-		quest.activeStepId = quest.steps[0]?.id
 
-		// Execute onStart actions for first step
-		if (quest.steps[0]) {
-			quest.steps[0].onStart.forEach((action) => {
+		// Find the first step that is not completed
+		const firstIncompleteStep = quest.steps.find((step) => !step.isCompleted)
+
+		if (firstIncompleteStep) {
+			quest.activeStepId = firstIncompleteStep.id
+
+			// Execute onStart actions for the current step
+			firstIncompleteStep.onStart.forEach((action) => {
 				commands.push(...this.executeAction(action))
 			})
 
 			commands.push({
 				type: 'log',
 				params: {
-					message: `Quest started: ${quest.title}. Now starting: ${quest.steps[0].name}`,
+					message: `Quest started: ${quest.title}. Now starting: ${firstIncompleteStep.name}`,
 				},
 			})
+		} else {
+			// All steps are completed, mark quest as completed
+			quest.completed = true
+			this.game.activeQuests = this.game.activeQuests.filter(
+				(id) => id !== questId
+			)
+
+			commands.push({
+				type: 'questCompleted',
+				params: { questId, questTitle: quest.title, quest },
+			})
+
+			commands.push({
+				type: 'log',
+				params: {
+					message: `Quest completed: ${quest.title}`,
+				},
+			})
+
+			// Send quest progress update
+			commands.push(...this.sendQuestProgressUpdate())
+			return commands
 		}
 
 		commands.push({
 			type: 'questActivated',
-			params: { questId, questTitle: quest.title },
+			params: { questId, questTitle: quest.title, quest },
 		})
+
+		// Send quest progress update
+		commands.push(...this.sendQuestProgressUpdate())
 
 		return commands
 	}
@@ -1024,9 +1088,12 @@ export class GameEngine {
 				)
 				commands.push({
 					type: 'questCompleted',
-					params: { questId, questTitle: quest.title },
+					params: { questId, questTitle: quest.title, quest },
 				})
 			}
+
+			// Send quest progress update after any step advancement
+			commands.push(...this.sendQuestProgressUpdate())
 
 			break // Only advance one step at a time
 		}
@@ -1295,8 +1362,10 @@ export class GameEngine {
 
 				case 'collectByType':
 					const { itemType, count: typeCount = 1 } = currentStep.objectiveParams
+					// Ensure count is at least 1 if not specified or empty
+					const targetCount = typeCount && typeCount > 0 ? typeCount : 1
 					console.log(
-						`[QuestEngine] Checking collectByType objective: looking for "${itemType}" (count: ${typeCount})`
+						`[QuestEngine] Checking collectByType objective: looking for "${itemType}" (count: ${targetCount})`
 					)
 					console.log(`[QuestEngine] Current inventory:`, this.game.inventory)
 					if (itemType) {
@@ -1317,16 +1386,16 @@ export class GameEngine {
 							}
 						}
 						console.log(
-							`[QuestEngine] Found ${itemsOfTypeCount} items of type "${itemType}" (required: ${typeCount})`
+							`[QuestEngine] Found ${itemsOfTypeCount} items of type "${itemType}" (required: ${targetCount})`
 						)
-						if (itemsOfTypeCount >= typeCount) {
+						if (itemsOfTypeCount >= targetCount) {
 							console.log(
-								`[QuestEngine] Objective completed! ${itemsOfTypeCount} >= ${typeCount}`
+								`[QuestEngine] Objective completed! ${itemsOfTypeCount} >= ${targetCount}`
 							)
 							objectiveCompleted = true
 						} else {
 							console.log(
-								`[QuestEngine] Objective not completed. ${itemsOfTypeCount} < ${typeCount}`
+								`[QuestEngine] Objective not completed. ${itemsOfTypeCount} < ${targetCount}`
 							)
 						}
 					}
@@ -1566,5 +1635,22 @@ export class GameEngine {
 	// Save game state
 	async saveGame(): Promise<void> {
 		await this.persistence.saveGame(this.game)
+	}
+
+	// Send quest progress update to frontend
+	private sendQuestProgressUpdate(): Command[] {
+		// Get all quests that are either active or completed
+		const relevantQuests = this.game.quests.filter(
+			(quest) => this.game.activeQuests.includes(quest.id) || quest.completed
+		)
+
+		return [
+			{
+				type: 'questProgressUpdate',
+				params: {
+					quests: relevantQuests,
+				},
+			},
+		]
 	}
 }

@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react'
 import { startGame, sendInteraction, getDialogue } from '@/shared/utils/api'
 import { Grid } from './Grid'
 import { DialoguePanel } from './DialoguePanel'
+import { QuestProgressPanel } from './QuestProgressPanel'
 import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
+import { Quest } from '@/core/models/types'
 import '@/shared/styles/base.css'
 import '@/shared/styles/Player.css'
 
@@ -27,6 +29,8 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 	const [backgroundMusic, setBackgroundMusic] = useState<string>('')
 	const [backgroundImage, setBackgroundImage] = useState<string>('')
 	const [projectPath, setProjectPath] = useState<string | null>(null)
+	const [activeQuests, setActiveQuests] = useState<Quest[]>([])
+	const [completedQuests, setCompletedQuests] = useState<Quest[]>([])
 	const audioRef = useRef<HTMLAudioElement>(null)
 
 	useEffect(() => {
@@ -275,6 +279,16 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 							command.params.questTitle || command.params.questId
 						}`
 					)
+					// Add quest to active quests if we have the full quest data
+					if (command.params.quest) {
+						setActiveQuests((prev) => {
+							const exists = prev.find((q) => q.id === command.params.quest.id)
+							if (!exists) {
+								return [...prev, command.params.quest]
+							}
+							return prev
+						})
+					}
 					break
 				case 'questCompleted':
 					addToQuestLog(
@@ -282,6 +296,42 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 							command.params.questTitle || command.params.questId
 						}`
 					)
+					// Move quest from active to completed
+					if (command.params.questId) {
+						setActiveQuests((prev) =>
+							prev.filter((q) => q.id !== command.params.questId)
+						)
+						// Add to completed if we have the quest data
+						if (command.params.quest) {
+							setCompletedQuests((prev) => {
+								const exists = prev.find(
+									(q) => q.id === command.params.quest.id
+								)
+								if (!exists) {
+									return [...prev, { ...command.params.quest, completed: true }]
+								}
+								return prev
+							})
+						}
+					}
+					break
+				case 'questProgressUpdate':
+					// Update quest progress
+					if (command.params.quests) {
+						const active: Quest[] = []
+						const completed: Quest[] = []
+
+						command.params.quests.forEach((quest: Quest) => {
+							if (quest.completed) {
+								completed.push(quest)
+							} else {
+								active.push(quest)
+							}
+						})
+
+						setActiveQuests(active)
+						setCompletedQuests(completed)
+					}
 					break
 				case 'showDialogue':
 					// Fetch the dialogue sequence and show it
@@ -583,6 +633,12 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 			<div className='project-name-display'>
 				<h3>{getProjectName()}</h3>
 			</div>
+
+			{/* Quest Progress Panel */}
+			<QuestProgressPanel
+				activeQuests={activeQuests}
+				completedQuests={completedQuests}
+			/>
 
 			{/* Dialogue Panel */}
 			{activeDialogue && (
