@@ -56,6 +56,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	getThumbnails: (): Promise<any> => ipcRenderer.invoke('get-thumbnails'),
 	readThumbnail: (filePath: string): Promise<string | null> =>
 		ipcRenderer.invoke('read-thumbnail', filePath),
+	readAudio: (filePath: string): Promise<string | null> =>
+		ipcRenderer.invoke('read-audio', filePath),
 	// Game operations
 	startGame: (): Promise<any> => ipcRenderer.invoke('start-game'),
 	processInteraction: (type: string, params: any): Promise<any> =>

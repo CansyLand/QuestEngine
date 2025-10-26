@@ -3,12 +3,14 @@ import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 import '@/shared/styles/Grid.css'
 
 interface GridProps {
-	onEntityClick: (entityType: string, entityId: string) => void
+	onEntityClick: (entityType: string, entityId: string, params?: any) => void
+	onExecuteCommand?: (command: any) => void
 	backgroundImage: string
 	entities?: any[]
 	childLocations?: any[]
 	currentChildLocationIndex?: number
 	onNavigateChildLocation?: (direction: 'prev' | 'next') => void
+	projectPath?: string | null
 }
 
 // Simple seeded random number generator
@@ -25,29 +27,23 @@ function seededRandom(seed: string): () => number {
 
 export const Grid: React.FC<GridProps> = ({
 	onEntityClick,
+	onExecuteCommand,
 	backgroundImage,
 	entities = [],
 	childLocations = [],
 	currentChildLocationIndex = 0,
 	onNavigateChildLocation,
+	projectPath = null,
 }) => {
 	const [hoveredEntity, setHoveredEntity] = useState<any>(null)
 	const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-	const [projectPath, setProjectPath] = useState<string | null>(null)
-
-	useEffect(() => {
-		const getProjectPath = async () => {
-			const electronAPI = (window as any).electronAPI
-			const path = electronAPI
-				? await electronAPI.getQuestEditorProjectPath()
-				: null
-			setProjectPath(path)
-		}
-		getProjectPath()
-	}, [])
 
 	const getEntityImageUrl = (imagePath: string) => {
 		return imagePath && projectPath ? projectPath + imagePath : imagePath
+	}
+
+	const getAudioUrl = (audioPath: string) => {
+		return audioPath && projectPath ? projectPath + audioPath : audioPath
 	}
 
 	// Use the provided entities from the game state
@@ -140,17 +136,60 @@ export const Grid: React.FC<GridProps> = ({
 		return cells
 	}, [gameEntities])
 
-	const handleCellClick = (x: number, y: number) => {
+	const handleCellClick = async (x: number, y: number) => {
+		console.log('Grid: handleCellClick called for position:', x, y)
 		const entity = gameEntities.find((e) => e.x === x && e.y === y)
+		console.log('Grid: Found entity:', entity)
 		if (entity) {
-			onEntityClick(entity.entityType, entity.id)
+			// For grabbable items, only play audio on click, don't collect
+			// Collection happens via E key press
+			if (entity.interactive === 'grabbable') {
+				console.log(
+					'Grid: Entity is grabbable, calling onEntityClick with playAudioOnly'
+				)
+				// Send interaction that only plays audio for grabbable items
+				await onEntityClick(entity.entityType, entity.id, {
+					playAudioOnly: true,
+				})
+			} else {
+				console.log('Grid: Entity is not grabbable, calling onEntityClick')
+				// For interactive items, normal click behavior
+				await onEntityClick(entity.entityType, entity.id)
+			}
 		}
 	}
 
 	const handleMouseEnter = (entity: any, e: React.MouseEvent) => {
+		console.log('🎵 Grid: handleMouseEnter triggered')
+		console.log('🎵 Grid: entity:', entity)
+		console.log('🎵 Grid: entity.audio:', entity?.audio)
+		console.log('🎵 Grid: onExecuteCommand available:', !!onExecuteCommand)
+
 		if (entity) {
 			setHoveredEntity(entity)
 			setMousePosition({ x: e.clientX, y: e.clientY })
+
+			// Play hover audio if available
+			if (entity.audio && onExecuteCommand) {
+				console.log(
+					'🎵 Grid: Sending playSound command for hover audio:',
+					entity.audio
+				)
+				// Use the same command system as interaction audio for consistency
+				onExecuteCommand({
+					type: 'playSound',
+					params: {
+						url: entity.audio,
+						volume: 0.3, // Lower volume for hover audio
+					},
+				})
+			} else {
+				console.log(
+					'🎵 Grid: NOT sending playSound command - missing entity.audio or onExecuteCommand'
+				)
+			}
+		} else {
+			console.log('🎵 Grid: No entity in handleMouseEnter')
 		}
 	}
 
@@ -161,6 +200,36 @@ export const Grid: React.FC<GridProps> = ({
 	const handleMouseLeave = () => {
 		setHoveredEntity(null)
 	}
+
+	const getInteractionHint = (entity: any) => {
+		if (!entity || entity.interactive === 'notInteractive') {
+			return null
+		}
+		if (entity.interactive === 'interactive') {
+			return 'Click to interact'
+		}
+		if (entity.interactive === 'grabbable') {
+			return 'Click to interact and E for collect'
+		}
+		return null
+	}
+
+	// Add keyboard event handling
+	useEffect(() => {
+		const handleKeyPress = async (e: KeyboardEvent) => {
+			if (e.key === 'e' || e.key === 'E') {
+				if (hoveredEntity && hoveredEntity.interactive === 'grabbable') {
+					// Send collect interaction for E key (actually collects the item)
+					await onEntityClick(hoveredEntity.entityType, hoveredEntity.id, {
+						collect: true,
+					})
+				}
+			}
+		}
+
+		document.addEventListener('keypress', handleKeyPress)
+		return () => document.removeEventListener('keypress', handleKeyPress)
+	}, [hoveredEntity, onEntityClick])
 
 	return (
 		<div className='grid-container'>
@@ -243,6 +312,11 @@ export const Grid: React.FC<GridProps> = ({
 								fallback={<div className='no-image'>?</div>}
 							/>
 						</div>
+						{getInteractionHint(hoveredEntity) && (
+							<div className='interaction-hint'>
+								{getInteractionHint(hoveredEntity)}
+							</div>
+						)}
 					</div>
 				</div>
 			)}

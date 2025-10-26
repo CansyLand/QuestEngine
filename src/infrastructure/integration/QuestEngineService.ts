@@ -411,6 +411,29 @@ export class QuestEngineService {
 	}
 
 	/**
+	 * Read audio file as data URL
+	 */
+	async readAudio(filePath: string): Promise<string | null> {
+		try {
+			const buffer = await fsPromises.readFile(filePath)
+			const ext = path.extname(filePath).toLowerCase()
+			const mimeType =
+				{
+					'.mp3': 'audio/mpeg',
+					'.wav': 'audio/wav',
+					'.ogg': 'audio/ogg',
+					'.m4a': 'audio/mp4',
+					'.aac': 'audio/aac',
+				}[ext] || 'audio/mpeg'
+
+			return `data:${mimeType};base64,${buffer.toString('base64')}`
+		} catch (error) {
+			console.error('Error reading audio file:', error)
+			return null
+		}
+	}
+
+	/**
 	 * Start game session for player
 	 */
 	startGame(): any {

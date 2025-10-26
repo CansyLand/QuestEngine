@@ -94,7 +94,7 @@ export class GameEngine {
 		switch (type) {
 			case 'clickItem':
 				console.log(`Handling item interaction for ${params.id}`)
-				commands.push(...this.handleItemInteraction(params.id))
+				commands.push(...this.handleItemInteraction(params.id, params))
 				break
 			case 'clickNPC':
 				console.log(`Handling NPC interaction for ${params.id}`)
@@ -120,14 +120,23 @@ export class GameEngine {
 		return commands
 	}
 
-	private handleItemInteraction(itemId: string): Command[] {
+	private handleItemInteraction(itemId: string, params?: any): Command[] {
 		const commands: Command[] = []
 		const currentLocation = this.getCurrentLocation()
 
-		if (!currentLocation) return commands
+		console.log(
+			`handleItemInteraction: Looking for item ${itemId}, params:`,
+			params
+		)
+
+		if (!currentLocation) {
+			console.log(`handleItemInteraction: No current location found`)
+			return commands
+		}
 
 		// Check parent location first
 		let item = currentLocation.items.find((i) => i.id === itemId)
+		console.log(`handleItemInteraction: Found item in parent location:`, item)
 
 		// If not found and we have an active child location, check there
 		if (!item && this.game.currentChildLocationId) {
@@ -135,35 +144,107 @@ export class GameEngine {
 				(l) => l.id === this.game.currentChildLocationId
 			)
 			item = childLocation?.items.find((i) => i.id === itemId)
+			console.log(`handleItemInteraction: Found item in child location:`, item)
 		}
 
-		if (!item || item.state !== EntityState.World) return commands
-
-		// Play interaction audio if specified
-		if (item.audioOnInteraction) {
-			commands.push({
-				type: 'playSound',
-				params: { url: item.audioOnInteraction },
-			})
+		if (!item) {
+			console.log(`handleItemInteraction: Item ${itemId} not found`)
+			return commands
 		}
 
-		// Execute onInteract actions
-		item.onInteract.forEach((action) => {
-			commands.push(...this.executeAction(action))
-		})
+		if (item.state !== EntityState.World) {
+			console.log(
+				`handleItemInteraction: Item ${itemId} is not in World state, current state: ${item.state}`
+			)
+			return commands
+		}
 
-		// Handle specific interaction modes
+		console.log(
+			`handleItemInteraction: Processing item ${itemId}, interactive: ${item.interactive}`
+		)
+
+		// For grabbable items, handle click vs collect differently
 		if (item.interactive === InteractiveMode.Grabbable) {
-			// Add to inventory and remove from world
-			commands.push(...this.addToInventory(itemId))
+			console.log(
+				`handleItemInteraction: Item is grabbable, params.collect: ${params?.collect}, params.playAudioOnly: ${params?.playAudioOnly}`
+			)
+			if (params?.collect) {
+				// E key pressed - collect the item
+				console.log(`handleItemInteraction: Collecting grabbable item`)
+				// Play interaction audio if specified
+				if (item.audioOnInteraction) {
+					console.log(
+						`handleItemInteraction: Playing interaction audio: ${item.audioOnInteraction}`
+					)
+					commands.push({
+						type: 'playSound',
+						params: { url: item.audioOnInteraction },
+					})
+				}
 
-			// Play grab audio
-			if (item.audioOnGrab) {
+				// Execute onInteract actions
+				item.onInteract.forEach((action) => {
+					console.log(
+						`handleItemInteraction: Executing onInteract action: ${action.type}`
+					)
+					commands.push(...this.executeAction(action))
+				})
+
+				// Add to inventory and remove from world
+				commands.push(...this.addToInventory(itemId))
+
+				// Play grab audio
+				if (item.audioOnGrab) {
+					console.log(
+						`handleItemInteraction: Playing grab audio: ${item.audioOnGrab}`
+					)
+					commands.push({
+						type: 'playSound',
+						params: { url: item.audioOnGrab },
+					})
+				}
+			} else if (params?.playAudioOnly) {
+				// Mouse click - only play audio, don't collect
+				console.log(
+					`handleItemInteraction: Playing audio only for grabbable item`
+				)
+				if (item.audioOnInteraction) {
+					console.log(
+						`handleItemInteraction: Playing interaction audio: ${item.audioOnInteraction}`
+					)
+					commands.push({
+						type: 'playSound',
+						params: { url: item.audioOnInteraction },
+					})
+				}
+			}
+		} else {
+			// For interactive items, normal behavior - but filter out AddToInventory actions
+			console.log(`handleItemInteraction: Item is interactive (not grabbable)`)
+			// Play interaction audio if specified
+			if (item.audioOnInteraction) {
+				console.log(
+					`handleItemInteraction: Playing interaction audio: ${item.audioOnInteraction}`
+				)
 				commands.push({
 					type: 'playSound',
-					params: { url: item.audioOnGrab },
+					params: { url: item.audioOnInteraction },
 				})
 			}
+
+			// Execute onInteract actions, but filter out AddToInventory for non-grabbable items
+			item.onInteract.forEach((action) => {
+				if (action.type === ActionType.AddToInventory) {
+					console.log(
+						`handleItemInteraction: Skipping AddToInventory action for non-grabbable item`
+					)
+					return // Skip AddToInventory for interactive items
+				}
+				console.log(
+					`handleItemInteraction: Executing onInteract action: ${action.type}`
+				)
+				commands.push(...this.executeAction(action))
+			})
 		}
 
 		// Check quest objectives
@@ -988,6 +1069,12 @@ export class GameEngine {
 		const gridEntities: GridEntity[] = []
 
 		location.items.forEach((item) => {
+			console.log(
+				'🎵 GameEngine: Creating grid entity for item:',
+				item.id,
+				'audio:',
+				item.audio
+			)
 			gridEntities.push({
 				id: item.id,
 				name: item.name,
@@ -995,6 +1082,7 @@ export class GameEngine {
 				image: item.image,
 				state: item.state,
 				interactive: item.interactive,
+				audio: item.audio,
 			})
 		})
 
@@ -1048,6 +1136,7 @@ export class GameEngine {
 					image: item.image,
 					state: item.state,
 					interactive: item.interactive,
+					audio: item.audio,
 				})
 			}
 		})
@@ -1122,6 +1211,10 @@ export class GameEngine {
 			entities = this.createGridEntities(newLocation)
 		}
 
+		console.log(
+			'🎵 GameEngine: Sending updateLocation with entities:',
+			entities.map((e) => ({ id: e.id, audio: e.audio }))
+		)
 		commands.push({
 			type: 'updateLocation',
 			params: {

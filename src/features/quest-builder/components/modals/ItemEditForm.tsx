@@ -117,13 +117,40 @@ export const ItemEditForm: React.FC<ItemEditFormProps> = ({
 				)}
 			</div>
 			<div className='form-group'>
-				<label>Audio:</label>
+				<label>Audio (Hover):</label>
 				<input
 					type='text'
 					value={item.audio || ''}
 					onChange={(e) => onUpdate({ audio: e.target.value })}
-					placeholder='/assets/sfx/...'
+					placeholder='/assets/sfx/hover-sound.mp3'
 				/>
+				<small className='field-description'>
+					Plays when hovering over the item in the game
+				</small>
+			</div>
+			<div className='form-group'>
+				<label>Audio on Interaction:</label>
+				<input
+					type='text'
+					value={item.audioOnInteraction || ''}
+					onChange={(e) => onUpdate({ audioOnInteraction: e.target.value })}
+					placeholder='/assets/sfx/interaction-sound.mp3'
+				/>
+				<small className='field-description'>
+					Plays when clicking interactive items
+				</small>
+			</div>
+			<div className='form-group'>
+				<label>Audio on Grab:</label>
+				<input
+					type='text'
+					value={item.audioOnGrab || ''}
+					onChange={(e) => onUpdate({ audioOnGrab: e.target.value })}
+					placeholder='/assets/sfx/grab-sound.mp3'
+				/>
+				<small className='field-description'>
+					Plays when collecting grabbable items
+				</small>
 			</div>
 			<div className='form-group'>
 				<label>Interactive:</label>

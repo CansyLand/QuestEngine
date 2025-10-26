@@ -1135,3 +1135,17 @@
     rgba(255, 0, 255, 0.3) 75%,
     transparent 100%);
 }
+
+.field-description {
+    display: block;
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 2px;
+}
+
+.interaction-hint {
+    font-size: 0.9em;
+    color: #4CAF50;
+    margin-top: 4px;
+    font-style: italic;
+}

@@ -90,6 +90,10 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 		return imagePath && projectPath ? projectPath + imagePath : imagePath
 	}
 
+	const getAudioUrl = (audioPath: string) => {
+		return audioPath && projectPath ? projectPath + audioPath : audioPath
+	}
+
 	const getProjectName = () => {
 		if (!projectPath) return 'Unknown Project'
 		// Extract project name from path (last segment before any file extension)
@@ -104,8 +108,75 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 		commands.forEach((command) => {
 			switch (command.type) {
 				case 'playSound':
-					const audio = new Audio(command.params.url)
-					audio.play().catch(console.error)
+					const rawUrl = command.params.url
+					console.log(
+						'🎵 GamePlayer: Playing audio - Raw URL:',
+						rawUrl,
+						'Project path:',
+						projectPath,
+						'Command source: hover/interaction'
+					)
+
+					// Use Electron API to read audio file as data URL
+					if (projectPath) {
+						const fullPath = projectPath + rawUrl
+						console.log('GamePlayer: Full file path:', fullPath)
+
+						const electronAPI = (window as any).electronAPI
+						if (electronAPI && electronAPI.readAudio) {
+							console.log('GamePlayer: Using electronAPI.readAudio...')
+							electronAPI
+								.readAudio(fullPath)
+								.then((dataUrl: string | null) => {
+									if (dataUrl) {
+										console.log(
+											'GamePlayer: Got data URL, creating Audio object...'
+										)
+										const audio = new Audio(dataUrl)
+										// Set volume if specified in command params
+										if (command.params.volume !== undefined) {
+											audio.volume = command.params.volume
+											console.log(
+												'GamePlayer: Set audio volume to:',
+												command.params.volume
+											)
+										}
+										console.log(
+											'GamePlayer: Audio object created, calling play()...'
+										)
+										audio
+											.play()
+											.then(() => {
+												console.log(
+													'GamePlayer: Audio started playing successfully!'
+												)
+											})
+											.catch((playError) => {
+												console.error(
+													'GamePlayer: Failed to play audio with data URL:',
+													playError
+												)
+											})
+									} else {
+										console.error(
+											'GamePlayer: Failed to read audio file via electronAPI'
+										)
+									}
+								})
+								.catch((apiError: any) => {
+									console.error(
+										'GamePlayer: electronAPI.readAudio failed:',
+										apiError
+									)
+								})
+						} else {
+							console.error(
+								'GamePlayer: electronAPI not available or readAudio method missing'
+							)
+						}
+					} else {
+						console.error('GamePlayer: No project path available')
+					}
 					break
 				case 'spawnEntity':
 					// Update grid to show entity
@@ -153,6 +224,13 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 						setCurrentChildLocationIndex(0)
 					}
 
+					console.log(
+						'🎵 GamePlayer: Received updateLocation entities:',
+						command.params.entities?.map((e: any) => ({
+							id: e.id,
+							audio: e.audio,
+						}))
+					)
 					setCurrentEntities(command.params.entities || [])
 					setBackgroundImage(command.params.backgroundImage)
 					setBackgroundMusic(command.params.backgroundMusic)
@@ -351,13 +429,20 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 		}
 	}
 
-	const handleEntityClick = async (entityType: string, entityId: string) => {
+	const handleEntityClick = async (
+		entityType: string,
+		entityId: string,
+		params?: any
+	) => {
 		console.log(
-			`Sending interaction: click${entityType} for entity ${entityId}`
+			`Sending interaction: click${entityType} for entity ${entityId}`,
+			params ? `with params: ${JSON.stringify(params)}` : ''
 		)
-		const response = await sendInteraction(`click${entityType}`, {
-			id: entityId,
-		})
+		const interactionParams = { id: entityId, ...params }
+		const response = await sendInteraction(
+			`click${entityType}`,
+			interactionParams
+		)
 		console.log(`Received response:`, response)
 		if (response.success && response.commands) {
 			console.log(`Executing commands:`, response.commands)
@@ -431,6 +516,8 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 		)
 	}
 
+	console.log('🎮 GamePlayer: Rendering with projectPath:', projectPath)
+
 	return (
 		<div className='player'>
 			<audio ref={audioRef} loop />
@@ -464,11 +551,13 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 			<div className='game-area'>
 				<Grid
 					onEntityClick={handleEntityClick}
+					onExecuteCommand={(command) => executeCommandsLocally([command])}
 					backgroundImage={backgroundImage}
 					entities={currentEntities}
 					childLocations={childLocations}
 					currentChildLocationIndex={currentChildLocationIndex}
 					onNavigateChildLocation={handleNavigateChildLocation}
+					projectPath={projectPath}
 				/>
 
 				{/* Inventory */}
@@ -477,11 +566,15 @@ export const GamePlayer: React.FC<PlayerProps> = () => {
 					{inventory.length === 0 ? (
 						<p>Empty</p>
 					) : (
-						inventory.map((entityId) => (
-							<div key={entityId} className='inventory-item'>
-								{entityId}
-							</div>
-						))
+						inventory.map((entityId) => {
+							// Find the entity to get its name
+							const entity = currentEntities.find((e: any) => e.id === entityId)
+							return (
+								<div key={entityId} className='inventory-item'>
+									{entity ? entity.name : entityId}
+								</div>
+							)
+						})
 					)}
 				</div>
 			</div>

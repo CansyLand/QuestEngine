@@ -381,6 +381,14 @@ ipcMain.handle(
 	}
 )
 
+ipcMain.handle(
+	'read-audio',
+	async (_event, filePath: string): Promise<string | null> => {
+		if (!questEngine) return null
+		return await questEngine.readAudio(filePath)
+	}
+)
+
 ipcMain.handle('start-game', async (): Promise<any> => {
 	if (!questEngine) return { success: false, error: 'Engine not initialized' }
 	return questEngine.startGame()

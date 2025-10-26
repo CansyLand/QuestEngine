@@ -167,6 +167,7 @@ export interface GridEntity {
 	y?: number
 	state?: EntityState
 	interactive?: InteractiveMode
+	audio?: string
 }
 
 // API response types
