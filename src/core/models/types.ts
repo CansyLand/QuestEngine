@@ -66,6 +66,7 @@ export interface NPC {
 	name: string
 	image: string // Display image URL (used for both grid and dialogue)
 	state: EntityState
+	bio?: string // Optional biography/description of the NPC
 	onInteract?: Action[] // Optional triggers on talk start/end
 }
 
