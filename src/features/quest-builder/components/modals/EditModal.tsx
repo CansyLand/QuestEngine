@@ -468,6 +468,7 @@ export const EditModal: React.FC<EditModalProps> = ({
 								locations={availableLocations}
 								quests={availableQuests}
 								dialogues={availableDialogues}
+								portals={availablePortals}
 							/>
 						)}
 						{entityType === 'npc' && (

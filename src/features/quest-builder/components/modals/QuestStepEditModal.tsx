@@ -9,6 +9,7 @@ import {
 	Quest,
 	InteractiveMode,
 	DialogueSequence,
+	Portal,
 } from '@/core/models/types'
 import { generateIdFromApi } from '@/shared/utils/api'
 import { BaseModal } from '@/shared/components/ui/BaseModal'
@@ -21,6 +22,7 @@ interface QuestStepEditModalProps {
 	locations: Location[]
 	quests: Quest[]
 	dialogues: DialogueSequence[]
+	portals: Portal[]
 	onSave: (step: QuestStep) => void
 	onCancel: () => void
 }
@@ -33,6 +35,7 @@ export const QuestStepEditModal: React.FC<QuestStepEditModalProps> = ({
 	locations,
 	quests,
 	dialogues,
+	portals,
 	onSave,
 	onCancel,
 }) => {
@@ -177,6 +180,7 @@ export const QuestStepEditModal: React.FC<QuestStepEditModalProps> = ({
 								locations={locations}
 								quests={quests}
 								dialogues={dialogues}
+								portals={portals}
 							/>
 						))}
 						<button
@@ -391,6 +395,7 @@ export const QuestStepEditModal: React.FC<QuestStepEditModalProps> = ({
 								locations={locations}
 								quests={quests}
 								dialogues={dialogues}
+								portals={portals}
 							/>
 						))}
 						<button
@@ -416,6 +421,7 @@ interface ActionEditorProps {
 	locations: Location[]
 	quests: Quest[]
 	dialogues: DialogueSequence[]
+	portals: Portal[]
 }
 
 const ActionEditor: React.FC<ActionEditorProps> = ({
@@ -427,6 +433,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
 	locations,
 	quests,
 	dialogues,
+	portals,
 }) => {
 	const updateType = (type: ActionType) => {
 		onChange({ type, params: {} })
@@ -504,9 +511,15 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
 					onChange={(e) => updateParam('entityId', e.target.value)}
 				>
 					<option value=''>Select Entity</option>
-					{[...items, ...npcs].map((entity) => (
+					{[...items, ...npcs, ...portals].map((entity) => (
 						<option key={entity.id} value={entity.id}>
-							{entity.name}
+							{entity.name} (
+							{entity.id.includes('portal')
+								? 'Portal'
+								: entity.id.includes('npc')
+								? 'NPC'
+								: 'Item'}
+							)
 						</option>
 					))}
 				</select>
@@ -518,9 +531,15 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
 					onChange={(e) => updateParam('entityId', e.target.value)}
 				>
 					<option value=''>Select Entity</option>
-					{[...items, ...npcs].map((entity) => (
+					{[...items, ...npcs, ...portals].map((entity) => (
 						<option key={entity.id} value={entity.id}>
-							{entity.name}
+							{entity.name} (
+							{entity.id.includes('portal')
+								? 'Portal'
+								: entity.id.includes('npc')
+								? 'NPC'
+								: 'Item'}
+							)
 						</option>
 					))}
 				</select>
@@ -532,10 +551,11 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
 						value={action.params.entityId || ''}
 						onChange={(e) => updateParam('entityId', e.target.value)}
 					>
-						<option value=''>Select Item</option>
-						{items.map((item) => (
-							<option key={item.id} value={item.id}>
-								{item.name}
+						<option value=''>Select Entity</option>
+						{[...items, ...portals].map((entity) => (
+							<option key={entity.id} value={entity.id}>
+								{entity.name} (
+								{entity.id.includes('portal') ? 'Portal' : 'Item'})
 							</option>
 						))}
 					</select>
@@ -693,9 +713,15 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
 					onChange={(e) => updateParam('entityId', e.target.value)}
 				>
 					<option value=''>Select Entity</option>
-					{[...items, ...npcs].map((entity) => (
+					{[...items, ...npcs, ...portals].map((entity) => (
 						<option key={entity.id} value={entity.id}>
-							{entity.name}
+							{entity.name} (
+							{entity.id.includes('portal')
+								? 'Portal'
+								: entity.id.includes('npc')
+								? 'NPC'
+								: 'Item'}
+							)
 						</option>
 					))}
 				</select>
@@ -732,9 +758,17 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
 					onChange={(e) => updateParam('entityId', e.target.value)}
 				>
 					<option value=''>Select Entity</option>
-					{[...items, ...npcs, ...locations].map((entity) => (
+					{[...items, ...npcs, ...locations, ...portals].map((entity) => (
 						<option key={entity.id} value={entity.id}>
-							{entity.name}
+							{entity.name} (
+							{entity.id.includes('portal')
+								? 'Portal'
+								: entity.id.includes('npc')
+								? 'NPC'
+								: entity.id.includes('location')
+								? 'Location'
+								: 'Item'}
+							)
 						</option>
 					))}
 				</select>
@@ -746,9 +780,17 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
 					onChange={(e) => updateParam('entityId', e.target.value)}
 				>
 					<option value=''>Select Entity</option>
-					{[...items, ...npcs, ...locations].map((entity) => (
+					{[...items, ...npcs, ...locations, ...portals].map((entity) => (
 						<option key={entity.id} value={entity.id}>
-							{entity.name}
+							{entity.name} (
+							{entity.id.includes('portal')
+								? 'Portal'
+								: entity.id.includes('npc')
+								? 'NPC'
+								: entity.id.includes('location')
+								? 'Location'
+								: 'Item'}
+							)
 						</option>
 					))}
 				</select>

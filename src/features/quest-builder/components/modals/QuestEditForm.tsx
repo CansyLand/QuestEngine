@@ -6,6 +6,7 @@ import {
 	Item,
 	Location,
 	DialogueSequence,
+	Portal,
 } from '@/core/models/types'
 import { QuestStepEditModal } from './QuestStepEditModal'
 
@@ -17,6 +18,7 @@ interface QuestEditFormProps {
 	locations: Location[]
 	quests: Quest[]
 	dialogues: DialogueSequence[]
+	portals: Portal[]
 }
 
 export const QuestEditForm: React.FC<QuestEditFormProps> = ({
@@ -27,6 +29,7 @@ export const QuestEditForm: React.FC<QuestEditFormProps> = ({
 	locations,
 	quests,
 	dialogues,
+	portals,
 }) => {
 	const [stepModalOpen, setStepModalOpen] = useState(false)
 	const [editingStep, setEditingStep] = useState<QuestStep | null>(null)
@@ -214,6 +217,7 @@ export const QuestEditForm: React.FC<QuestEditFormProps> = ({
 				locations={locations}
 				quests={quests}
 				dialogues={dialogues}
+				portals={portals}
 				onSave={handleSaveStep}
 				onCancel={() => setStepModalOpen(false)}
 			/>

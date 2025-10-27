@@ -141,6 +141,12 @@ export const Grid: React.FC<GridProps> = ({
 		const entity = gameEntities.find((e) => e.x === x && e.y === y)
 		console.log('Grid: Found entity:', entity)
 		if (entity) {
+			// Don't interact with non-interactive entities
+			if (entity.interactive === 'notInteractive') {
+				console.log('Grid: Entity is not interactive, ignoring click')
+				return
+			}
+
 			// For grabbable items, only play audio on click, don't collect
 			// Collection happens via E key press
 			if (entity.interactive === 'grabbable') {

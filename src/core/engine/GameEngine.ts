@@ -400,6 +400,11 @@ export class GameEngine {
 			return commands
 		}
 
+		if (portal.interactive === InteractiveMode.NotInteractive) {
+			console.log(`Portal ${portalId} is not interactive`)
+			return commands
+		}
+
 		console.log(
 			`Portal found, executing onInteract actions:`,
 			portal.onInteract
