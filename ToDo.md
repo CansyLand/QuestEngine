@@ -1,3 +1,17 @@
+- create new item from link window
+- (createa new item automatically with new DCL Entiy?)
+- make filter parent tabs in link tab
+  - keep tab open after tab switch
+- copy items
+- diplcate items with counter (virtual items)
+- make page not selectable except for id text or so
+- sort items
+- images in location item select
+- items reatach themselves to different dcl entites
+- if i change a name of anything it should change everywhere like even image names and in code
+
+- save state so you can create draft states to test something
+
 - if thre is no npc in location then i get this error in DCL:
   (they disappear when i attacha n npc to location)
 
