@@ -67,6 +67,7 @@ export interface NPC {
 	image: string // Display image URL (used for both grid and dialogue)
 	state: EntityState
 	bio?: string // Optional biography/description of the NPC
+	gltf?: string // GLTF model path for 3D representation
 	onInteract?: Action[] // Optional triggers on talk start/end
 }
 
@@ -80,6 +81,7 @@ export interface Item {
 	state: EntityState
 	interactive: InteractiveMode
 	type?: string // Item type for grouping similar items (e.g., "drum", "crystal")
+	gltf?: string // GLTF model path for 3D representation
 	onInteract: Action[] // e.g., [{ type: 'addToInventory', params: { entityId: 'item_id' } }, { type: 'playSound', params: { url: 'grab.mp3' } }]
 }
 

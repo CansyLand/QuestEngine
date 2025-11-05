@@ -76,6 +76,18 @@ export const ItemEditForm: React.FC<ItemEditFormProps> = ({
 				/>
 			</div>
 			<div className='form-group'>
+				<label>GLTF Model:</label>
+				<input
+					type='text'
+					value={item.gltf || ''}
+					onChange={(e) => onUpdate({ gltf: e.target.value })}
+					placeholder='/assets/models/item-model.gltf'
+				/>
+				<small className='field-description'>
+					Path to the 3D GLTF model file for this item
+				</small>
+			</div>
+			<div className='form-group'>
 				<label>Type:</label>
 				{!isCreatingType ? (
 					<select

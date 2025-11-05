@@ -38,6 +38,18 @@ export const NPCEditForm: React.FC<NPCEditFormProps> = ({ npc, onUpdate }) => {
 				/>
 			</div>
 			<div className='form-group'>
+				<label>GLTF Model:</label>
+				<input
+					type='text'
+					value={npc.gltf || ''}
+					onChange={(e) => onUpdate({ gltf: e.target.value })}
+					placeholder='/assets/models/npc-model.gltf'
+				/>
+				<small className='field-description'>
+					Path to the 3D GLTF model file for this NPC
+				</small>
+			</div>
+			<div className='form-group'>
 				<label>State:</label>
 				<select
 					value={npc.state}
