@@ -38,8 +38,10 @@ const saveProjects = async (projects: Project[]): Promise<void> => {
 
 function createWindow(): void {
 	mainWindow = new BrowserWindow({
-		width: 800,
-		height: 600,
+		width: 1800,
+		height: 1000,
+		minWidth: 500,
+		minHeight: 500,
 		webPreferences: {
 			nodeIntegration: false, // Security: Disable direct Node in renderer
 			contextIsolation: true,

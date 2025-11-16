@@ -32,6 +32,12 @@ export const BuilderTabs: React.FC<BuilderTabsProps> = ({
 				Quests ({gameData.quests.length})
 			</button>
 			<button
+				className={activeTab === 'quests-2' ? 'active' : ''}
+				onClick={() => onTabChange('quests-2')}
+			>
+				Quests-2 ({gameData.quests.length})
+			</button>
+			<button
 				className={activeTab === 'npcs' ? 'active' : ''}
 				onClick={() => onTabChange('npcs')}
 			>

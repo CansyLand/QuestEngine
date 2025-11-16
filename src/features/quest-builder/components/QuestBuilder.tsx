@@ -22,6 +22,7 @@ import { LinksPanel } from './entities/LinksPanel'
 import { DialoguePanel } from './entities/DialoguePanel'
 import { LocationPanel } from './entities/LocationPanel'
 import { QuestPanel } from './entities/QuestPanel'
+import { QuestPanel2 } from './entities/QuestPanel2'
 import { NPCPanel } from './entities/NPCPanel'
 import { ItemPanel } from './entities/ItemPanel'
 import { PortalPanel } from './entities/PortalPanel'
@@ -832,6 +833,14 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 							openEditModal('quest', quest)
 						}}
 						onDelete={deleteQuest}
+					/>
+				)}
+
+				{activeTab === 'quests-2' && (
+					<QuestPanel2
+						quests={gameData.quests}
+						npcs={(gameData as any).npcs || []}
+						dialogues={gameData.dialogues || []}
 					/>
 				)}
 
