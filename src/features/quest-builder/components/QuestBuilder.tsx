@@ -163,21 +163,23 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 
 	const saveData = async (dataToSave?: Game) => {
 		const data = dataToSave || gameData
+		console.log('QuestBuilder: saveData called with data:', data)
 
 		// If there's already a save in progress, wait for it
 		if (currentSaveRef.current) {
-			console.log('Save already in progress, waiting...')
+			console.log('QuestBuilder: Save already in progress, waiting...')
 			await currentSaveRef.current
 		}
 
 		// Create a new save operation
 		const saveOperation = (async () => {
 			try {
-				console.log('Saving data:', data)
+				console.log('QuestBuilder: Executing save operation')
 				await saveGameDataToStore(data)
+				console.log('QuestBuilder: Save completed successfully')
 				addNotification({ message: 'Data saved successfully!', type: 'success' })
 			} catch (error) {
-				console.error('Save failed:', error)
+				console.error('QuestBuilder: Save failed:', error)
 				addNotification({
 					message: `Save failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
 					type: 'error'
@@ -841,6 +843,9 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 						quests={gameData.quests}
 						npcs={(gameData as any).npcs || []}
 						dialogues={gameData.dialogues || []}
+						gameData={gameData}
+						onSetGameData={setGameData}
+						onSaveData={saveData}
 					/>
 				)}
 

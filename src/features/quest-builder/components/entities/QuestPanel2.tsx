@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { Quest, DialogueSequence, NPC } from '@/core/models/types'
+import React, { useState, useEffect, useCallback } from 'react'
+import { Quest, DialogueSequence, NPC, Game } from '@/core/models/types'
 import { Card } from '@/shared/ui'
 import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 
@@ -7,14 +7,28 @@ interface QuestPanel2Props {
 	quests: Quest[]
 	npcs: NPC[]
 	dialogues: DialogueSequence[]
+	gameData: Game
+	onSetGameData?: (data: Game) => void
+	onSaveData?: (data?: Game) => Promise<void>
 }
 
 export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 	quests,
 	npcs,
 	dialogues,
+	gameData,
+	onSetGameData,
+	onSaveData,
 }) => {
 	const [projectPath, setProjectPath] = useState<string | null>(null)
+
+	// State for tracking edited dialogue text
+	const [editedDialogues, setEditedDialogues] = useState<
+		Record<string, string>
+	>({})
+	const [originalDialogues, setOriginalDialogues] = useState<
+		Record<string, string>
+	>({})
 
 	useEffect(() => {
 		const getProjectPath = async () => {
@@ -26,6 +40,88 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 		}
 		getProjectPath()
 	}, [])
+
+	// Auto-save function with debouncing
+	const autoSave = useCallback(async () => {
+		if (!onSetGameData || !onSaveData) {
+			console.log('QuestPanel2: Auto-save skipped - missing handlers')
+			return
+		}
+
+		try {
+			console.log(
+				'QuestPanel2: Starting auto-save with edited dialogues:',
+				Object.keys(editedDialogues)
+			)
+
+			// Update all dialogues that have edited dialogs
+			const updatedDialogues = dialogues.map((dialogue) => {
+				const hasEditedDialogs = dialogue.dialogs.some(
+					(dialog) => editedDialogues[dialog.id] !== undefined
+				)
+
+				if (hasEditedDialogs) {
+					console.log(`QuestPanel2: Updating dialogue ${dialogue.id}`)
+					// Update this dialogue sequence with edited dialog texts
+					const updatedDialogs = dialogue.dialogs.map((dialog) =>
+						editedDialogues[dialog.id] !== undefined
+							? { ...dialog, text: editedDialogues[dialog.id] }
+							: dialog
+					)
+
+					return { ...dialogue, dialogs: updatedDialogs }
+				}
+
+				return dialogue
+			})
+
+			// Create the updated game data
+			const updatedGameData: Game = {
+				...gameData,
+				dialogues: updatedDialogues,
+			}
+
+			// Update local state and save
+			onSetGameData(updatedGameData)
+			console.log('QuestPanel2: Updated local game data, calling onSaveData')
+			await onSaveData(updatedGameData)
+			console.log('QuestPanel2: Auto-save completed successfully')
+		} catch (error) {
+			console.error('QuestPanel2: Error auto-saving dialogues:', error)
+		}
+	}, [dialogues, editedDialogues, gameData, onSetGameData, onSaveData])
+
+	// Handle input changes
+	const handleDialogueChange = (
+		dialogId: string,
+		newText: string,
+		originalText: string
+	) => {
+		setEditedDialogues((prev) => ({ ...prev, [dialogId]: newText }))
+
+		// Store original text if not already stored
+		if (!originalDialogues[dialogId]) {
+			setOriginalDialogues((prev) => ({ ...prev, [dialogId]: originalText }))
+		}
+
+		// Auto-save after a short delay
+		setTimeout(() => autoSave(), 500)
+	}
+
+	// Handle revert to original
+	const handleRevertDialogue = (dialogId: string) => {
+		const originalText = originalDialogues[dialogId]
+		if (originalText) {
+			setEditedDialogues((prev) => {
+				const newState = { ...prev }
+				delete newState[dialogId]
+				return newState
+			})
+
+			// Auto-save the revert
+			setTimeout(() => autoSave(), 100)
+		}
+	}
 	// Helper function to get NPC name by ID
 	const getNpcName = (npcId: string) => {
 		const npc = npcs.find((n) => n.id === npcId)
@@ -352,42 +448,84 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 																	{(isTalkToStep
 																		? dialogue.dialogs.slice(0, 1)
 																		: dialogue.dialogs
-																	).map((dialog, dialogIndex) => (
-																		<div key={dialog.id} className='space-y-2'>
-																			{/* Dialog Text */}
-																			<div className='bg-bg-hover p-3 rounded border-l-2 border-primary'>
-																				<p className='text-text-primary text-sm leading-relaxed'>
-																					{dialog.text}
-																				</p>
-																			</div>
+																	).map((dialog, dialogIndex) => {
+																		const currentText =
+																			editedDialogues[dialog.id] ?? dialog.text
+																		const hasBeenEdited =
+																			editedDialogues[dialog.id] !== undefined
+																		const originalText =
+																			originalDialogues[dialog.id] ??
+																			dialog.text
 
-																			{/* Response Buttons */}
-																			{dialog.isQuestion &&
-																				dialog.buttons &&
-																				dialog.buttons.length > 0 && (
-																					<div className='ml-4 space-y-1'>
-																						<p className='text-text-muted text-xs italic mb-2'>
-																							Responses:
-																						</p>
-																						{dialog.buttons.map(
-																							(button, buttonIndex) => (
-																								<div
-																									key={buttonIndex}
-																									className='bg-secondary/20 border border-secondary/30 p-2 rounded text-xs'
-																								>
-																									<span className='text-secondary font-medium'>
-																										{button.label}
-																									</span>
-																									<span className='text-text-muted ml-2'>
-																										→ Dialog {button.goToDialog}
-																									</span>
-																								</div>
-																							)
+																		return (
+																			<div
+																				key={dialog.id}
+																				className='space-y-2'
+																			>
+																				{/* Dialog Text */}
+																				<div className='bg-bg-hover p-3 rounded border-l-2 border-primary'>
+																					<div className='flex items-start gap-2'>
+																						<textarea
+																							value={currentText}
+																							onChange={(e) =>
+																								handleDialogueChange(
+																									dialog.id,
+																									e.target.value,
+																									originalText
+																								)
+																							}
+																							className='flex-1 text-text-primary text-sm leading-relaxed bg-transparent border-none outline-none resize-none min-h-[2rem]'
+																							rows={Math.max(
+																								2,
+																								currentText.split('\n').length
+																							)}
+																							placeholder='Enter dialogue text...'
+																						/>
+																						{hasBeenEdited && (
+																							<button
+																								onClick={() =>
+																									handleRevertDialogue(
+																										dialog.id
+																									)
+																								}
+																								className='text-warning hover:text-warning-hover text-xs px-2 py-1 bg-warning/10 hover:bg-warning/20 rounded transition-colors flex-shrink-0'
+																								title='Revert to original text'
+																							>
+																								↻
+																							</button>
 																						)}
 																					</div>
-																				)}
-																		</div>
-																	))}
+																				</div>
+
+																				{/* Response Buttons */}
+																				{dialog.isQuestion &&
+																					dialog.buttons &&
+																					dialog.buttons.length > 0 && (
+																						<div className='ml-4 space-y-1'>
+																							<p className='text-text-muted text-xs italic mb-2'>
+																								Responses:
+																							</p>
+																							{dialog.buttons.map(
+																								(button, buttonIndex) => (
+																									<div
+																										key={buttonIndex}
+																										className='bg-secondary/20 border border-secondary/30 p-2 rounded text-xs'
+																									>
+																										<span className='text-secondary font-medium'>
+																											{button.label}
+																										</span>
+																										<span className='text-text-muted ml-2'>
+																											→ Dialog{' '}
+																											{button.goToDialog}
+																										</span>
+																									</div>
+																								)
+																							)}
+																						</div>
+																					)}
+																			</div>
+																		)
+																	})}
 																</div>
 															</Card>
 														)
