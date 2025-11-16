@@ -9,6 +9,23 @@ import {
 	Portal,
 } from '@/core/models/types'
 import { QuestStepEditModal } from './QuestStepEditModal'
+import {
+	DndContext,
+	closestCenter,
+	KeyboardSensor,
+	PointerSensor,
+	useSensor,
+	useSensors,
+	DragEndEvent,
+} from '@dnd-kit/core'
+import {
+	SortableContext,
+	sortableKeyboardCoordinates,
+	useSortable,
+	verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { Button } from '@/shared/ui'
 
 interface QuestEditFormProps {
 	quest: Quest
@@ -34,8 +51,13 @@ export const QuestEditForm: React.FC<QuestEditFormProps> = ({
 	const [stepModalOpen, setStepModalOpen] = useState(false)
 	const [editingStep, setEditingStep] = useState<QuestStep | null>(null)
 	const [editingStepIndex, setEditingStepIndex] = useState<number | null>(null)
-	const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
-	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
+	const sensors = useSensors(
+		useSensor(PointerSensor),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		})
+	)
 
 	const handleEditStep = (step: QuestStep, index: number) => {
 		setEditingStep(step)
@@ -68,53 +90,24 @@ export const QuestEditForm: React.FC<QuestEditFormProps> = ({
 		onUpdate({ steps: newSteps })
 	}
 
-	const handleDragStart = (
-		e: React.DragEvent<HTMLDivElement>,
-		index: number
-	) => {
-		setDraggedIndex(index)
-		e.dataTransfer.effectAllowed = 'move'
-		e.dataTransfer.setData('text/html', e.currentTarget.outerHTML)
-		e.currentTarget.style.opacity = '0.5'
-	}
+	const handleDragEnd = (event: DragEndEvent) => {
+		const { active, over } = event
 
-	const handleDragOver = (
-		e: React.DragEvent<HTMLDivElement>,
-		index: number
-	) => {
-		e.preventDefault()
-		e.dataTransfer.dropEffect = 'move'
-		setDragOverIndex(index)
-	}
+		if (over && active.id !== over.id) {
+			const oldIndex = quest.steps.findIndex(
+				(_, index) => `step-${index}` === active.id
+			)
+			const newIndex = quest.steps.findIndex(
+				(_, index) => `step-${index}` === over.id
+			)
 
-	const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
-		e.currentTarget.style.opacity = '1'
-		setDraggedIndex(null)
-		setDragOverIndex(null)
-	}
-
-	const handleDrop = (
-		e: React.DragEvent<HTMLDivElement>,
-		dropIndex: number
-	) => {
-		e.preventDefault()
-		const dragIndex = draggedIndex
-
-		if (dragIndex === null || dragIndex === dropIndex) {
-			return
+			if (oldIndex !== -1 && newIndex !== -1) {
+				const newSteps = [...quest.steps]
+				const [draggedStep] = newSteps.splice(oldIndex, 1)
+				newSteps.splice(newIndex, 0, draggedStep)
+				onUpdate({ steps: newSteps })
+			}
 		}
-
-		const newSteps = [...quest.steps]
-		const [draggedStep] = newSteps.splice(dragIndex, 1)
-		newSteps.splice(dropIndex, 0, draggedStep)
-
-		onUpdate({ steps: newSteps })
-		setDraggedIndex(null)
-		setDragOverIndex(null)
-	}
-
-	const handleDragLeave = () => {
-		setDragOverIndex(null)
 	}
 
 	return (
@@ -162,50 +155,32 @@ export const QuestEditForm: React.FC<QuestEditFormProps> = ({
 				</div>
 				<div className='form-group'>
 					<label>Steps: {quest.steps.length} steps</label>
-					<div className='array-list'>
-						{quest.steps.map((step, index) => (
-							<div
-								key={index}
-								className={`array-item step-item ${
-									draggedIndex === index ? 'dragging' : ''
-								} ${dragOverIndex === index ? 'drag-over' : ''}`}
-								draggable
-								onDragStart={(e) => handleDragStart(e, index)}
-								onDragOver={(e) => handleDragOver(e, index)}
-								onDragEnd={handleDragEnd}
-								onDrop={(e) => handleDrop(e, index)}
-								onDragLeave={handleDragLeave}
-							>
-								<div className='step-info'>
-									<div className='step-name'>{step.name}</div>
-									<div className='step-type'>{step.objectiveType}</div>
-									<div className='step-actions'>
-										<button
-											type='button'
-											className='edit-step-button'
-											onClick={() => handleEditStep(step, index)}
-										>
-											Edit
-										</button>
-										<button
-											type='button'
-											className='remove-button'
-											onClick={() => handleRemoveStep(index)}
-										>
-											Remove
-										</button>
-									</div>
-								</div>
-							</div>
-						))}
-						<button
-							type='button'
-							className='add-array-button'
-							onClick={handleAddStep}
+					<DndContext
+						sensors={sensors}
+						collisionDetection={closestCenter}
+						onDragEnd={handleDragEnd}
+					>
+						<SortableContext
+							items={quest.steps.map((_, index) => `step-${index}`)}
+							strategy={verticalListSortingStrategy}
 						>
-							Add Step
-						</button>
-					</div>
+							<div className='space-y-2 mb-4'>
+								{quest.steps.map((step, index) => (
+									<SortableStepItem
+										key={`step-${index}`}
+										id={`step-${index}`}
+										step={step}
+										index={index}
+										onEdit={() => handleEditStep(step, index)}
+										onRemove={() => handleRemoveStep(index)}
+									/>
+								))}
+							</div>
+						</SortableContext>
+					</DndContext>
+					<Button onClick={handleAddStep} variant="outline" size="sm">
+						Add Step
+					</Button>
 				</div>
 			</div>
 
@@ -222,5 +197,68 @@ export const QuestEditForm: React.FC<QuestEditFormProps> = ({
 				onCancel={() => setStepModalOpen(false)}
 			/>
 		</>
+	)
+}
+
+interface SortableStepItemProps {
+	id: string
+	step: QuestStep
+	index: number
+	onEdit: () => void
+	onRemove: () => void
+}
+
+const SortableStepItem: React.FC<SortableStepItemProps> = ({
+	id,
+	step,
+	index,
+	onEdit,
+	onRemove,
+}) => {
+	const {
+		attributes,
+		listeners,
+		setNodeRef,
+		transform,
+		transition,
+		isDragging,
+	} = useSortable({ id })
+
+	const style = {
+		transform: CSS.Transform.toString(transform),
+		transition,
+		opacity: isDragging ? 0.5 : 1,
+	}
+
+	return (
+		<div
+			ref={setNodeRef}
+			style={style}
+			className={`flex items-center gap-2 rounded-md border border-border-secondary bg-bg-card p-3 ${
+				isDragging ? 'shadow-lg' : ''
+			}`}
+		>
+			<button
+				type="button"
+				{...attributes}
+				{...listeners}
+				className="cursor-grab active:cursor-grabbing text-text-muted hover:text-text-primary px-2"
+				title="Drag to reorder"
+			>
+				⋮⋮
+			</button>
+			<div className="flex-1">
+				<div className="text-text-primary font-medium">{step.name}</div>
+				<div className="text-text-muted text-sm">{step.objectiveType}</div>
+			</div>
+			<div className="flex gap-2">
+				<Button onClick={onEdit} variant="outline" size="sm">
+					Edit
+				</Button>
+				<Button onClick={onRemove} variant="danger" size="sm">
+					Remove
+				</Button>
+			</div>
+		</div>
 	)
 }

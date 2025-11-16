@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
 	Location,
 	Quest,
@@ -13,7 +13,7 @@ import {
 	EntityState,
 } from '@/core/models/types'
 import { loadGameData, saveGameData, generateId } from '@/shared/utils/api'
-import { NotificationContainer } from './Notification'
+import { NotificationContainer } from '@/shared/ui'
 import { EditModal } from './EditModal'
 import { QuestStepSelector } from './modals/QuestStepSelector'
 import { BuilderTabs } from './layout/BuilderTabs'
@@ -26,6 +26,12 @@ import { NPCPanel } from './entities/NPCPanel'
 import { ItemPanel } from './entities/ItemPanel'
 import { PortalPanel } from './entities/PortalPanel'
 import { Project } from '@/shared/types'
+import {
+	useGameDataStore,
+	useUIStore,
+	useProjectStore,
+} from '@/store'
+import { useSound } from '@/shared/ui/hooks/useSound'
 
 // Import all CSS files
 import '@/shared/styles/base.css'
@@ -50,69 +56,40 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 	onProjectPathChange,
 	enableAutoProjectSwitch = true,
 }) => {
-	const [gameData, setGameData] = useState<Game>({
-		locations: [],
-		quests: [],
-		npcs: [],
-		items: [],
-		portals: [],
-		dialogues: [],
-		currentLocationId: '',
-		activeQuests: [],
-		inventory: [],
-	})
-	const [activeTab, setActiveTab] = useState<string>('locations')
-	const [loading, setLoading] = useState(true)
-	const [saving, setSaving] = useState(false)
-	const [unlinkedCount, setUnlinkedCount] = useState<number>(0)
+	// Zustand stores
+	const {
+		gameData,
+		loading,
+		saving,
+		loadData: loadGameDataFromStore,
+		saveData: saveGameDataToStore,
+		updateGameData,
+		setGameData,
+	} = useGameDataStore()
+
+	const {
+		activeTab,
+		setActiveTab,
+		editModal,
+		openEditModal,
+		closeEditModal,
+		questAttachmentModal,
+		openQuestAttachmentModal,
+		closeQuestAttachmentModal,
+		confirmDialog,
+		openConfirmDialog,
+		closeConfirmDialog,
+		notifications,
+		addNotification,
+		removeNotification,
+		unlinkedCount,
+		setUnlinkedCount,
+	} = useUIStore()
+
+	const { setCurrentProject } = useProjectStore()
+	const { play: playSound } = useSound()
+
 	const currentSaveRef = useRef<Promise<void> | null>(null)
-	const [notifications, setNotifications] = useState<
-		Array<{ id: string; message: string; type: 'success' | 'error' }>
-	>([])
-	const [editModal, setEditModal] = useState<{
-		isOpen: boolean
-		entityType:
-			| 'location'
-			| 'quest'
-			| 'npc'
-			| 'item'
-			| 'portal'
-			| 'dialogue'
-			| null
-		entity: Location | Quest | NPC | Item | Portal | DialogueSequence | null
-	}>({
-		isOpen: false,
-		entityType: null,
-		entity: null,
-	})
-
-	const [questAttachmentModal, setQuestAttachmentModal] = useState<{
-		isOpen: boolean
-		dialogue: DialogueSequence | null
-		pendingChanges: {
-			questId: string
-			stepId: string
-			dialogueSequenceId?: string
-		}[]
-	}>({
-		isOpen: false,
-		dialogue: null,
-		pendingChanges: [],
-	})
-
-	const [confirmDialog, setConfirmDialog] = useState<{
-		isOpen: boolean
-		title: string
-		message: string
-		onConfirm: () => void
-		onCancel: () => void
-	}>({
-		isOpen: false,
-		title: '',
-		message: '',
-		onConfirm: () => {},
-		onCancel: () => {},
-	})
 
 	// Load data when component mounts or project changes
 	useEffect(() => {
@@ -164,40 +141,23 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 		return () => {
 			delete (window as any).updateUnlinkedCount
 		}
-	}, [])
+	}, [setUnlinkedCount])
+
+	// Load data when component mounts or project changes
+	useEffect(() => {
+		if (project) {
+			setCurrentProject(project)
+		}
+	}, [project, setCurrentProject])
 
 	const loadData = async () => {
-		setLoading(true)
 		console.log('Loading data for project:', project?.name, project?.path)
 
 		// Small delay to ensure backend has finished switching projects
 		await new Promise((resolve) => setTimeout(resolve, 500))
 
-		const response = await loadGameData()
-		console.log('Load response:', response)
-		if (response.success && response.data) {
-			console.log('Setting game data:', {
-				locations: response.data.locations?.length || 0,
-				quests: response.data.quests?.length || 0,
-				npcs: response.data.npcs?.length || 0,
-				items: response.data.items?.length || 0,
-				portals: response.data.portals?.length || 0,
-				dialogues: response.data.dialogues?.length || 0,
-			})
-			setGameData(response.data)
-		} else {
-			console.log('Load failed:', response.error)
-		}
-		setLoading(false)
-	}
-
-	const showNotification = (message: string, type: 'success' | 'error') => {
-		const id = generateId()
-		setNotifications((prev) => [...prev, { id, message, type }])
-	}
-
-	const removeNotification = (id: string) => {
-		setNotifications((prev) => prev.filter((n) => n.id !== id))
+		await loadGameDataFromStore()
+		playSound('modalOpen')
 	}
 
 	const saveData = async (dataToSave?: Game) => {
@@ -212,25 +172,16 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 		// Create a new save operation
 		const saveOperation = (async () => {
 			try {
-				setSaving(true)
 				console.log('Saving data:', data)
-				const response = await saveGameData(data)
-				console.log('Save response:', response)
-				if (response.success) {
-					showNotification('Data saved successfully!', 'success')
-					// Use the updated data returned from save endpoint instead of reloading
-					if (response.data) {
-						console.log('Using returned data from save:', response.data)
-						setGameData(response.data)
-					}
-				} else {
-					showNotification(
-						`Save failed: ${response.error || 'Unknown error'}`,
-						'error'
-					)
-				}
+				await saveGameDataToStore(data)
+				addNotification({ message: 'Data saved successfully!', type: 'success' })
+			} catch (error) {
+				console.error('Save failed:', error)
+				addNotification({
+					message: `Save failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+					type: 'error'
+				})
 			} finally {
-				setSaving(false)
 				currentSaveRef.current = null
 			}
 		})()
@@ -239,50 +190,10 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 		return saveOperation
 	}
 
-	const updateGameData = (updates: Partial<Game>) => {
-		setGameData((prev) => {
-			const newData = { ...prev, ...updates }
 
-			// Validate and clean up entity arrays to prevent contamination
-			if (newData.items) {
-				// Filter out any portals that might have been mixed into items array
-				newData.items = newData.items.filter(
-					(item: any) => !item.destinationLocationId
-				)
-			}
-
-			if (newData.portals) {
-				// Filter out any items that might have been mixed into portals array
-				newData.portals = newData.portals.filter(
-					(portal: any) => portal.destinationLocationId
-				)
-			}
-
-			return newData
-		})
-	}
-
-	const openEditModal = (
-		entityType: 'location' | 'quest' | 'npc' | 'item' | 'portal' | 'dialogue',
-		entity: Location | Quest | NPC | Item | Portal | DialogueSequence
-	) => {
-		setEditModal({
-			isOpen: true,
-			entityType,
-			entity,
-		})
-	}
-
-	const closeEditModal = () => {
-		setEditModal({
-			isOpen: false,
-			entityType: null,
-			entity: null,
-		})
-	}
 
 	const handleUpdateQuest = (questId: string, updates: Partial<Quest>) => {
-		const updatedQuests = (gameData.quests || []).map((quest) =>
+		const updatedQuests = (gameData.quests || []).map((quest: Quest) =>
 			quest.id === questId ? { ...quest, ...updates } : quest
 		)
 		updateGameData({ quests: updatedQuests })
@@ -292,31 +203,10 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 		dialogueId: string,
 		updates: Partial<DialogueSequence>
 	) => {
-		const updatedDialogues = (gameData.dialogues || []).map((dialogue) =>
+		const updatedDialogues = (gameData.dialogues || []).map((dialogue: DialogueSequence) =>
 			dialogue.id === dialogueId ? { ...dialogue, ...updates } : dialogue
 		)
 		updateGameData({ dialogues: updatedDialogues })
-	}
-
-	const openQuestAttachmentModal = (dialogue: DialogueSequence) => {
-		setQuestAttachmentModal({
-			isOpen: true,
-			dialogue,
-			pendingChanges: [],
-		})
-	}
-
-	const closeQuestAttachmentModal = () => {
-		// Save any pending changes before closing (fire-and-forget)
-		saveData().catch((error) => {
-			console.error('Failed to save quest attachment changes:', error)
-		})
-
-		setQuestAttachmentModal({
-			isOpen: false,
-			dialogue: null,
-			pendingChanges: [],
-		})
 	}
 
 	const handleQuestAttachmentSelect = (questStepId: string) => {
@@ -352,17 +242,17 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 	) => {
 		if (!editModal.entityType || !editModal.entity) return
 
-		let updatedGameData: Game
+		let updatedGameData: Game = gameData
 
 		// Check if this is a new entity (doesn't exist in current game data) or an existing one
 		const originalEntity = editModal.entity
 		const isNewEntity = (() => {
 			switch (editModal.entityType) {
 				case 'location':
-					return !gameData.locations.some((loc) => loc.id === originalEntity.id)
+					return !gameData.locations.some((loc: Location) => loc.id === originalEntity.id)
 				case 'quest':
 					return !gameData.quests.some(
-						(quest) => quest.id === originalEntity.id
+						(quest: Quest) => quest.id === originalEntity.id
 					)
 				case 'npc':
 					const npcs = (gameData as any).npcs || []
@@ -412,7 +302,7 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 				} else {
 					updatedGameData = {
 						...gameData,
-						locations: gameData.locations.map((loc) =>
+						locations: gameData.locations.map((loc: Location) =>
 							loc.id === originalEntity.id ? locationWithUpdatedPortals : loc
 						),
 					}
@@ -427,7 +317,7 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 				} else {
 					updatedGameData = {
 						...gameData,
-						quests: gameData.quests.map((quest) =>
+						quests: gameData.quests.map((quest: Quest) =>
 							quest.id === originalEntity.id ? (updatedEntity as Quest) : quest
 						),
 					}
@@ -537,6 +427,7 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 		setGameData(updatedGameData)
 		await saveData(updatedGameData)
 		closeEditModal()
+		playSound('success')
 	}
 
 	// Update all references to an entity when its ID changes
@@ -784,76 +675,46 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 	}
 
 	const deleteLocation = (location: Location) => {
-		setConfirmDialog({
-			isOpen: true,
-			title: '⚠️ CRITICAL DELETION PROTOCOL ⚠️',
-			message: `WARNING: Deleting location "${location.name}" will permanently remove it and all associated data. This action cannot be undone. Proceed with extreme caution.`,
-			onConfirm: async () => {
+		openConfirmDialog(
+			'⚠️ CRITICAL DELETION PROTOCOL ⚠️',
+			`WARNING: Deleting location "${location.name}" will permanently remove it and all associated data. This action cannot be undone. Proceed with extreme caution.`,
+			async () => {
 				console.log('Deleting location:', location.name)
 				const updatedGameData = {
 					...gameData,
-					locations: gameData.locations.filter((l) => l.id !== location.id),
+					locations: gameData.locations.filter((l: Location) => l.id !== location.id),
 				}
 				setGameData(updatedGameData)
 				console.log('Updated gameData, calling saveData')
 				await saveData(updatedGameData)
-				console.log('Save completed, closing dialog')
-				setConfirmDialog({
-					isOpen: false,
-					title: '',
-					message: '',
-					onConfirm: () => {},
-					onCancel: () => {},
-				})
-			},
-			onCancel: () =>
-				setConfirmDialog({
-					isOpen: false,
-					title: '',
-					message: '',
-					onConfirm: () => {},
-					onCancel: () => {},
-				}),
-		})
+				console.log('Save completed')
+				playSound('success')
+			}
+		)
 	}
 
 	const deleteQuest = (quest: Quest) => {
-		setConfirmDialog({
-			isOpen: true,
-			title: '⚠️ MISSION TERMINATION ⚠️',
-			message: `DANGER: Terminating quest "${quest.title}" will erase all quest progress and objectives. This mission will be lost forever. Confirm termination?`,
-			onConfirm: async () => {
+		openConfirmDialog(
+			'⚠️ MISSION TERMINATION ⚠️',
+			`DANGER: Terminating quest "${quest.title}" will erase all quest progress and objectives. This mission will be lost forever. Confirm termination?`,
+			async () => {
 				const updatedGameData = {
 					...gameData,
-					quests: gameData.quests.filter((q) => q.id !== quest.id),
+					quests: gameData.quests.filter((q: Quest) => q.id !== quest.id),
 				}
 				setGameData(updatedGameData)
-				await saveData(updatedGameData)
-				setConfirmDialog({
-					isOpen: false,
-					title: '',
-					message: '',
-					onConfirm: () => {},
-					onCancel: () => {},
-				})
+				await saveGameDataToStore(updatedGameData)
+				closeConfirmDialog()
 			},
-			onCancel: () =>
-				setConfirmDialog({
-					isOpen: false,
-					title: '',
-					message: '',
-					onConfirm: () => {},
-					onCancel: () => {},
-				}),
-		})
+			() => closeConfirmDialog()
+		)
 	}
 
 	const deleteNPC = (npc: NPC) => {
-		setConfirmDialog({
-			isOpen: true,
-			title: '⚠️ ENTITY PURGE PROTOCOL ⚠️',
-			message: `CRITICAL ALERT: NPC "${npc.name}" will be permanently eliminated from the system. All dialogue sequences and interactions will be lost. This cannot be reversed.`,
-			onConfirm: async () => {
+		openConfirmDialog(
+			'⚠️ ENTITY PURGE PROTOCOL ⚠️',
+			`CRITICAL ALERT: NPC "${npc.name}" will be permanently eliminated from the system. All dialogue sequences and interactions will be lost. This cannot be reversed.`,
+			async () => {
 				const updatedGameData = {
 					...gameData,
 					npcs: [
@@ -863,32 +724,18 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 					],
 				}
 				setGameData(updatedGameData)
-				await saveData(updatedGameData)
-				setConfirmDialog({
-					isOpen: false,
-					title: '',
-					message: '',
-					onConfirm: () => {},
-					onCancel: () => {},
-				})
+				await saveGameDataToStore(updatedGameData)
+				closeConfirmDialog()
 			},
-			onCancel: () =>
-				setConfirmDialog({
-					isOpen: false,
-					title: '',
-					message: '',
-					onConfirm: () => {},
-					onCancel: () => {},
-				}),
-		})
+			() => closeConfirmDialog()
+		)
 	}
 
 	const deleteItem = (item: Item) => {
-		setConfirmDialog({
-			isOpen: true,
-			title: '⚠️ INVENTORY DESTRUCTION ⚠️',
-			message: `DESTRUCTION ALERT: Item "${item.name}" will be vaporized from the inventory database. All item properties and interactions will be permanently erased.`,
-			onConfirm: async () => {
+		openConfirmDialog(
+			'⚠️ INVENTORY DESTRUCTION ⚠️',
+			`DESTRUCTION ALERT: Item "${item.name}" will be vaporized from the inventory database. All item properties and interactions will be permanently erased.`,
+			async () => {
 				const updatedGameData = {
 					...gameData,
 					items: [
@@ -898,32 +745,18 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 					],
 				}
 				setGameData(updatedGameData)
-				await saveData(updatedGameData)
-				setConfirmDialog({
-					isOpen: false,
-					title: '',
-					message: '',
-					onConfirm: () => {},
-					onCancel: () => {},
-				})
+				await saveGameDataToStore(updatedGameData)
+				closeConfirmDialog()
 			},
-			onCancel: () =>
-				setConfirmDialog({
-					isOpen: false,
-					title: '',
-					message: '',
-					onConfirm: () => {},
-					onCancel: () => {},
-				}),
-		})
+			() => closeConfirmDialog()
+		)
 	}
 
 	const deletePortal = (portal: Portal) => {
-		setConfirmDialog({
-			isOpen: true,
-			title: '⚠️ PORTAL COLLAPSE ⚠️',
-			message: `DIMENSIONAL ALERT: Portal "${portal.name}" will collapse, severing all dimensional connections. Travel routes will be permanently disrupted.`,
-			onConfirm: async () => {
+		openConfirmDialog(
+			'⚠️ PORTAL COLLAPSE ⚠️',
+			`DIMENSIONAL ALERT: Portal "${portal.name}" will collapse, severing all dimensional connections. Travel routes will be permanently disrupted.`,
+			async () => {
 				const updatedGameData = {
 					...gameData,
 					portals: [
@@ -933,56 +766,30 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 					],
 				}
 				setGameData(updatedGameData)
-				await saveData(updatedGameData)
-				setConfirmDialog({
-					isOpen: false,
-					title: '',
-					message: '',
-					onConfirm: () => {},
-					onCancel: () => {},
-				})
+				await saveGameDataToStore(updatedGameData)
+				closeConfirmDialog()
 			},
-			onCancel: () =>
-				setConfirmDialog({
-					isOpen: false,
-					title: '',
-					message: '',
-					onConfirm: () => {},
-					onCancel: () => {},
-				}),
-		})
+			() => closeConfirmDialog()
+		)
 	}
 
 	const deleteDialogue = (dialogue: DialogueSequence) => {
-		setConfirmDialog({
-			isOpen: true,
-			title: '⚠️ DIALOGUE DELETION ⚠️',
-			message: `CRITICAL ALERT: Dialogue sequence "${dialogue.name}" will be permanently eliminated from the system. Any NPCs referencing this dialogue will lose their dialogue sequences. This cannot be reversed.`,
-			onConfirm: async () => {
+		openConfirmDialog(
+			'⚠️ DIALOGUE DELETION ⚠️',
+			`CRITICAL ALERT: Dialogue sequence "${dialogue.name}" will be permanently eliminated from the system. Any NPCs referencing this dialogue will lose their dialogue sequences. This cannot be reversed.`,
+			async () => {
 				const updatedGameData = {
 					...gameData,
 					dialogues: (gameData.dialogues || []).filter(
 						(d: DialogueSequence) => d.id !== dialogue.id
 					),
 				}
-				await saveData(updatedGameData)
-				setConfirmDialog({
-					isOpen: false,
-					title: '',
-					message: '',
-					onConfirm: () => {},
-					onCancel: () => {},
-				})
+				setGameData(updatedGameData)
+				await saveGameDataToStore(updatedGameData)
+				closeConfirmDialog()
 			},
-			onCancel: () =>
-				setConfirmDialog({
-					isOpen: false,
-					title: '',
-					message: '',
-					onConfirm: () => {},
-					onCancel: () => {},
-				}),
-		})
+			() => closeConfirmDialog()
+		)
 	}
 
 	if (loading) {
@@ -1103,8 +910,8 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 			{questAttachmentModal.isOpen && questAttachmentModal.dialogue && (
 				<QuestStepSelector
 					availableQuests={gameData.quests || []}
-					availableQuestSteps={(gameData.quests || []).flatMap((quest) =>
-						quest.steps.map((step) => ({ ...step, questId: quest.id }))
+					availableQuestSteps={(gameData.quests || []).flatMap((quest: Quest) =>
+						quest.steps.map((step: QuestStep) => ({ ...step, questId: quest.id }))
 					)}
 					availableDialogues={gameData.dialogues || []}
 					availableNpcs={gameData.npcs || []}
@@ -1126,15 +933,7 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 			{confirmDialog.isOpen && (
 				<div
 					className='modal-overlay'
-					onClick={() =>
-						setConfirmDialog({
-							isOpen: false,
-							title: '',
-							message: '',
-							onConfirm: () => {},
-							onCancel: () => {},
-						})
-					}
+					onClick={closeConfirmDialog}
 				>
 					<div className='confirm-dialog' onClick={(e) => e.stopPropagation()}>
 						<div className='confirm-header'>
@@ -1153,7 +952,10 @@ export const QuestBuilder: React.FC<BuilderProps> = ({
 							</button>
 							<button
 								className='confirm-button danger-confirm'
-								onClick={confirmDialog.onConfirm}
+								onClick={() => {
+									confirmDialog.onConfirm()
+									closeConfirmDialog()
+								}}
 							>
 								CONFIRM DESTRUCTION
 							</button>

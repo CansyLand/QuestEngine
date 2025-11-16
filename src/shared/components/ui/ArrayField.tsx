@@ -1,4 +1,22 @@
-import React, { useState } from 'react'
+import React from 'react'
+import {
+	DndContext,
+	closestCenter,
+	KeyboardSensor,
+	PointerSensor,
+	useSensor,
+	useSensors,
+	DragEndEvent,
+} from '@dnd-kit/core'
+import {
+	arrayMove,
+	SortableContext,
+	sortableKeyboardCoordinates,
+	useSortable,
+	verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { Button } from '@/shared/ui'
 
 interface BaseEntity {
 	id: string
@@ -22,6 +40,72 @@ interface ArrayFieldProps<T extends BaseEntity> {
 	enableDragDrop?: boolean
 }
 
+interface SortableItemProps<T extends BaseEntity> {
+	item: T
+	index: number
+	onRemove: (index: number) => void
+	renderItem: (
+		item: T,
+		index: number,
+		onRemove: (index: number) => void
+	) => React.ReactNode
+	enableDragDrop: boolean
+}
+
+function SortableItem<T extends BaseEntity>({
+	item,
+	index,
+	onRemove,
+	renderItem,
+	enableDragDrop,
+}: SortableItemProps<T>) {
+	const {
+		attributes,
+		listeners,
+		setNodeRef,
+		transform,
+		transition,
+		isDragging,
+	} = useSortable({ id: item.id, disabled: !enableDragDrop })
+
+	const style = {
+		transform: CSS.Transform.toString(transform),
+		transition,
+		opacity: isDragging ? 0.5 : 1,
+	}
+
+	return (
+		<div
+			ref={setNodeRef}
+			style={style}
+			className={`flex items-center gap-2 rounded-md border border-border-secondary bg-bg-card p-2 ${
+				isDragging ? 'shadow-lg' : ''
+			}`}
+		>
+			{enableDragDrop && (
+				<button
+					type="button"
+					{...attributes}
+					{...listeners}
+					className="cursor-grab active:cursor-grabbing text-text-muted hover:text-text-primary px-2"
+					title="Drag to reorder"
+				>
+					⋮⋮
+				</button>
+			)}
+			<div className="flex-1">{renderItem(item, index, onRemove)}</div>
+			<button
+				type="button"
+				onClick={() => onRemove(index)}
+				className="text-danger hover:text-danger/80 px-2"
+				title="Remove item"
+			>
+				×
+			</button>
+		</div>
+	)
+}
+
 export function ArrayField<T extends BaseEntity>({
 	items,
 	onAdd,
@@ -34,67 +118,80 @@ export function ArrayField<T extends BaseEntity>({
 	className = '',
 	enableDragDrop = false,
 }: ArrayFieldProps<T>) {
-	const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+	const sensors = useSensors(
+		useSensor(PointerSensor),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		})
+	)
 
-	const handleDragStart = (e: React.DragEvent, index: number) => {
-		setDraggedIndex(index)
-		e.dataTransfer.effectAllowed = 'move'
-	}
+	const handleDragEnd = (event: DragEndEvent) => {
+		const { active, over } = event
 
-	const handleDragOver = (e: React.DragEvent) => {
-		e.preventDefault()
-		e.dataTransfer.dropEffect = 'move'
-	}
-
-	const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-		e.preventDefault()
-		if (draggedIndex !== null && draggedIndex !== dropIndex && onReorder) {
-			onReorder(draggedIndex, dropIndex)
+		if (over && active.id !== over.id && onReorder) {
+			const oldIndex = items.findIndex((item) => item.id === active.id)
+			const newIndex = items.findIndex((item) => item.id === over.id)
+			onReorder(oldIndex, newIndex)
 		}
-		setDraggedIndex(null)
 	}
 
-	const handleDragEnd = () => {
-		setDraggedIndex(null)
-	}
+	const itemIds = items.map((item) => item.id)
+
 	return (
-		<div className={`array-field ${className}`.trim()}>
-			<div className='array-list' style={{ maxHeight }}>
+		<div className={className}>
+			<div style={{ maxHeight }} className="overflow-y-auto space-y-2 mb-4">
 				{items.length === 0 ? (
-					<div className='empty-state'>{emptyMessage}</div>
-				) : (
-					items.map((item, index) => (
-						<div
-							key={item.id}
-							className={`array-item ${enableDragDrop ? 'drag-handle' : ''} ${
-								draggedIndex === index ? 'dragging' : ''
-							}`}
-							draggable={enableDragDrop}
-							onDragStart={
-								enableDragDrop ? (e) => handleDragStart(e, index) : undefined
-							}
-							onDragOver={enableDragDrop ? handleDragOver : undefined}
-							onDrop={enableDragDrop ? (e) => handleDrop(e, index) : undefined}
-							onDragEnd={enableDragDrop ? handleDragEnd : undefined}
+					<div className="text-text-muted text-sm py-4 text-center">
+						{emptyMessage}
+					</div>
+				) : enableDragDrop && onReorder ? (
+					<DndContext
+						sensors={sensors}
+						collisionDetection={closestCenter}
+						onDragEnd={handleDragEnd}
+					>
+						<SortableContext
+							items={itemIds}
+							strategy={verticalListSortingStrategy}
 						>
-							<div className='array-item-content'>
-								{renderItem(item, index, onRemove)}
+							<div className="space-y-2">
+								{items.map((item, index) => (
+									<SortableItem
+										key={item.id}
+										item={item}
+										index={index}
+										onRemove={onRemove}
+										renderItem={renderItem}
+										enableDragDrop={enableDragDrop}
+									/>
+								))}
 							</div>
-							<button
-								type='button'
-								className='array-item-remove'
-								onClick={() => onRemove(index)}
-								title='Remove item'
+						</SortableContext>
+					</DndContext>
+				) : (
+					<div className="space-y-2">
+						{items.map((item, index) => (
+							<div
+								key={item.id}
+								className="flex items-center gap-2 rounded-md border border-border-secondary bg-bg-card p-2"
 							>
-								×
-							</button>
-						</div>
-					))
+								<div className="flex-1">{renderItem(item, index, onRemove)}</div>
+								<button
+									type="button"
+									onClick={() => onRemove(index)}
+									className="text-danger hover:text-danger/80 px-2"
+									title="Remove item"
+								>
+									×
+								</button>
+							</div>
+						))}
+					</div>
 				)}
 			</div>
-			<button type='button' className='add-array-button' onClick={onAdd}>
+			<Button onClick={onAdd} variant="outline" size="sm">
 				{addButtonText}
-			</button>
+			</Button>
 		</div>
 	)
 }

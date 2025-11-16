@@ -7,5 +7,13 @@ module.exports = function override(config, env) {
 		'@': path.resolve(__dirname, 'src'),
 	}
 
+	// Ensure PostCSS is configured for Tailwind
+	if (!config.module) {
+		config.module = {}
+	}
+	if (!config.module.rules) {
+		config.module.rules = []
+	}
+
 	return config
 }

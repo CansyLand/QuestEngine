@@ -1,13 +1,108 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	html {
+		@apply bg-gradient-primary bg-fixed;
+	}
+
+	html::before {
+		content: '';
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-image: radial-gradient(
+				circle at 20% 80%,
+				rgba(120, 119, 198, 0.1) 0%,
+				transparent 50%
+			),
+			radial-gradient(
+				circle at 80% 20%,
+				rgba(255, 119, 198, 0.1) 0%,
+				transparent 50%
+			),
+			radial-gradient(
+				circle at 40% 40%,
+				rgba(120, 219, 255, 0.1) 0%,
+				transparent 50%
+			);
+		pointer-events: none;
+		z-index: -1;
+	}
+
+	body {
+		@apply m-0 bg-gradient-primary bg-fixed text-text-secondary font-primary;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+
+	body::before {
+		content: '';
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-image: radial-gradient(
+				circle at 20% 80%,
+				rgba(120, 119, 198, 0.1) 0%,
+				transparent 50%
+			),
+			radial-gradient(
+				circle at 80% 20%,
+				rgba(255, 119, 198, 0.1) 0%,
+				transparent 50%
+			),
+			radial-gradient(
+				circle at 40% 40%,
+				rgba(120, 219, 255, 0.1) 0%,
+				transparent 50%
+			);
+		pointer-events: none;
+		z-index: -1;
+	}
+
+	code {
+		font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+			monospace;
+	}
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@layer components {
+	.builder {
+		@apply min-h-screen bg-gradient-primary bg-fixed text-text-secondary font-primary;
+	}
+
+	.builder::before {
+		content: '';
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-image: radial-gradient(
+				circle at 20% 80%,
+				rgba(120, 119, 198, 0.1) 0%,
+				transparent 50%
+			),
+			radial-gradient(
+				circle at 80% 20%,
+				rgba(255, 119, 198, 0.1) 0%,
+				transparent 50%
+			),
+			radial-gradient(
+				circle at 40% 40%,
+				rgba(120, 219, 255, 0.1) 0%,
+				transparent 50%
+			);
+		pointer-events: none;
+		z-index: -1;
+	}
+
+	.builder-content {
+		@apply p-xxl;
+	}
 }
