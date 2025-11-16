@@ -121,12 +121,14 @@ export interface QuestStep {
 		| 'collectByName'
 		| 'collectByType'
 		| 'interact'
+		| 'interactByType'
 		| 'goToLocation'
 		| 'custom' // For auto-advance logic
 	objectiveParams: Record<string, any> // e.g., { npcId: string } or { entityIds: ['crystal_1', 'crystal_2'] } or { itemName: 'crystal', count: 5 } or { itemType: 'drum' }
 	onStart: Action[] // e.g., set items grabbable, set NPC dialogue
 	onComplete: Action[] // e.g., spawn mushrooms, activateQuest
 	isCompleted?: boolean // Runtime state
+	interactedItemIds?: string[] // Runtime tracking for interactByType objectives - IDs of items already interacted with
 }
 
 export interface Quest {

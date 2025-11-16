@@ -80,6 +80,10 @@ export class GameEngine {
 			quest.activeStepId = undefined
 			quest.steps.forEach((step) => {
 				step.isCompleted = false
+				// Clear interaction tracking for interactByType objectives
+				if (step.objectiveType === 'interactByType') {
+					step.interactedItemIds = []
+				}
 			})
 		})
 
@@ -1309,8 +1313,7 @@ export class GameEngine {
 		const commands: Command[] = []
 
 		console.log(
-			`[QuestEngine] Checking objectives for ${this.game.activeQuests.length} active quests:`,
-			this.game.activeQuests
+			`[QuestEngine] Checking objectives for ${this.game.activeQuests.length} active quests. Interacted: NPC=${interactedNpcId}, Item=${interactedItemId}`
 		)
 
 		for (const questId of this.game.activeQuests) {
@@ -1425,6 +1428,32 @@ export class GameEngine {
 						interactedItemId &&
 						currentStep.objectiveParams.itemId === interactedItemId
 					) {
+						objectiveCompleted = true
+					}
+					break
+
+				case 'interactByType':
+					const { itemType: interactItemType, count: interactCount = 1 } = currentStep.objectiveParams
+					const interactTargetCount = interactCount && interactCount > 0 ? interactCount : 1
+
+					// Initialize tracking array if not exists
+					if (!currentStep.interactedItemIds) {
+						currentStep.interactedItemIds = []
+					}
+
+					// If an item was just interacted with, check if it matches the type and hasn't been counted yet
+					if (interactedItemId) {
+						const entity = this.findEntityById(interactedItemId)
+						const isItemWithType = entity && 'type' in entity && entity.type === interactItemType
+
+						if (isItemWithType && !currentStep.interactedItemIds.includes(interactedItemId)) {
+							// Add this item to the interacted list
+							currentStep.interactedItemIds.push(interactedItemId)
+						}
+					}
+
+					// Check if we have enough interactions
+					if (currentStep.interactedItemIds && currentStep.interactedItemIds.length >= interactTargetCount) {
 						objectiveCompleted = true
 					}
 					break

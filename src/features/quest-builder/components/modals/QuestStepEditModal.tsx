@@ -211,6 +211,7 @@ export const QuestStepEditModal: React.FC<QuestStepEditModalProps> = ({
 						<option value='collectByName'>Collect by Name</option>
 						<option value='collectByType'>Collect by Type</option>
 						<option value='interact'>Interact with Item</option>
+						<option value='interactByType'>Interact with Type</option>
 						<option value='goToLocation'>Go to Location</option>
 						<option value='custom'>Custom</option>
 					</select>
@@ -357,6 +358,45 @@ export const QuestStepEditModal: React.FC<QuestStepEditModalProps> = ({
 							))}
 						</select>
 					</div>
+				)}
+
+				{formData.objectiveType === 'interactByType' && (
+					<>
+						<div className='form-group'>
+							<label>Select Item Type:</label>
+							<select
+								value={formData.objectiveParams.itemType || ''}
+								onChange={(e) =>
+									updateObjectiveParams('itemType', e.target.value)
+								}
+							>
+								<option value=''>Choose an item type...</option>
+								{/* Get unique item types */}
+								{[
+									...new Set(
+										items
+											.map((item) => item.type)
+											.filter((type) => type && type.trim() !== '')
+									),
+								].map((itemType) => (
+									<option key={itemType} value={itemType}>
+										{itemType}
+									</option>
+								))}
+							</select>
+						</div>
+						<div className='form-group'>
+							<label>Required Count:</label>
+							<input
+								type='number'
+								min='1'
+								value={formData.objectiveParams.count || 1}
+								onChange={(e) =>
+									updateObjectiveParams('count', parseInt(e.target.value) || 1)
+								}
+							/>
+						</div>
+					</>
 				)}
 
 				{formData.objectiveType === 'goToLocation' && (
