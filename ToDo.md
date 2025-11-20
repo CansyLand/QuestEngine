@@ -1,5 +1,7 @@
 # Focus Make Quests and dialogues fun! and Easy
 
+There must be a way how to test only selected quest step at position with certain conditions met
+
 ### Quests-2
 
 - detatch dialog sequence from quest step without deleting it

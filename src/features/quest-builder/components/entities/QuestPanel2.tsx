@@ -164,10 +164,12 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 				if (hasEditedDialogs) {
 					console.log(`QuestPanel2: Updating dialogue ${dialogue.id}`)
 					// Update this dialogue sequence with edited dialog texts
-					const updatedDialogs = dialogue.dialogs.map((dialog) =>
-						currentEditedDialogues[dialog.id] !== undefined
-							? { ...dialog, text: currentEditedDialogues[dialog.id] }
-							: dialog
+					const updatedDialogs = correctDialogTypes(
+						dialogue.dialogs.map((dialog) =>
+							currentEditedDialogues[dialog.id] !== undefined
+								? { ...dialog, text: currentEditedDialogues[dialog.id] }
+								: dialog
+						)
 					)
 
 					return { ...dialogue, dialogs: updatedDialogs }
@@ -749,6 +751,33 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 			...dialog,
 			isEndOfDialog: index === dialogs.length - 1,
 		}))
+	}
+
+	// Function to fix all dialogue states in existing data
+	const handleFixAllDialogStates = async () => {
+		if (!onSetGameData || !onSaveData) return
+
+		try {
+			// Create corrected dialogues
+			const correctedDialogues = dialogues.map((dialogue) => ({
+				...dialogue,
+				dialogs: correctDialogTypes(dialogue.dialogs),
+			}))
+
+			// Update game data with corrected dialogues
+			const updatedGameData: Game = {
+				...gameData,
+				dialogues: correctedDialogues,
+			}
+
+			// Update local state and save
+			onSetGameData(updatedGameData)
+			await onSaveData(updatedGameData)
+
+			console.log('QuestPanel2: Fixed all dialogue states successfully')
+		} catch (error) {
+			console.error('QuestPanel2: Error fixing dialogue states:', error)
+		}
 	}
 
 	// Cancel new dialogue creation
@@ -1446,9 +1475,18 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 	return (
 		<div className='w-full space-y-6'>
 			<div className='mb-6'>
-				<h2 className='text-xl font-primary text-text-primary mb-2'>
-					Quest Overview
-				</h2>
+				<div className='flex items-center justify-between mb-2'>
+					<h2 className='text-xl font-primary text-text-primary'>
+						Quest Overview
+					</h2>
+					<button
+						onClick={handleFixAllDialogStates}
+						className='text-xs px-3 py-1 bg-warning/20 text-warning hover:bg-warning/30 rounded transition-colors'
+						title='Fix End of Dialog states for all dialogues'
+					>
+						Fix Dialog States
+					</button>
+				</div>
 				<p className='text-text-secondary text-sm'>
 					See which dialogues are connected to which quest steps
 				</p>
