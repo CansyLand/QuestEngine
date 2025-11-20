@@ -338,16 +338,20 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 			id: generateDialogId(),
 			text: '',
 			isQuestion: false,
-			isEndOfDialog: false,
+			isEndOfDialog: false, // This will be corrected by correctDialogTypes
 		}
 
 		setNewDialogues((prev) => {
 			const current = prev[questStepId] || { dialogs: [] }
+			const updatedDialogs = correctDialogTypes([
+				...(current.dialogs || []),
+				newDialog,
+			])
 			return {
 				...prev,
 				[questStepId]: {
 					...current,
-					dialogs: [...(current.dialogs || []), newDialog],
+					dialogs: updatedDialogs,
 				},
 			}
 		})
@@ -392,9 +396,10 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 			const current = prev[questStepId]
 			if (!current || !current.dialogs) return prev
 
-			const updatedDialogs = current.dialogs.filter(
+			const filteredDialogs = current.dialogs.filter(
 				(_: Dialog, i: number) => i !== dialogIndex
 			)
+			const updatedDialogs = correctDialogTypes(filteredDialogs)
 
 			return {
 				...prev,
@@ -560,18 +565,20 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 			id: generateDialogId(),
 			text: '',
 			isQuestion: false,
-			isEndOfDialog: false,
+			isEndOfDialog: false, // This will be corrected by correctDialogTypes
 		}
 
 		setEditingDialogues((prev) => {
 			const current = prev[dialogueId]
 			if (!current) return prev
 
+			const updatedDialogs = correctDialogTypes([...current.dialogs, newDialog])
+
 			return {
 				...prev,
 				[dialogueId]: {
 					...current,
-					dialogs: [...current.dialogs, newDialog],
+					dialogs: updatedDialogs,
 				},
 			}
 		})
@@ -616,9 +623,10 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 			const current = prev[dialogueId]
 			if (!current) return prev
 
-			const updatedDialogs = current.dialogs.filter(
+			const filteredDialogs = current.dialogs.filter(
 				(_: Dialog, i: number) => i !== dialogIndex
 			)
+			const updatedDialogs = correctDialogTypes(filteredDialogs)
 
 			return {
 				...prev,
@@ -735,6 +743,14 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 		setTimeout(() => autoSave(), 500)
 	}
 
+	// Helper function to correct dialog types based on position
+	const correctDialogTypes = (dialogs: Dialog[]): Dialog[] => {
+		return dialogs.map((dialog, index) => ({
+			...dialog,
+			isEndOfDialog: index === dialogs.length - 1,
+		}))
+	}
+
 	// Cancel new dialogue creation
 	const handleCancelNewDialogue = (questStepId: string) => {
 		setNewDialogues((prev) => {
@@ -758,8 +774,10 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 			id: generateDialogId(),
 			text: '',
 			isQuestion: false,
-			isEndOfDialog: false,
+			isEndOfDialog: false, // This will be corrected by correctDialogTypes
 		}
+
+		const updatedDialogs = correctDialogTypes([...dialogue.dialogs, newDialog])
 
 		// If already in editing state, update it, otherwise create editing state
 		if (editingDialogues[dialogueId]) {
@@ -767,7 +785,7 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 				...prev,
 				[dialogueId]: {
 					...prev[dialogueId],
-					dialogs: [...prev[dialogueId].dialogs, newDialog],
+					dialogs: updatedDialogs,
 				},
 			}))
 		} else {
@@ -775,7 +793,7 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 				...prev,
 				[dialogueId]: {
 					...dialogue,
-					dialogs: [...dialogue.dialogs, newDialog],
+					dialogs: updatedDialogs,
 				},
 			}))
 		}
@@ -794,11 +812,13 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 		const dialogue = dialogues.find((d) => d.id === dialogueId)
 		if (!dialogue) return
 
+		const filteredDialogs = dialogue.dialogs.filter(
+			(_: Dialog, i: number) => i !== dialogIndex
+		)
+		const updatedDialogs = correctDialogTypes(filteredDialogs)
+
 		// If already in editing state, update it, otherwise create editing state
 		if (editingDialogues[dialogueId]) {
-			const updatedDialogs = editingDialogues[dialogueId].dialogs.filter(
-				(_: Dialog, i: number) => i !== dialogIndex
-			)
 			setEditingDialogues((prev) => ({
 				...prev,
 				[dialogueId]: {
@@ -807,9 +827,6 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 				},
 			}))
 		} else {
-			const updatedDialogs = dialogue.dialogs.filter(
-				(_: Dialog, i: number) => i !== dialogIndex
-			)
 			setEditingDialogues((prev) => ({
 				...prev,
 				[dialogueId]: {
@@ -1128,6 +1145,15 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 							const isEditing = isNew
 								? true
 								: editingDialogues[dialogue.id!] !== undefined
+							const isLastDialog = dialogIndex === dialogs.length - 1
+							const shouldBeEndOfDialog = isLastDialog
+							const shouldBeContinue = !isLastDialog
+
+							// Auto-correct dialog type based on position
+							const correctedDialog = {
+								...dialog,
+								isEndOfDialog: shouldBeEndOfDialog,
+							}
 
 							return (
 								<div
@@ -1136,7 +1162,7 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 								>
 									{/* Dialog Text */}
 									<textarea
-										value={dialog.text}
+										value={correctedDialog.text}
 										onChange={(e) => {
 											if (isNew) {
 												handleUpdateDialogInNew(questStepId, dialogIndex, {
@@ -1161,7 +1187,7 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 												if (isNew) {
 													handleUpdateDialogInNew(questStepId, dialogIndex, {
 														isQuestion: true,
-														isEndOfDialog: false,
+														isEndOfDialog: shouldBeEndOfDialog,
 													})
 												} else {
 													handleUpdateDialogInEditing(
@@ -1169,13 +1195,13 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 														dialogIndex,
 														{
 															isQuestion: true,
-															isEndOfDialog: false,
+															isEndOfDialog: shouldBeEndOfDialog,
 														}
 													)
 												}
 											}}
 											className={`text-xs px-2 py-1 rounded transition-colors ${
-												dialog.isQuestion
+												correctedDialog.isQuestion
 													? 'bg-primary text-white'
 													: 'bg-bg-secondary text-text-secondary hover:bg-bg-hover'
 											}`}
@@ -1184,55 +1210,38 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 										</button>
 										<button
 											type='button'
-											onClick={() => {
-												if (isNew) {
-													handleUpdateDialogInNew(questStepId, dialogIndex, {
-														isQuestion: false,
-														isEndOfDialog: true,
-													})
-												} else {
-													handleUpdateDialogInEditing(
-														dialogue.id!,
-														dialogIndex,
-														{
-															isQuestion: false,
-															isEndOfDialog: true,
-														}
-													)
-												}
-											}}
+											disabled={!isLastDialog}
 											className={`text-xs px-2 py-1 rounded transition-colors ${
-												dialog.isEndOfDialog
+												correctedDialog.isEndOfDialog
 													? 'bg-warning text-white'
-													: 'bg-bg-secondary text-text-secondary hover:bg-bg-hover'
+													: 'bg-bg-secondary text-text-secondary opacity-50'
+											} ${
+												isLastDialog ? 'cursor-pointer' : 'cursor-not-allowed'
 											}`}
+											title={
+												isLastDialog
+													? 'This dialog is the last in the sequence and will end the dialogue'
+													: 'Only the last dialog in a sequence can be "End of Dialog"'
+											}
 										>
 											End of Dialog
 										</button>
 										<button
 											type='button'
-											onClick={() => {
-												if (isNew) {
-													handleUpdateDialogInNew(questStepId, dialogIndex, {
-														isQuestion: false,
-														isEndOfDialog: false,
-													})
-												} else {
-													handleUpdateDialogInEditing(
-														dialogue.id!,
-														dialogIndex,
-														{
-															isQuestion: false,
-															isEndOfDialog: false,
-														}
-													)
-												}
-											}}
+											disabled={isLastDialog}
 											className={`text-xs px-2 py-1 rounded transition-colors ${
-												!dialog.isQuestion && !dialog.isEndOfDialog
+												!correctedDialog.isQuestion &&
+												!correctedDialog.isEndOfDialog
 													? 'bg-secondary text-white'
-													: 'bg-bg-secondary text-text-secondary hover:bg-bg-hover'
+													: 'bg-bg-secondary text-text-secondary opacity-50'
+											} ${
+												!isLastDialog ? 'cursor-pointer' : 'cursor-not-allowed'
 											}`}
+											title={
+												!isLastDialog
+													? 'This dialog continues to the next one in the sequence'
+													: 'The last dialog in a sequence cannot continue'
+											}
 										>
 											Continue
 										</button>
@@ -1805,24 +1814,6 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 																					setHoveredDialogueId(null)
 																				}}
 																			>
-																				{/* Quick Add button on hover */}
-																				{hoveredDialogueId === dialogue.id && (
-																					<div className='flex gap-2 mb-2'>
-																						<button
-																							type='button'
-																							onClick={() =>
-																								handleQuickAddDialog(
-																									dialogue.id
-																								)
-																							}
-																							className='text-xs px-2 py-1 rounded bg-primary/20 text-primary hover:bg-primary/30 transition-colors'
-																							title='Add dialog to sequence'
-																						>
-																							+ Add Dialog
-																						</button>
-																					</div>
-																				)}
-
 																				{(
 																					editingDialogues[dialogue.id]
 																						?.dialogs || dialogue.dialogs
@@ -1926,6 +1917,22 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 																						</div>
 																					)
 																				})}
+																				{hoveredDialogueId === dialogue.id && (
+																					<div className='pt-2'>
+																						<button
+																							type='button'
+																							onClick={() =>
+																								handleQuickAddDialog(
+																									dialogue.id
+																								)
+																							}
+																							className='text-xs px-2 py-1 text-text-muted hover:text-primary transition-colors opacity-60 hover:opacity-100'
+																							title='Add dialog'
+																						>
+																							+ Add Dialog
+																						</button>
+																					</div>
+																				)}
 																			</div>
 																		)}
 																	</Card>
@@ -1945,7 +1952,7 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 																className='text-xs px-2 py-1 text-text-muted hover:text-primary transition-colors opacity-60 hover:opacity-100'
 																title='Add new dialogue sequence'
 															>
-																+ Add Dialogue
+																+ Add Dialog Sequence
 															</button>
 														)}
 													</>
