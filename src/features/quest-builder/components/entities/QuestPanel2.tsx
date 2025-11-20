@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
 	Quest,
 	DialogueSequence,
@@ -71,6 +71,49 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 	// Confirmation dialog hook
 	const confirmDialog = useConfirmDialog()
 
+	// Refs to track latest state for auto-save (to avoid stale closures)
+	const editedDialoguesRef = useRef(editedDialogues)
+	const editingDialoguesRef = useRef(editingDialogues)
+	const newDialoguesRef = useRef(newDialogues)
+	const dialoguesRef = useRef(dialogues)
+	const gameDataRef = useRef(gameData)
+
+	// Keep refs in sync with state and props
+	useEffect(() => {
+		editedDialoguesRef.current = editedDialogues
+	}, [editedDialogues])
+	useEffect(() => {
+		editingDialoguesRef.current = editingDialogues
+	}, [editingDialogues])
+	useEffect(() => {
+		newDialoguesRef.current = newDialogues
+	}, [newDialogues])
+	useEffect(() => {
+		dialoguesRef.current = dialogues
+		// When dialogues prop changes, clear editedDialogues for dialogs that no longer exist or have matching text
+		setEditedDialogues((prev) => {
+			const updated: Record<string, string> = {}
+			for (const dialogue of dialogues) {
+				for (const dialog of dialogue.dialogs) {
+					if (prev[dialog.id] !== undefined) {
+						// Only keep edited text if it's different from the current text
+						if (prev[dialog.id] !== dialog.text) {
+							updated[dialog.id] = prev[dialog.id]
+						}
+					}
+				}
+			}
+			editedDialoguesRef.current = updated
+			return updated
+		})
+	}, [dialogues])
+	useEffect(() => {
+		gameDataRef.current = gameData
+	}, [gameData])
+
+	// Ref to track timeout for debouncing
+	const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
 	useEffect(() => {
 		const getProjectPath = async () => {
 			const electronAPI = (window as any).electronAPI
@@ -80,9 +123,16 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 			setProjectPath(path)
 		}
 		getProjectPath()
+
+		// Cleanup timeout on unmount
+		return () => {
+			if (saveTimeoutRef.current) {
+				clearTimeout(saveTimeoutRef.current)
+			}
+		}
 	}, [])
 
-	// Auto-save function with debouncing
+	// Auto-save function with debouncing - uses refs to always get latest state
 	const autoSave = useCallback(async () => {
 		if (!onSetGameData || !onSaveData) {
 			console.log('QuestPanel2: Auto-save skipped - missing handlers')
@@ -90,26 +140,33 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 		}
 
 		try {
+			// Use refs to get latest state values
+			const currentEditedDialogues = editedDialoguesRef.current
+			const currentEditingDialogues = editingDialoguesRef.current
+			const currentNewDialogues = newDialoguesRef.current
+			const currentDialogues = dialoguesRef.current
+			const currentGameData = gameDataRef.current
+
 			console.log(
 				'QuestPanel2: Starting auto-save with edited dialogues:',
-				Object.keys(editedDialogues)
+				Object.keys(currentEditedDialogues)
 			)
 
 			// Start with existing dialogues
-			let updatedDialogues = [...dialogues]
+			let updatedDialogues = [...currentDialogues]
 
 			// Update all dialogues that have edited dialogs (text-only)
 			updatedDialogues = updatedDialogues.map((dialogue) => {
 				const hasEditedDialogs = dialogue.dialogs.some(
-					(dialog) => editedDialogues[dialog.id] !== undefined
+					(dialog) => currentEditedDialogues[dialog.id] !== undefined
 				)
 
 				if (hasEditedDialogs) {
 					console.log(`QuestPanel2: Updating dialogue ${dialogue.id}`)
 					// Update this dialogue sequence with edited dialog texts
 					const updatedDialogs = dialogue.dialogs.map((dialog) =>
-						editedDialogues[dialog.id] !== undefined
-							? { ...dialog, text: editedDialogues[dialog.id] }
+						currentEditedDialogues[dialog.id] !== undefined
+							? { ...dialog, text: currentEditedDialogues[dialog.id] }
 							: dialog
 					)
 
@@ -121,38 +178,40 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 
 			// Update dialogues that are being edited inline
 			updatedDialogues = updatedDialogues.map((dialogue) => {
-				if (editingDialogues[dialogue.id]) {
-					return editingDialogues[dialogue.id]
+				if (currentEditingDialogues[dialogue.id]) {
+					return currentEditingDialogues[dialogue.id]
 				}
 				return dialogue
 			})
 
 			// Add new dialogue sequences that are complete (have name, npcId, and at least one dialog)
-			Object.entries(newDialogues).forEach(([questStepId, newDialogue]) => {
-				if (
-					newDialogue.name &&
-					newDialogue.npcId &&
-					newDialogue.dialogs &&
-					newDialogue.dialogs.length > 0 &&
-					newDialogue.id
-				) {
-					// Check if this dialogue already exists
-					const exists = updatedDialogues.some((d) => d.id === newDialogue.id)
-					if (!exists) {
-						updatedDialogues.push({
-							id: newDialogue.id!,
-							name: newDialogue.name!,
-							npcId: newDialogue.npcId,
-							questStepId: questStepId,
-							dialogs: newDialogue.dialogs as Dialog[],
-						})
+			Object.entries(currentNewDialogues).forEach(
+				([questStepId, newDialogue]) => {
+					if (
+						newDialogue.name &&
+						newDialogue.npcId &&
+						newDialogue.dialogs &&
+						newDialogue.dialogs.length > 0 &&
+						newDialogue.id
+					) {
+						// Check if this dialogue already exists
+						const exists = updatedDialogues.some((d) => d.id === newDialogue.id)
+						if (!exists) {
+							updatedDialogues.push({
+								id: newDialogue.id!,
+								name: newDialogue.name!,
+								npcId: newDialogue.npcId,
+								questStepId: questStepId,
+								dialogs: newDialogue.dialogs as Dialog[],
+							})
+						}
 					}
 				}
-			})
+			)
 
 			// Create the updated game data
 			const updatedGameData: Game = {
-				...gameData,
+				...currentGameData,
 				dialogues: updatedDialogues,
 			}
 
@@ -164,15 +223,7 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 		} catch (error) {
 			console.error('QuestPanel2: Error auto-saving dialogues:', error)
 		}
-	}, [
-		dialogues,
-		editedDialogues,
-		editingDialogues,
-		newDialogues,
-		gameData,
-		onSetGameData,
-		onSaveData,
-	])
+	}, [onSetGameData, onSaveData])
 
 	// Handle input changes
 	const handleDialogueChange = (
@@ -180,15 +231,32 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 		newText: string,
 		originalText: string
 	) => {
-		setEditedDialogues((prev) => ({ ...prev, [dialogId]: newText }))
+		// Update state using functional update to ensure we have latest state
+		setEditedDialogues((prev) => {
+			const updated = { ...prev, [dialogId]: newText }
+			// Update ref immediately for synchronous access
+			editedDialoguesRef.current = updated
+			return updated
+		})
 
 		// Store original text if not already stored
-		if (!originalDialogues[dialogId]) {
-			setOriginalDialogues((prev) => ({ ...prev, [dialogId]: originalText }))
+		setOriginalDialogues((prev) => {
+			if (!prev[dialogId]) {
+				return { ...prev, [dialogId]: originalText }
+			}
+			return prev
+		})
+
+		// Clear existing timeout
+		if (saveTimeoutRef.current) {
+			clearTimeout(saveTimeoutRef.current)
 		}
 
-		// Auto-save after a short delay
-		setTimeout(() => autoSave(), 500)
+		// Set new timeout for auto-save
+		saveTimeoutRef.current = setTimeout(() => {
+			autoSave()
+			saveTimeoutRef.current = null
+		}, 500)
 	}
 
 	// Handle revert to original
