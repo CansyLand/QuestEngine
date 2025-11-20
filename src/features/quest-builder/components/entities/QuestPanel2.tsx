@@ -301,13 +301,12 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 			const current = prev[questStepId] || {}
 			const updated = { ...current, ...updates }
 
-			// Auto-generate ID when name or npcId changes, OR when we have both name and npcId (for cases where dialogs were added first)
+			// Auto-generate ID when name or npcId changes
 			const nameChanged = updates.name && updates.name !== current.name
 			const npcIdChanged =
 				updates.npcId !== undefined && updates.npcId !== current.npcId
-			const hasRequiredFields = updated.name && updated.npcId
 
-			if (nameChanged || (npcIdChanged && updated.name) || (hasRequiredFields && !updated.id?.startsWith('temp_'))) {
+			if (nameChanged || (npcIdChanged && updated.name)) {
 				generateIdFromApi(
 					updated.name || 'dialogue',
 					'dialogue',

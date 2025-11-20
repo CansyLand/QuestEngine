@@ -1,3 +1,15 @@
+# Focus Make Quests and dialogues fun! and Easy
+
+### Quests-2
+
+- detatch dialog sequence from quest step without deleting it
+- move dialog sequeco to other quest tep
+- renaming and quest step looses all its dialogs
+- after adding dialog sequence i can not add another one
+- zoom effect is annoying
+
+### Other older stuff
+
 - create new item from link window
 - (createa new item automatically with new DCL Entiy?)
 - make filter parent tabs in link tab

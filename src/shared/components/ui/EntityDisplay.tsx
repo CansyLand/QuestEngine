@@ -107,8 +107,9 @@ const EntityDisplay = <T extends BaseEntity>({
 	const imageUrl = getEntityImage(entity)
 	const typeLabel = getEntityTypeLabel(entity)
 
-	const containerClasses =
-		`entity-display entity-${variant} ${className}`.trim()
+	const containerClasses = variant === 'list'
+		? `flex items-center gap-3 w-full ${className}`.trim()
+		: `entity-display entity-${variant} ${className}`.trim()
 
 	return (
 		<>
@@ -119,22 +120,33 @@ const EntityDisplay = <T extends BaseEntity>({
 				onMouseLeave={handleMouseLeave}
 			>
 				{showImage && (
-					<div
-						className={`entity-image entity-${typeLabel.toLowerCase()}-image`}
-					>
+					<div className={variant === 'list' ? 'flex-shrink-0' : `entity-image entity-${typeLabel.toLowerCase()}-image`}>
 						<ImageDisplay
 							src={imageUrl || ''}
 							alt={`${entity.name} image`}
-							className='entity-thumbnail'
-							fallback={<div className='no-image'>?</div>}
+							className={variant === 'list' ? 'w-8 h-8 object-cover rounded' : 'entity-thumbnail'}
+							fallback={<div className={variant === 'list' ? 'w-8 h-8 bg-bg-hover rounded flex items-center justify-center text-text-muted text-xs' : 'no-image'}>?</div>}
 						/>
 					</div>
 				)}
-				<div className='entity-info'>
-					<div className='entity-name'>{entity.name}</div>
-					{showId && <div className='entity-id'>({entity.id})</div>}
+				<div className={variant === 'list' ? 'flex-1 min-w-0' : 'entity-info'}>
+					<div className={variant === 'list' ? 'text-text-primary font-medium truncate' : 'entity-name'}>{entity.name}</div>
+					{showId && <div className={variant === 'list' ? 'text-text-muted text-xs truncate' : 'entity-id'}>({entity.id})</div>}
 				</div>
-				{onRemove && index !== undefined && (
+				{onRemove && index !== undefined && variant === 'list' && (
+					<button
+						type='button'
+						className='text-danger hover:text-danger/80 px-2 text-lg leading-none'
+						onClick={(e) => {
+							e.stopPropagation()
+							onRemove(index)
+						}}
+						title='Remove item'
+					>
+						×
+					</button>
+				)}
+				{onRemove && index !== undefined && variant !== 'list' && (
 					<button
 						type='button'
 						className='entity-remove-button'
