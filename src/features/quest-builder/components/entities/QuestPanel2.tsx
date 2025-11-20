@@ -1684,13 +1684,16 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 																let cardClassName = 'cursor-pointer'
 																let statusBadge = null
 
-																if (isOverlapping) {
-																	// Green for overlapping (both linked and auto-started)
+																if (isAutoStarted) {
+																	// Yellow for auto-started dialogues (takes priority)
 																	statusBadge = (
-																		<span className='text-success text-xs font-medium px-2 py-1 bg-success/20 rounded flex items-center'>
-																			✓ LINKED & AUTO
+																		<span className='text-warning text-xs font-medium px-2 py-1 bg-warning/20 rounded'>
+																			AUTO-START
 																		</span>
 																	)
+																	cardVariant = 'default'
+																	cardClassName =
+																		'cursor-pointer border-warning bg-warning/10'
 																} else if (isLinked) {
 																	// Red for dialogues of the target NPC in talkTo steps, teal for others
 																	const badgeColor = isTargetNpc
@@ -1706,16 +1709,6 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 																			{badgeText}
 																		</span>
 																	)
-																} else if (isAutoStarted) {
-																	// Yellow for auto-started only
-																	statusBadge = (
-																		<span className='text-warning text-xs font-medium px-2 py-1 bg-warning/20 rounded'>
-																			AUTO-START
-																		</span>
-																	)
-																	cardVariant = 'default'
-																	cardClassName =
-																		'cursor-pointer border-warning bg-warning/10'
 																}
 
 																// Use editing version if available, otherwise use original
