@@ -6,10 +6,14 @@ import {
 	Game,
 	Dialog,
 	Button,
+	QuestStep,
 } from '@/core/models/types'
 import { Card } from '@/shared/ui'
 import { ImageDisplay } from '@/shared/components/ui/ImagePicker'
 import { generateIdFromApi } from '@/shared/utils/api'
+import { QuestStepEditModal } from '../modals/QuestStepEditModal'
+import { useConfirmDialog } from '@/shared/hooks/useConfirmDialog'
+import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 
 interface QuestPanel2Props {
 	quests: Quest[]
@@ -57,6 +61,15 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 	const [hoveredDialogueId, setHoveredDialogueId] = useState<string | null>(
 		null
 	)
+
+	// State for QuestStepEditModal
+	const [stepModalOpen, setStepModalOpen] = useState<boolean>(false)
+	const [editingStep, setEditingStep] = useState<QuestStep | null>(null)
+	const [editingQuestId, setEditingQuestId] = useState<string | null>(null)
+	const [editingStepIndex, setEditingStepIndex] = useState<number | null>(null)
+
+	// Confirmation dialog hook
+	const confirmDialog = useConfirmDialog()
 
 	useEffect(() => {
 		const getProjectPath = async () => {
@@ -740,6 +753,190 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 
 		setTimeout(() => autoSave(), 500)
 	}
+
+	// Remove entire dialogue sequence
+	const handleRemoveDialogueSequence = (dialogueId: string) => {
+		// Remove from editing state if present
+		setEditingDialogues((prev) => {
+			const newState = { ...prev }
+			delete newState[dialogueId]
+			return newState
+		})
+
+		// Remove from dialogues array via auto-save
+		const updatedDialogues = dialogues.filter((d) => d.id !== dialogueId)
+		const updatedGameData: Game = {
+			...gameData,
+			dialogues: updatedDialogues,
+		}
+
+		if (onSetGameData && onSaveData) {
+			onSetGameData(updatedGameData)
+			onSaveData(updatedGameData).catch((error) => {
+				console.error('Error removing dialogue sequence:', error)
+			})
+		}
+	}
+	// Handler functions for quest step management
+	const handleAddQuestStep = (questId: string) => {
+		const newStep: QuestStep = {
+			id: `temp_step_${Date.now()}`,
+			name: 'New Step',
+			objectiveType: 'custom',
+			objectiveParams: {},
+			onStart: [],
+			onComplete: [],
+		}
+		setEditingStep(newStep)
+		setEditingQuestId(questId)
+		setEditingStepIndex(null)
+		setStepModalOpen(true)
+	}
+
+	const handleEditQuestStep = (questId: string, stepIndex: number) => {
+		const quest = quests.find((q) => q.id === questId)
+		if (!quest || !quest.steps[stepIndex]) return
+
+		setEditingStep(quest.steps[stepIndex])
+		setEditingQuestId(questId)
+		setEditingStepIndex(stepIndex)
+		setStepModalOpen(true)
+	}
+
+	const handleSaveQuestStep = (step: QuestStep) => {
+		if (!editingQuestId || !onSetGameData || !onSaveData) return
+
+		const quest = quests.find((q) => q.id === editingQuestId)
+		if (!quest) return
+
+		let updatedSteps: QuestStep[]
+		if (editingStepIndex !== null) {
+			// Edit existing step
+			updatedSteps = [...quest.steps]
+			updatedSteps[editingStepIndex] = step
+		} else {
+			// Add new step
+			updatedSteps = [...quest.steps, step]
+		}
+
+		const updatedQuests = quests.map((q) =>
+			q.id === editingQuestId ? { ...q, steps: updatedSteps } : q
+		)
+
+		const updatedGameData: Game = {
+			...gameData,
+			quests: updatedQuests,
+		}
+
+		onSetGameData(updatedGameData)
+		onSaveData(updatedGameData).catch((error) => {
+			console.error('Error saving quest step:', error)
+		})
+
+		setStepModalOpen(false)
+		setEditingStep(null)
+		setEditingQuestId(null)
+		setEditingStepIndex(null)
+	}
+
+	const handleCancelStepEdit = () => {
+		setStepModalOpen(false)
+		setEditingStep(null)
+		setEditingQuestId(null)
+		setEditingStepIndex(null)
+	}
+
+	const handleMoveQuestStepUp = (questId: string, stepIndex: number) => {
+		if (stepIndex === 0 || !onSetGameData || !onSaveData) return
+
+		const quest = quests.find((q) => q.id === questId)
+		if (!quest) return
+
+		const updatedSteps = [...quest.steps]
+		;[updatedSteps[stepIndex - 1], updatedSteps[stepIndex]] = [
+			updatedSteps[stepIndex],
+			updatedSteps[stepIndex - 1],
+		]
+
+		const updatedQuests = quests.map((q) =>
+			q.id === questId ? { ...q, steps: updatedSteps } : q
+		)
+
+		const updatedGameData: Game = {
+			...gameData,
+			quests: updatedQuests,
+		}
+
+		onSetGameData(updatedGameData)
+		onSaveData(updatedGameData).catch((error) => {
+			console.error('Error moving quest step up:', error)
+		})
+	}
+
+	const handleMoveQuestStepDown = (questId: string, stepIndex: number) => {
+		const quest = quests.find((q) => q.id === questId)
+		if (
+			!quest ||
+			stepIndex === quest.steps.length - 1 ||
+			!onSetGameData ||
+			!onSaveData
+		)
+			return
+
+		const updatedSteps = [...quest.steps]
+		;[updatedSteps[stepIndex], updatedSteps[stepIndex + 1]] = [
+			updatedSteps[stepIndex + 1],
+			updatedSteps[stepIndex],
+		]
+
+		const updatedQuests = quests.map((q) =>
+			q.id === questId ? { ...q, steps: updatedSteps } : q
+		)
+
+		const updatedGameData: Game = {
+			...gameData,
+			quests: updatedQuests,
+		}
+
+		onSetGameData(updatedGameData)
+		onSaveData(updatedGameData).catch((error) => {
+			console.error('Error moving quest step down:', error)
+		})
+	}
+
+	const handleRemoveQuestStep = (questId: string, stepIndex: number) => {
+		const quest = quests.find((q) => q.id === questId)
+		if (!quest || !quest.steps[stepIndex]) return
+
+		const step = quest.steps[stepIndex]
+		confirmDialog.openConfirmDialog(
+			'Remove Quest Step',
+			`Are you sure you want to remove the quest step "${step.name}"? This action cannot be undone.`,
+			() => {
+				const updatedSteps = quest.steps.filter((_, i) => i !== stepIndex)
+				const updatedQuests = quests.map((q) =>
+					q.id === questId ? { ...q, steps: updatedSteps } : q
+				)
+
+				const updatedGameData: Game = {
+					...gameData,
+					quests: updatedQuests,
+				}
+
+				if (onSetGameData && onSaveData) {
+					onSetGameData(updatedGameData)
+					onSaveData(updatedGameData).catch((error) => {
+						console.error('Error removing quest step:', error)
+					})
+				}
+				confirmDialog.closeConfirmDialog()
+			},
+			() => {
+				confirmDialog.closeConfirmDialog()
+			}
+		)
+	}
+
 	// Helper function to get NPC name by ID
 	const getNpcName = (npcId: string) => {
 		const npc = npcs.find((n) => n.id === npcId)
@@ -1197,9 +1394,61 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 									{/* Step Column */}
 									<div className='w-2/12'>
 										<Card variant='default' padding='sm' className='h-full'>
-											<h4 className='font-primary text-text-primary text-sm mb-2'>
-												{step.name}
-											</h4>
+											<div className='flex items-center justify-between mb-2'>
+												<h4 className='font-primary text-text-primary text-sm'>
+													{step.name}
+												</h4>
+												<div className='flex gap-1'>
+													{/* Edit Button */}
+													<button
+														type='button'
+														onClick={() =>
+															handleEditQuestStep(quest.id, stepIndex)
+														}
+														className='text-xs px-1.5 py-1 rounded bg-primary/20 text-primary hover:bg-primary/30 transition-colors'
+														title='Edit quest step'
+													>
+														✎
+													</button>
+													{/* Move Up Button */}
+													{stepIndex > 0 && (
+														<button
+															type='button'
+															onClick={() =>
+																handleMoveQuestStepUp(quest.id, stepIndex)
+															}
+															className='text-xs px-1.5 py-1 rounded bg-secondary/20 text-secondary hover:bg-secondary/30 transition-colors'
+															title='Move step up'
+														>
+															↑
+														</button>
+													)}
+													{/* Move Down Button */}
+													{stepIndex < quest.steps.length - 1 && (
+														<button
+															type='button'
+															onClick={() =>
+																handleMoveQuestStepDown(quest.id, stepIndex)
+															}
+															className='text-xs px-1.5 py-1 rounded bg-secondary/20 text-secondary hover:bg-secondary/30 transition-colors'
+															title='Move step down'
+														>
+															↓
+														</button>
+													)}
+													{/* Delete Button */}
+													<button
+														type='button'
+														onClick={() =>
+															handleRemoveQuestStep(quest.id, stepIndex)
+														}
+														className='text-xs px-1.5 py-1 rounded bg-danger/20 text-danger hover:bg-danger/30 transition-colors'
+														title='Remove quest step'
+													>
+														×
+													</button>
+												</div>
+											</div>
 
 											{/* Objective Type & Params */}
 											<div className='mb-3'>
@@ -1404,12 +1653,32 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 																		variant={cardVariant as any}
 																		padding='md'
 																		className={cardClassName}
+																		onMouseEnter={() => {
+																			setHoveredDialogueId(dialogue.id)
+																		}}
+																		onMouseLeave={() => {
+																			setHoveredDialogueId(null)
+																		}}
 																	>
 																		{/* Status Indicator */}
 																		<div className='flex items-center justify-between mb-2'>
 																			<div className='flex items-center space-x-2'>
 																				{statusBadge}
 																			</div>
+																			{hoveredDialogueId === dialogue.id && (
+																				<button
+																					type='button'
+																					onClick={() =>
+																						handleRemoveDialogueSequence(
+																							dialogue.id
+																						)
+																					}
+																					className='text-danger hover:text-danger-hover text-xs px-2 py-1 bg-danger/10 hover:bg-danger/20 rounded transition-colors'
+																					title='Remove dialogue sequence'
+																				>
+																					× Remove Sequence
+																				</button>
+																			)}
 																		</div>
 																		{/* NPC Header */}
 																		<div className='flex items-center space-x-3 mb-3 pb-2 border-b border-border-secondary'>
@@ -1486,13 +1755,9 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 																					</div>
 																				)}
 
-																				{(isTalkToStep
-																					? (
-																							editingDialogues[dialogue.id]
-																								?.dialogs || dialogue.dialogs
-																					  ).slice(0, 1)
-																					: editingDialogues[dialogue.id]
-																							?.dialogs || dialogue.dialogs
+																				{(
+																					editingDialogues[dialogue.id]
+																						?.dialogs || dialogue.dialogs
 																				).map((dialog, dialogIndex) => {
 																					const currentText =
 																						editedDialogues[dialog.id] ??
@@ -1623,6 +1888,22 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 								</div>
 							))}
 
+							{/* Add Quest Step Button */}
+							<div className='flex w-full gap-4'>
+								<div className='w-3/12' />
+								<div className='w-2/12'>
+									<button
+										type='button'
+										onClick={() => handleAddQuestStep(quest.id)}
+										className='w-full text-xs px-2 py-2 rounded bg-primary/20 text-primary hover:bg-primary/30 transition-colors border border-dashed border-primary/30'
+										title='Add new quest step'
+									>
+										+ Add Quest Step
+									</button>
+								</div>
+								<div className='w-7/12' />
+							</div>
+
 							{/* Separator between quests */}
 							{quest !== quests[quests.length - 1] && (
 								<div className='border-t border-border-secondary my-6' />
@@ -1631,6 +1912,23 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 					))}
 				</div>
 			</div>
+
+			{/* Quest Step Edit Modal */}
+			<QuestStepEditModal
+				isOpen={stepModalOpen}
+				step={editingStep}
+				npcs={gameData.npcs || []}
+				items={gameData.items || []}
+				locations={gameData.locations || []}
+				quests={quests}
+				dialogues={dialogues}
+				portals={gameData.portals || []}
+				onSave={handleSaveQuestStep}
+				onCancel={handleCancelStepEdit}
+			/>
+
+			{/* Confirmation Dialog */}
+			<ConfirmDialog confirmDialog={confirmDialog.confirmDialog} />
 		</div>
 	)
 }
