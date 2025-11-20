@@ -1078,21 +1078,32 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 		const dialogs = dialogue.dialogs || []
 		const isExpanded =
 			expandedDialogues[isNew ? questStepId : dialogue.id!] || false
+		const isExistingEditing =
+			!isNew && dialogue.id
+				? editingDialogues[dialogue.id] !== undefined
+				: false
+		const showSequenceDetailsForm = isNew || isExistingEditing
 
 		return (
 			<div className='space-y-3'>
 				{/* Dialogue Sequence Header */}
 				<div className='flex items-center justify-between mb-2'>
 					<div className='flex-1 space-y-2'>
-						{isNew ? (
+						{showSequenceDetailsForm ? (
 							<>
 								<input
 									type='text'
 									value={dialogue.name || ''}
 									onChange={(e) =>
-										handleUpdateNewDialogue(questStepId, {
-											name: e.target.value,
-										})
+										isNew
+											? handleUpdateNewDialogue(questStepId, {
+													name: e.target.value,
+											  })
+											: dialogue.id
+											? handleUpdateEditingDialogue(dialogue.id, {
+													name: e.target.value,
+											  })
+											: undefined
 									}
 									placeholder='Dialogue sequence name'
 									className='w-full px-2 py-1 text-sm border border-border-primary rounded bg-bg-primary text-text-primary'
@@ -1100,9 +1111,15 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 								<select
 									value={dialogue.npcId || ''}
 									onChange={(e) =>
-										handleUpdateNewDialogue(questStepId, {
-											npcId: e.target.value || undefined,
-										})
+										isNew
+											? handleUpdateNewDialogue(questStepId, {
+													npcId: e.target.value || undefined,
+											  })
+											: dialogue.id
+											? handleUpdateEditingDialogue(dialogue.id, {
+													npcId: e.target.value || undefined,
+											  })
+											: undefined
 									}
 									className='w-full px-2 py-1 text-sm border border-border-primary rounded bg-bg-primary text-text-primary'
 								>
@@ -1131,6 +1148,14 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 					{isNew && (
 						<button
 							onClick={() => handleCancelNewDialogue(questStepId)}
+							className='text-danger hover:text-danger-hover text-xs px-2 py-1'
+						>
+							× Cancel
+						</button>
+					)}
+					{isExistingEditing && dialogue.id && (
+						<button
+							onClick={() => handleToggleEditDialogue(dialogue.id as string)}
 							className='text-danger hover:text-danger-hover text-xs px-2 py-1'
 						>
 							× Cancel
@@ -1736,18 +1761,32 @@ export const QuestPanel2: React.FC<QuestPanel2Props> = ({
 																				{statusBadge}
 																			</div>
 																			{hoveredDialogueId === dialogue.id && (
-																				<button
-																					type='button'
-																					onClick={() =>
-																						handleRemoveDialogueSequence(
-																							dialogue.id
-																						)
-																					}
-																					className='text-danger hover:text-danger-hover text-xs px-2 py-1 bg-danger/10 hover:bg-danger/20 rounded transition-colors'
-																					title='Remove dialogue sequence'
-																				>
-																					× Remove Sequence
-																				</button>
+																				<div className='flex items-center gap-2'>
+																					<button
+																						type='button'
+																						onClick={() =>
+																							handleToggleEditDialogue(
+																								dialogue.id
+																							)
+																						}
+																						className='text-xs px-2 py-1 bg-primary/15 text-primary hover:bg-primary/25 rounded transition-colors'
+																						title='Edit dialogue sequence'
+																					>
+																						✎ Edit Sequence
+																					</button>
+																					<button
+																						type='button'
+																						onClick={() =>
+																							handleRemoveDialogueSequence(
+																								dialogue.id
+																							)
+																						}
+																						className='text-danger hover:text-danger-hover text-xs px-2 py-1 bg-danger/10 hover:bg-danger/20 rounded transition-colors'
+																						title='Remove dialogue sequence'
+																					>
+																						× Remove Sequence
+																					</button>
+																				</div>
 																			)}
 																		</div>
 																		{/* NPC Header */}
